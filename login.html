@@ -374,7 +374,7 @@
                     localStorage.setItem('user', JSON.stringify(data.session.user));
                     localStorage.setItem('session', JSON.stringify(data.session));
                     console.log('✅ جلسة سابقة موجودة، جاري التوجيه...');
-                    window.location.href = 'admin.html';
+                    window.location.href = 'admin/admin.html';';
                 }
             } catch (e) {
                 console.log('ℹ️ لا توجد جلسة سابقة');
@@ -452,7 +452,7 @@
                 
                 // التوجيه إلى لوحة التحكم
                 setTimeout(() => {
-                    window.location.href = 'admin.html';
+                    window.location.href = 'admin/admin.html';';
                 }, 1000);
                 
             } catch (error) {

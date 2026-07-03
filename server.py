@@ -6,7 +6,7 @@ import sys
 import webbrowser
 from pathlib import Path
 
-PORT = 5512
+PORT = 5513
 
 # تغيير المجلد الحالي إلى مكان الملف
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -46,7 +46,7 @@ class TithkariHandler(http.server.SimpleHTTPRequestHandler):
         elif self.path.startswith('/admin'):
             # دعم مسار admin
             if self.path == '/admin' or self.path == '/admin/':
-                self.path = '/admin/index.html'
+                self.path = '/admin/admin.html'
         
         # دعم المسارات النسبية
         if self.path.startswith('/../'):
