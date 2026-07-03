@@ -344,14 +344,15 @@
         // ============================================
         // استيراد الإعدادات
         // ============================================
-        import { CONFIG, createSupabaseClient } from './config.js';
+        import { CONFIG } from './config.js';
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
         
         console.log('🚀 جاري تهيئة صفحة تسجيل الدخول...');
         
         // ============================================
-        // تهيئة Supabase
+        // تهيئة Supabase مباشرة
         // ============================================
-        const supabase = await createSupabaseClient();
+        const supabase = createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
         
         // ============================================
         // عناصر DOM
@@ -374,7 +375,7 @@
                     localStorage.setItem('user', JSON.stringify(data.session.user));
                     localStorage.setItem('session', JSON.stringify(data.session));
                     console.log('✅ جلسة سابقة موجودة، جاري التوجيه...');
-                    window.location.href = 'admin/admin.html';';
+                    window.location.href = 'admin/admin.html';
                 }
             } catch (e) {
                 console.log('ℹ️ لا توجد جلسة سابقة');
@@ -452,7 +453,7 @@
                 
                 // التوجيه إلى لوحة التحكم
                 setTimeout(() => {
-                    window.location.href = 'admin/admin.html';';
+                    window.location.href = 'admin/admin.html';
                 }, 1000);
                 
             } catch (error) {
