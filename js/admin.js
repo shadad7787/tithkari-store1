@@ -16,16 +16,16 @@ console.log('✅ Supabase initialized');
 // ============================================
 const session = localStorage.getItem('session');
 if (!session) {
-    window.location.href = '/login.html';
+    window.location.href = '../login.html';
 }
 
 try {
     const parsed = JSON.parse(session);
     if (!parsed.access_token) {
-        window.location.href = '/login.html';
+        window.location.href = '../login.html';
     }
 } catch (e) {
-    window.location.href = '/login.html';
+    window.location.href = '../login.html';
 }
 
 // ============================================
@@ -35,7 +35,7 @@ window.logout = function() {
     if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
         localStorage.removeItem('user');
         localStorage.removeItem('session');
-        window.location.href = '/login.html';
+        window.location.href = '../login.html';
     }
 };
 
