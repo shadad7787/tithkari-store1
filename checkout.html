@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>إتمام الطلب - Tithkari</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <!-- Google Font - Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: #0F0F1A;
+            color: #FFFFFF;
+            direction: rtl;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* الهيدر */
+        .checkout-header {
+            background: rgba(15, 15, 26, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid #FFD700;
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .checkout-header .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .checkout-header .logo {
+            font-size: 28px;
+            font-weight: 800;
+            color: #FFD700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+        
+        .checkout-header .logo i {
+            font-size: 32px;
+        }
+        
+        .checkout-steps {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #8A8A9B;
+            font-size: 14px;
+        }
+        
+        .step .step-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid #8A8A9B;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+        }
+        
+        .step.active .step-number {
+            background: #FFD700;
+            border-color: #FFD700;
+            color: #0F0F1A;
+        }
+        
+        .step.active {
+            color: #FFD700;
+        }
+        
+        .step.completed .step-number {
+            background: #4CAF50;
+            border-color: #4CAF50;
+            color: white;
+        }
+        
+        .step.completed {
+            color: #4CAF50;
+        }
+        
+        .step-line {
+            width: 40px;
+            height: 2px;
+            background: #8A8A9B;
+        }
+        
+        .step-line.active {
+            background: #FFD700;
+        }
+        
+        /* المحتوى الرئيسي */
+        .checkout-main {
+            padding: 40px 0 60px;
+        }
+        
+        .checkout-grid {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 40px;
+            align-items: start;
+        }
+        
+        /* نموذج الدفع */
+        .checkout-form-section {
+            background: #1A1A2E;
+            border-radius: 16px;
+            padding: 30px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+        }
+        
+        .checkout-form-section h2 {
+            color: #FFD700;
+            font-size: 24px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #8A8A9B;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+        
+        .form-group label .required {
+            color: #ef4444;
+        }
+        
+        .form-group label .optional {
+            color: #8A8A9B;
+            font-weight: 400;
+            font-size: 12px;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 10px;
+            background: #0F0F1A;
+            color: #FFFFFF;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            font-family: 'Cairo', sans-serif;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            border-color: #FFD700;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.1);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .form-group select option {
+            background: #1A1A2E;
+            color: #FFFFFF;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        /* ===== الحقول الإضافية للطلب ===== */
+        .additional-fields-section {
+            background: rgba(255, 215, 0, 0.03);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+        }
+        
+        .additional-fields-section h3 {
+            color: #FFD700;
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .additional-fields-section h3 small {
+            color: #8A8A9B;
+            font-size: 13px;
+            font-weight: 400;
+        }
+        
+        .file-upload-wrapper {
+            position: relative;
+            padding: 20px;
+            border: 2px dashed rgba(255, 215, 0, 0.15);
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .file-upload-wrapper:hover {
+            border-color: #FFD700;
+            background: rgba(255, 215, 0, 0.05);
+        }
+        
+        .file-upload-wrapper input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        .file-upload-wrapper .upload-icon {
+            font-size: 40px;
+            color: #FFD700;
+            opacity: 0.5;
+            display: block;
+            margin-bottom: 10px;
+        }
+        
+        .file-upload-wrapper .upload-text {
+            color: #8A8A9B;
+            font-size: 14px;
+        }
+        
+        .file-upload-wrapper .upload-text strong {
+            color: #FFD700;
+        }
+        
+        .file-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .file-preview-item {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+        }
+        
+        .file-preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .file-preview-item .file-name {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 2px 4px;
+            font-size: 8px;
+            text-align: center;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .file-preview-item .remove-file {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ef4444;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .file-preview-item .remove-file:hover {
+            transform: scale(1.1);
+        }
+        
+        .file-preview-item .file-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            background: #0F0F1A;
+            font-size: 30px;
+            color: #8A8A9B;
+        }
+        
+        /* ملخص الطلب */
+        .order-summary {
+            background: #1A1A2E;
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+            position: sticky;
+            top: 100px;
+        }
+        
+        .order-summary h3 {
+            color: #FFD700;
+            font-size: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .checkout-items {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        
+        .checkout-items::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .checkout-items::-webkit-scrollbar-thumb {
+            background: #FFD700;
+            border-radius: 10px;
+        }
+        
+        .checkout-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .checkout-item:last-child {
+            border-bottom: none;
+        }
+        
+        .checkout-item img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 8px;
+            background: #0F0F1A;
+            flex-shrink: 0;
+        }
+        
+        .checkout-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .checkout-item-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .checkout-item-meta {
+            font-size: 12px;
+            color: #8A8A9B;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .checkout-item-meta .custom-badge {
+            background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+            color: white;
+            padding: 0 8px;
+            border-radius: 4px;
+            font-size: 10px;
+        }
+        
+        .checkout-item-price {
+            color: #FFD700;
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        
+        /* الحقول المخصصة في الملخص */
+        .checkout-custom-fields {
+            margin-top: 4px;
+            padding: 6px 8px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 6px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+        }
+        
+        .checkout-custom-field {
+            display: flex;
+            padding: 2px 0;
+            font-size: 11px;
+            color: #8A8A9B;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: baseline;
+        }
+        
+        .checkout-custom-field .field-label {
+            font-weight: 600;
+            color: #FFD700;
+            min-width: 70px;
+            font-size: 11px;
+        }
+        
+        .checkout-custom-field .field-value {
+            color: #FFFFFF;
+            word-break: break-word;
+            font-size: 11px;
+        }
+        
+        .checkout-custom-field .field-value.empty-value {
+            color: #8A8A9B;
+            font-style: italic;
+        }
+        
+        /* المجاميع */
+        .summary-totals {
+            border-top: 1px solid rgba(255, 215, 0, 0.1);
+            padding-top: 15px;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            color: #8A8A9B;
+            font-size: 15px;
+        }
+        
+        .summary-row.total {
+            font-size: 20px;
+            font-weight: 700;
+            color: #FFD700;
+            border-top: 2px solid rgba(255, 215, 0, 0.2);
+            padding-top: 15px;
+            margin-top: 5px;
+        }
+        
+        .summary-row .amount {
+            font-weight: 700;
+        }
+        
+        .summary-row .amount.discount {
+            color: #4CAF50;
+        }
+        
+        .coupon-info {
+            margin: 10px 0;
+            padding: 10px 12px;
+            background: rgba(76, 175, 80, 0.1);
+            border-radius: 8px;
+            border-right: 3px solid #4CAF50;
+        }
+        
+        .coupon-info .coupon-applied {
+            color: #4CAF50;
+            font-size: 14px;
+        }
+        
+        .coupon-info .coupon-applied strong {
+            color: #FFD700;
+        }
+        
+        /* زر الإرسال */
+        .submit-order-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #FFD700, #FFED4A);
+            color: #0F0F1A;
+            border: none;
+            border-radius: 12px;
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Cairo', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 15px;
+        }
+        
+        .submit-order-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+        }
+        
+        .submit-order-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .back-to-cart {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #8A8A9B;
+            text-decoration: none;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-to-cart:hover {
+            color: #FFD700;
+        }
+        
+        /* Toast */
+        #toastContainer {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 350px;
+            width: 100%;
+            direction: rtl;
+        }
+        
+        .toast-item {
+            background: #1A1A2E;
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border-right: 4px solid #2196F3;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            font-size: 14px;
+            animation: slideInRight 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: Cairo, sans-serif;
+        }
+        
+        .toast-item.success { border-right-color: #4CAF50; }
+        .toast-item.error { border-right-color: #f44336; }
+        .toast-item.warning { border-right-color: #FF9800; }
+        .toast-item.info { border-right-color: #2196F3; }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        
+        @media (max-width: 992px) {
+            .checkout-grid {
+                grid-template-columns: 1fr;
+            }
+            .order-summary {
+                position: static;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .checkout-header .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            .checkout-steps {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .step-line {
+                width: 20px;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .checkout-form-section {
+                padding: 20px;
+            }
+            .order-summary {
+                padding: 20px;
+            }
+            .file-preview-item {
+                width: 60px;
+                height: 60px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .step {
+                font-size: 12px;
+            }
+            .step .step-number {
+                width: 24px;
+                height: 24px;
+                font-size: 11px;
+            }
+            .step-line {
+                width: 12px;
+            }
+            .submit-order-btn {
+                font-size: 16px;
+                padding: 14px;
+            }
+            .additional-fields-section {
+                padding: 15px;
+            }
+            .file-upload-wrapper {
+                padding: 15px;
+            }
+            .file-preview-item {
+                width: 50px;
+                height: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== الهيدر ===== -->
+<header class="checkout-header">
+    <div class="container">
+        <div class="header-content">
+            <a href="index.html" class="logo">
+                <i class="fas fa-shield-halved"></i>
+                <span>Tithkari</span>
+            </a>
+            
+            <div class="checkout-steps">
+                <div class="step completed">
+                    <span class="step-number"><i class="fas fa-check"></i></span>
+                    السلة
+                </div>
+                <div class="step-line"></div>
+                <div class="step active">
+                    <span class="step-number">2</span>
+                    إتمام الطلب
+                </div>
+                <div class="step-line"></div>
+                <div class="step">
+                    <span class="step-number">3</span>
+                    التأكيد
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- ===== المحتوى الرئيسي ===== -->
+<main class="checkout-main">
+    <div class="container">
+        <div class="checkout-grid">
+            
+            <!-- ===== نموذج الدفع ===== -->
+            <div class="checkout-form-section">
+                <h2><i class="fas fa-user-edit"></i> معلومات الطلب</h2>
+                
+                <form id="checkoutForm" onsubmit="event.preventDefault(); submitOrderFromCheckout();">
+                    
+                    <!-- ===== الحقول الإضافية للطلب ===== -->
+                    <div class="additional-fields-section">
+                        <h3>
+                            <i class="fas fa-pencil-alt"></i> تفاصيل الطلب الإضافية
+                            <small>(اختيارية)</small>
+                        </h3>
+                        
+                        <!-- 1. اختيار المناسبة -->
+                        <div class="form-group">
+                            <label>🎯 نوع المناسبة <span class="optional">(اختياري)</span></label>
+                            <select id="occasionType">
+                                <option value="">-- اختر نوع المناسبة --</option>
+                                <option value="شكر وتقدير">شكر وتقدير</option>
+                                <option value="زواج">زواج</option>
+                                <option value="عقد قران">عقد قران</option>
+                                <option value="تخرج">تخرج</option>
+                                <option value="عيد ميلاد">عيد ميلاد</option>
+                                <option value="هدية">هدية</option>
+                                <option value="عزاء">عزاء</option>
+                                <option value="افتتاح">افتتاح</option>
+                                <option value="تكريم">تكريم</option>
+                                <option value="مناسبة خاصة">مناسبة خاصة</option>
+                                <option value="أخرى">أخرى</option>
+                            </select>
+                        </div>
+                        
+                        <!-- 2. مربع نص المناسبة -->
+                        <div class="form-group">
+                            <label>✏️ اكتب المناسبة <span class="optional">(اختياري)</span></label>
+                            <input type="text" id="occasionText" placeholder="مثال: شكر وتقدير للدكتور أحمد" />
+                        </div>
+                        
+                        <!-- 3. عبارة الإهداء -->
+                        <div class="form-group">
+                            <label>💝 عبارة الإهداء <span class="optional">(اختياري)</span></label>
+                            <textarea id="dedicationText" rows="3" placeholder="اكتب عبارة الإهداء التي تريدها على الدرع..."></textarea>
+                        </div>
+                        
+                        <!-- 4. اسم الشخص -->
+                        <div class="form-group">
+                            <label>👤 اسم الشخص <span class="optional">(اختياري)</span></label>
+                            <input type="text" id="personName" placeholder="أدخل اسم الشخص المراد إهداؤه" />
+                        </div>
+                        
+                        <!-- 5. رفع الصور -->
+                        <div class="form-group">
+                            <label>🖼️ رفع صور (شعار / صورة شخصية) <span class="optional">(اختياري)</span></label>
+                            <div class="file-upload-wrapper" id="fileUploadWrapper">
+                                <span class="upload-icon">📤</span>
+                                <span class="upload-text">
+                                    <strong>اضغط هنا</strong> لرفع الصور<br />
+                                    <small style="color: #6B7280;">jpg, png, svg (الحد الأقصى 5 صور)</small>
+                                </span>
+                                <input type="file" id="imageUpload" accept="image/*" multiple />
+                            </div>
+                            <div class="file-preview-container" id="filePreviewContainer"></div>
+                            <small style="color: #6B7280; font-size: 12px; display: block; margin-top: 5px;">
+                                يمكنك رفع صورة شعار أو صورة شخصية أو أي صورة تريد نقشها على الدرع
+                            </small>
+                        </div>
+                        
+                        <!-- 6. ملاحظات إضافية -->
+                        <div class="form-group">
+                            <label>📝 ملاحظات إضافية <span class="optional">(اختياري)</span></label>
+                            <textarea id="additionalNotes" rows="3" placeholder="أي ملاحظات أو تعليمات إضافية للطلب..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- ===== بيانات العميل الأساسية ===== -->
+                    <div class="form-group">
+                        <label>👤 الاسم الكامل <span class="required">*</span></label>
+                        <input type="text" id="checkoutName" placeholder="أدخل اسمك الكامل" required />
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>📧 البريد الإلكتروني <span class="required">*</span></label>
+                            <input type="email" id="checkoutEmail" placeholder="example@email.com" required />
+                        </div>
+                        <div class="form-group">
+                            <label>📱 رقم الهاتف <span class="required">*</span></label>
+                            <input type="tel" id="checkoutPhone" placeholder="05xxxxxxxx" required />
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>📍 عنوان الشحن <span class="required">*</span></label>
+                        <input type="text" id="checkoutAddress" placeholder="الشارع، الحي، رقم المبنى" required />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>المدينة</label>
+                        <input type="text" id="checkoutCity" placeholder="أدخل اسم المدينة" />
+                    </div>
+                    
+                    <button type="submit" class="submit-order-btn" id="submitOrderBtn">
+                        <i class="fas fa-check"></i> إتمام الطلب
+                    </button>
+                </form>
+                
+                <a href="index.html" class="back-to-cart">
+                    <i class="fas fa-arrow-right"></i> العودة للمتجر
+                </a>
+            </div>
+            
+            <!-- ===== ملخص الطلب ===== -->
+            <div class="order-summary">
+                <h3><i class="fas fa-receipt"></i> ملخص الطلب</h3>
+                
+                <div class="checkout-items" id="checkoutItems">
+                    <p style="text-align:center;color:var(--gray);">جاري تحميل البيانات...</p>
+                </div>
+                
+                <div class="summary-totals">
+                    <div class="coupon-info" id="checkoutCouponInfo"></div>
+                    
+                    <div class="summary-row">
+                        <span>المجموع الفرعي</span>
+                        <span class="amount" id="checkoutSubtotal">0.00 ر.س</span>
+                    </div>
+                    
+                    <div class="summary-row">
+                        <span>الخصم</span>
+                        <span class="amount discount" id="checkoutDiscount">0.00 ر.س</span>
+                    </div>
+                    
+                    <div class="summary-row total">
+                        <span>المجموع الكلي</span>
+                        <span class="amount" id="checkoutTotal">0.00 ر.س</span>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</main>
+
+<!-- ===== Toast Container ===== -->
+<div id="toastContainer"></div>
+
+<!-- ===== Scripts ===== -->
+<script>
+    // ============================================
+    // تهيئة Supabase
+    // ============================================
+    const supabaseUrl = 'https://savtqajghyloevzwrzvt.supabase.co';
+    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhdnRxYWpnaHlsb2V2endyenZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3ODA1OTMsImV4cCI6MjA5ODM1NjU5M30.CBq7eKyr3RR11op_SevMBBcKQNKF7uftpaa-URemEww';
+    const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+    
+    // ============================================
+    // العملات
+    // ============================================
+    const CURRENCIES = {
+        SAR: { code: 'SAR', symbol: 'ر.س', name: 'ريال سعودي', flag: '🇸🇦', rate: 1 },
+        BHD: { code: 'BHD', symbol: 'د.ب', name: 'دينار بحريني', flag: '🇧🇭', rate: 0.1 },
+        QAR: { code: 'QAR', symbol: 'ر.ق', name: 'ريال قطري', flag: '🇶🇦', rate: 0.98 },
+        AED: { code: 'AED', symbol: 'د.إ', name: 'درهم إماراتي', flag: '🇦🇪', rate: 0.98 },
+        KWD: { code: 'KWD', symbol: 'د.ك', name: 'دينار كويتي', flag: '🇰🇼', rate: 0.082 },
+        OMR: { code: 'OMR', symbol: 'ر.ع', name: 'ريال عماني', flag: '🇴🇲', rate: 0.1 },
+        USD: { code: 'USD', symbol: '$', name: 'دولار أمريكي', flag: '🇺🇸', rate: 0.27 },
+        EUR: { code: 'EUR', symbol: '€', name: 'يورو', flag: '🇪🇺', rate: 0.25 }
+    };
+    
+    let currentCurrency = localStorage.getItem('tithkari_currency') || 'SAR';
+    let cart = [];
+    let appliedCoupon = null;
+    let uploadedFiles = [];
+    let uploadedFileUrls = [];
+    
+    const PLACEHOLDER_SMALL = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60"%3E%3Crect width="60" height="60" fill="%231a1a2e"/%3E%3Ctext x="30" y="38" text-anchor="middle" font-size="28"%3E🛡️%3C/text%3E%3C/svg%3E';
+    
+    // ============================================
+    // دوال مساعدة
+    // ============================================
+    function getExchangeRate(fromCurrency, toCurrency) {
+        if (!CURRENCIES[fromCurrency] || !CURRENCIES[toCurrency]) return 1;
+        return CURRENCIES[toCurrency].rate / CURRENCIES[fromCurrency].rate;
+    }
+    
+    function convertCurrency(amount, fromCurrency, toCurrency) {
+        if (fromCurrency === toCurrency) return amount;
+        const rate = getExchangeRate(fromCurrency, toCurrency);
+        return amount * rate;
+    }
+    
+    function formatCurrency(amount, currencyCode = 'SAR') {
+        const currency = CURRENCIES[currencyCode];
+        if (!currency) return `${amount.toFixed(2)}`;
+        return `${amount.toFixed(2)} ${currency.symbol}`;
+    }
+    
+    function displayPrice(price, fromCurrency = 'SAR') {
+        const converted = convertCurrency(price, fromCurrency, currentCurrency);
+        return formatCurrency(converted, currentCurrency);
+    }
+    
+    function calculateDiscount(total) {
+        if (!appliedCoupon) return 0;
+        
+        let discount = 0;
+        
+        if (appliedCoupon.min_order_amount && total < appliedCoupon.min_order_amount) {
+            return 0;
+        }
+        
+        if (appliedCoupon.discount_type === 'percentage') {
+            discount = (total * appliedCoupon.discount_value) / 100;
+            if (appliedCoupon.max_discount) {
+                discount = Math.min(discount, appliedCoupon.max_discount);
+            }
+        } else {
+            discount = appliedCoupon.discount_value;
+        }
+        
+        return Math.min(discount, total);
+    }
+    
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
+        
+        const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+        const toast = document.createElement('div');
+        toast.className = `toast-item ${type}`;
+        toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span><span>${message}</span>`;
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 3500);
+    }
+    
+    // ============================================
+    // رفع الصور إلى Supabase Storage
+    // ============================================
+    async function uploadFilesToStorage(files) {
+        const urls = [];
+        const bucketName = 'order-images';
+        
+        // التأكد من وجود البكت
+        try {
+            const { data: buckets } = await supabase.storage.listBuckets();
+            const bucketExists = buckets.some(b => b.name === bucketName);
+            
+            if (!bucketExists) {
+                await supabase.storage.createBucket(bucketName, {
+                    public: true,
+                    allowedMimeTypes: ['image/png', 'image/jpeg', 'image/svg+xml'],
+                    fileSizeLimit: 5242880 // 5MB
+                });
+            }
+        } catch (e) {
+            console.log('⚠️ Bucket may already exist or error:', e);
+        }
+        
+        for (const file of files) {
+            try {
+                const fileName = `order_${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`;
+                const filePath = `${fileName}`;
+                
+                const { data, error } = await supabase.storage
+                    .from(bucketName)
+                    .upload(filePath, file, {
+                        cacheControl: '3600',
+                        upsert: false
+                    });
+                
+                if (error) throw error;
+                
+                const { data: urlData } = supabase.storage
+                    .from(bucketName)
+                    .getPublicUrl(filePath);
+                
+                urls.push(urlData.publicUrl);
+                
+            } catch (error) {
+                console.error('❌ خطأ في رفع الملف:', error);
+                showToast(`⚠️ حدث خطأ في رفع الملف: ${file.name}`, 'warning');
+            }
+        }
+        
+        return urls;
+    }
+    
+    // ============================================
+    // معالجة رفع الصور (معاينة)
+    // ============================================
+    function handleFileUpload(e) {
+        const files = e.target.files;
+        const maxFiles = 5;
+        const container = document.getElementById('filePreviewContainer');
+        
+        if (uploadedFiles.length + files.length > maxFiles) {
+            showToast(`⚠️ يمكنك رفع ${maxFiles} صور كحد أقصى`, 'warning');
+            e.target.value = '';
+            return;
+        }
+        
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            if (!file.type.startsWith('image/')) {
+                showToast('⚠️ الرجاء رفع ملفات صور فقط', 'warning');
+                continue;
+            }
+            
+            uploadedFiles.push(file);
+            
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                const div = document.createElement('div');
+                div.className = 'file-preview-item';
+                div.innerHTML = `
+                    <img src="${ev.target.result}" alt="${file.name}" />
+                    <div class="file-name">${file.name}</div>
+                    <button class="remove-file" data-index="${uploadedFiles.length - 1}">×</button>
+                `;
+                container.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        e.target.value = '';
+        
+        // إضافة مستمعات لأزرار الحذف
+        document.querySelectorAll('.remove-file').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const index = parseInt(this.dataset.index);
+                removeFile(index);
+            });
+        });
+    }
+    
+    function removeFile(index) {
+        uploadedFiles.splice(index, 1);
+        renderFilePreviews();
+    }
+    
+    function renderFilePreviews() {
+        const container = document.getElementById('filePreviewContainer');
+        container.innerHTML = '';
+        
+        uploadedFiles.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                const div = document.createElement('div');
+                div.className = 'file-preview-item';
+                div.innerHTML = `
+                    <img src="${ev.target.result}" alt="${file.name}" />
+                    <div class="file-name">${file.name}</div>
+                    <button class="remove-file" data-index="${index}">×</button>
+                `;
+                container.appendChild(div);
+                
+                // إضافة مستمع الحدث
+                div.querySelector('.remove-file').addEventListener('click', function() {
+                    removeFile(index);
+                });
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+    
+    // ربط حدث رفع الصور
+    document.getElementById('imageUpload')?.addEventListener('change', handleFileUpload);
+    
+    // ============================================
+    // دالة التصحيح
+    // ============================================
+    function debugCheckoutData() {
+        const saved = localStorage.getItem('tithkari_checkout_cart');
+        console.log('🔍 [DEBUG] Checkout data from localStorage:');
+        if (saved) {
+            const data = JSON.parse(saved);
+            console.log('📋 Data:', data);
+            data.forEach((item, i) => {
+                console.log(`  ${i + 1}. ${item.name}`);
+                console.log(`     customFields:`, item.customFields || []);
+                console.log(`     isCustom: ${item.isCustom || false}`);
+            });
+        } else {
+            console.log('❌ No checkout data found in localStorage');
+            console.log('📌 Available keys:', Object.keys(localStorage));
+        }
+        return saved ? JSON.parse(saved) : null;
+    }
+    
+    // ============================================
+    // تحميل بيانات الدفع
+    // ============================================
+    function loadCheckoutData() {
+        try {
+            const savedCart = localStorage.getItem('tithkari_checkout_cart');
+            const savedCoupon = localStorage.getItem('tithkari_checkout_coupon');
+            
+            console.log('📦 بيانات السلة من localStorage:', savedCart);
+            
+            if (!savedCart) {
+                console.warn('⚠️ لا توجد بيانات سلة في localStorage');
+                showToast('⚠️ لا توجد بيانات للطلب، سيتم تحويلك للصفحة الرئيسية', 'warning');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
+                return;
+            }
+            
+            cart = JSON.parse(savedCart);
+            appliedCoupon = savedCoupon ? JSON.parse(savedCoupon) : null;
+            
+            console.log('✅ تم تحميل السلة:', cart);
+            
+            renderCheckoutSummary();
+            
+        } catch (error) {
+            console.error('❌ خطأ في تحميل بيانات الدفع:', error);
+            showToast('❌ حدث خطأ في تحميل بيانات الطلب', 'error');
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 2000);
+        }
+    }
+    
+    // ============================================
+    // عرض ملخص الطلب
+    // ============================================
+    function renderCheckoutSummary() {
+        const itemsContainer = document.getElementById('checkoutItems');
+        const subtotalEl = document.getElementById('checkoutSubtotal');
+        const discountEl = document.getElementById('checkoutDiscount');
+        const totalEl = document.getElementById('checkoutTotal');
+        const couponInfoEl = document.getElementById('checkoutCouponInfo');
+        
+        if (!itemsContainer) return;
+        
+        console.log('🔄 جاري عرض ملخص الطلب، عدد العناصر:', cart.length);
+        
+        if (!cart || cart.length === 0) {
+            itemsContainer.innerHTML = '<p style="text-align:center;color:#8A8A9B;">السلة فارغة</p>';
+            return;
+        }
+        
+        let itemsHtml = '';
+        
+        cart.forEach((item, index) => {
+            const itemCurrency = item.currency || 'SAR';
+            const itemTotal = item.price * item.quantity;
+            const priceDisplay = displayPrice(itemTotal, itemCurrency);
+            
+            let customFieldsHtml = '';
+            const customFields = item.customFields || [];
+            
+            if (customFields.length > 0) {
+                customFieldsHtml = `
+                    <div class="checkout-custom-fields">
+                        ${customFields.map(f => {
+                            let displayValue = f.value || '—';
+                            let valueClass = '';
+                            
+                            if (f.field_type === 'file') {
+                                displayValue = '📎 ' + (f.value || 'ملف مرفق');
+                            } else if (!f.value || f.value.trim() === '') {
+                                displayValue = '—';
+                                valueClass = 'empty-value';
+                            }
+                            
+                            return `
+                                <div class="checkout-custom-field">
+                                    <span class="field-label">${f.field_name}:</span>
+                                    <span class="field-value ${valueClass}">${displayValue}</span>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            } else {
+                customFieldsHtml = `
+                    <div class="checkout-custom-fields" style="border-color: rgba(255,255,255,0.03);">
+                        <div class="checkout-custom-field">
+                            <span class="field-label" style="color:#8A8A9B;">ملاحظات:</span>
+                            <span class="field-value empty-value">لا توجد تفاصيل إضافية</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            itemsHtml += `
+                <div class="checkout-item">
+                    <img src="${item.image_url || PLACEHOLDER_SMALL}" alt="${item.name}" onerror="this.src='${PLACEHOLDER_SMALL}'" />
+                    <div class="checkout-item-info">
+                        <div class="checkout-item-name">${item.name}</div>
+                        <div class="checkout-item-meta">
+                            <span>الكمية: ${item.quantity}</span>
+                            ${item.isCustom ? '<span class="custom-badge">🎨 مخصص</span>' : ''}
+                        </div>
+                        ${customFieldsHtml}
+                    </div>
+                    <div class="checkout-item-price">${priceDisplay}</div>
+                </div>
+            `;
+        });
+        
+        itemsContainer.innerHTML = itemsHtml;
+        
+        const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const discount = calculateDiscount(subtotal);
+        const total = subtotal - discount;
+        
+        if (subtotalEl) subtotalEl.textContent = displayPrice(subtotal, 'SAR');
+        if (totalEl) totalEl.textContent = displayPrice(total, 'SAR');
+        
+        if (discount > 0) {
+            if (discountEl) {
+                discountEl.textContent = `- ${displayPrice(discount, 'SAR')}`;
+                discountEl.style.color = '#4CAF50';
+            }
+            if (couponInfoEl) {
+                couponInfoEl.innerHTML = `
+                    <span class="coupon-applied">✅ تم تطبيق كود الخصم: <strong>${appliedCoupon?.code || ''}</strong></span>
+                `;
+            }
+        } else {
+            if (discountEl) {
+                discountEl.textContent = '0.00 ر.س';
+                discountEl.style.color = '#8A8A9B';
+            }
+            if (couponInfoEl) {
+                couponInfoEl.innerHTML = '';
+            }
+        }
+        
+        console.log('✅ تم عرض ملخص الطلب');
+    }
+    
+    // ============================================
+    // إرسال الطلب مع جميع البيانات
+    // ============================================
+    async function submitOrderFromCheckout() {
+        const name = document.getElementById('checkoutName')?.value.trim();
+        const email = document.getElementById('checkoutEmail')?.value.trim();
+        const phone = document.getElementById('checkoutPhone')?.value.trim();
+        const address = document.getElementById('checkoutAddress')?.value.trim();
+        const city = document.getElementById('checkoutCity')?.value.trim();
+        
+        // الحقول الإضافية
+        const occasionType = document.getElementById('occasionType')?.value || '';
+        const occasionText = document.getElementById('occasionText')?.value.trim() || '';
+        const dedicationText = document.getElementById('dedicationText')?.value.trim() || '';
+        const personName = document.getElementById('personName')?.value.trim() || '';
+        const additionalNotes = document.getElementById('additionalNotes')?.value.trim() || '';
+        
+        // التحقق من الحقول المطلوبة
+        if (!name) {
+            showToast('⚠️ الرجاء إدخال الاسم', 'warning');
+            document.getElementById('checkoutName')?.focus();
+            return;
+        }
+        
+        if (!email) {
+            showToast('⚠️ الرجاء إدخال البريد الإلكتروني', 'warning');
+            document.getElementById('checkoutEmail')?.focus();
+            return;
+        }
+        
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            showToast('⚠️ الرجاء إدخال بريد إلكتروني صحيح', 'warning');
+            document.getElementById('checkoutEmail')?.focus();
+            return;
+        }
+        
+        if (!phone) {
+            showToast('⚠️ الرجاء إدخال رقم الهاتف', 'warning');
+            document.getElementById('checkoutPhone')?.focus();
+            return;
+        }
+        
+        if (!address) {
+            showToast('⚠️ الرجاء إدخال عنوان الشحن', 'warning');
+            document.getElementById('checkoutAddress')?.focus();
+            return;
+        }
+        
+        // حساب المجموع
+        const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const discount = calculateDiscount(subtotal);
+        const total = subtotal - discount;
+        const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+        
+        const submitBtn = document.getElementById('submitOrderBtn');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري المعالجة...';
+        }
+        
+        try {
+            // 1. رفع الصور إلى Supabase Storage
+            let uploadedImageUrls = [];
+            if (uploadedFiles.length > 0) {
+                uploadedImageUrls = await uploadFilesToStorage(uploadedFiles);
+                console.log('✅ تم رفع الصور:', uploadedImageUrls);
+            }
+            
+            // 2. حفظ الطلب في Supabase مع جميع البيانات
+            const { data, error } = await supabase
+                .from('orders')
+                .insert({
+                    order_number: orderNumber,
+                    customer_name: name,
+                    customer_email: email,
+                    customer_phone: phone,
+                    shipping_address: `${address}${city ? ', ' + city : ''}`,
+                    notes: additionalNotes || '',
+                    items: cart.map(item => ({
+                        id: item.id,
+                        name: item.name,
+                        price: item.price,
+                        quantity: item.quantity,
+                        image_url: item.image_url,
+                        isCustom: item.isCustom || false,
+                        currency: item.currency || 'SAR',
+                        custom_fields: item.customFields || []
+                    })),
+                    total_amount: total,
+                    discount_applied: discount,
+                    coupon_code: appliedCoupon?.code || null,
+                    currency: currentCurrency,
+                    status: 'pending',
+                    payment_status: 'pending',
+                    // ===== الحقول الإضافية =====
+                    occasion_type: occasionType,
+                    occasion_text: occasionText,
+                    dedication_text: dedicationText,
+                    person_name: personName,
+                    uploaded_images: uploadedImageUrls, // روابط الصور المرفوعة
+                    uploaded_files_names: uploadedFiles.map(f => f.name),
+                    created_at: new Date().toISOString()
+                });
+            
+            if (error) throw error;
+            
+            // 3. تحديث عدد استخدامات الكوبون
+            if (appliedCoupon) {
+                await supabase
+                    .from('coupons')
+                    .update({ used_count: appliedCoupon.used_count + 1 })
+                    .eq('id', appliedCoupon.id);
+            }
+            
+            // 4. تفريغ السلة والبيانات المؤقتة
+            cart = [];
+            appliedCoupon = null;
+            uploadedFiles = [];
+            uploadedFileUrls = [];
+            localStorage.setItem('tithkari_cart', JSON.stringify(cart));
+            localStorage.removeItem('tithkari_checkout_cart');
+            localStorage.removeItem('tithkari_checkout_coupon');
+            
+            const totalDisplay = displayPrice(total, 'SAR');
+            showToast(`🎉 تم إتمام الطلب بنجاح! رقم الطلب: ${orderNumber}`, 'success');
+            
+            setTimeout(() => {
+                window.location.href = `thank-you.html?order=${orderNumber}&total=${total}`;
+            }, 1500);
+            
+        } catch (error) {
+            console.error('❌ خطأ في إتمام الطلب:', error);
+            showToast('❌ حدث خطأ في إتمام الطلب: ' + error.message, 'error');
+            
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-check"></i> إتمام الطلب';
+            }
+        }
+    }
+    window.submitOrderFromCheckout = submitOrderFromCheckout;
+    
+    // ============================================
+    // تهيئة الصفحة
+    // ============================================
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 Checkout page loaded');
+        console.log('📌 للتصحيح، اكتب: debugCheckoutData()');
+        window.debugCheckoutData = debugCheckoutData;
+        
+        loadCheckoutData();
+    });
+</script>
+
+</body>
+</html>

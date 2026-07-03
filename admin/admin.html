@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>لوحة التحكم - Tithkari Admin</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script type="importmap">
+    {
+        "imports": {
+            "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.39.0"
+        }
+    }
+    </script>
+    
+    <link rel="stylesheet" href="../style.css" />
+    <link rel="stylesheet" href="../css/admin.css" />
+</head>
+<body>
+    <div class="admin-container">
+        <!-- الشريط الجانبي -->
+        <aside class="admin-sidebar">
+            <div class="admin-logo">
+                <i class="fas fa-shield-halved"></i>
+                <span>Tithkari</span>
+                <small>لوحة التحكم</small>
+            </div>
+            <nav class="admin-nav">
+                <a href="#" class="active" onclick="switchTab('dashboard'); return false;">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>لوحة المعلومات</span>
+                </a>
+                <a href="#" onclick="switchTab('products'); return false;">
+                    <i class="fas fa-box"></i>
+                    <span>المنتجات</span>
+                </a>
+                <a href="#" onclick="switchTab('add-product'); return false;">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>إضافة منتج</span>
+                </a>
+                <a href="#" onclick="switchTab('custom-fields'); return false;" style="background: rgba(139, 92, 246, 0.1); border-right: 2px solid #8B5CF6;">
+                    <i class="fas fa-pencil-alt" style="color: #8B5CF6;"></i>
+                    <span style="color: #8B5CF6;">الحقول المخصصة</span>
+                </a>
+                <a href="#" onclick="switchTab('orders'); return false;">
+                    <i class="fas fa-truck"></i>
+                    <span>الطلبات</span>
+                </a>
+                <a href="#" onclick="switchTab('analytics'); return false;">
+                    <i class="fas fa-chart-line"></i>
+                    <span>التحليلات</span>
+                </a>
+                <a href="#" onclick="switchTab('banners'); return false;">
+                    <i class="fas fa-images"></i>
+                    <span>البنرات</span>
+                </a>
+                <a href="#" onclick="switchTab('menus'); return false;">
+                    <i class="fas fa-bars"></i>
+                    <span>القوائم</span>
+                </a>
+                <a href="#" onclick="switchTab('customers'); return false;">
+                    <i class="fas fa-users"></i>
+                    <span>العملاء</span>
+                </a>
+                <a href="#" onclick="switchTab('design-templates'); return false;" style="background: rgba(139, 92, 246, 0.1); border-right: 2px solid #8B5CF6;">
+                    <i class="fas fa-palette" style="color: #8B5CF6;"></i>
+                    <span style="color: #8B5CF6;">قوالب التصميم</span>
+                </a>
+                <a href="#" onclick="switchTab('code-editor'); return false;" style="background: rgba(16, 185, 129, 0.1); border-right: 2px solid #10b981;">
+                    <i class="fas fa-code" style="color: #10b981;"></i>
+                    <span style="color: #10b981;">محرر الأكواد</span>
+                </a>
+                <a href="#" onclick="switchTab('store-settings'); return false;" style="background: rgba(59, 130, 246, 0.1); border-right: 2px solid #3b82f6;">
+                    <i class="fas fa-store" style="color: #3b82f6;"></i>
+                    <span style="color: #3b82f6;">إعدادات المتجر</span>
+                </a>
+                <a href="#" onclick="switchTab('advanced-settings'); return false;" style="background: rgba(255, 215, 0, 0.05); border-right: 2px solid #FFD700;">
+                    <i class="fas fa-cog" style="color: #FFD700;"></i>
+                    <span style="color: #FFD700;">إعدادات متقدمة</span>
+                </a>
+            </nav>
+            <div class="admin-bottom">
+                <a href="../design-studio.html" class="admin-back" target="_blank" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: white;">
+                    <i class="fas fa-paint-brush"></i> مصمم الدروع
+                </a>
+                <a href="../index.html" class="admin-back" target="_blank">
+                    <i class="fas fa-store"></i> زيارة المتجر
+                </a>
+                <button onclick="logout()" class="admin-logout">
+                    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                </button>
+            </div>
+        </aside>
+
+        <!-- المحتوى الرئيسي -->
+        <main class="admin-main">
+            <header class="admin-header">
+                <h1 id="pageTitle">📊 لوحة المعلومات</h1>
+                <div class="admin-user">
+                    <i class="fas fa-user-circle"></i>
+                    <span id="adminName">مدير المتجر</span>
+                </div>
+            </header>
+
+            <div class="admin-content">
+                <!-- Dashboard -->
+                <div id="dashboard-tab" class="admin-tab active">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <i class="fas fa-box"></i>
+                            <div>
+                                <h3 id="totalProducts">0</h3>
+                                <p>إجمالي المنتجات</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-shopping-cart"></i>
+                            <div>
+                                <h3 id="totalOrders">0</h3>
+                                <p>إجمالي الطلبات</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-clock"></i>
+                            <div>
+                                <h3 id="pendingOrders">0</h3>
+                                <p>طلبات قيد الانتظار</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-check-circle"></i>
+                            <div>
+                                <h3 id="completedOrders">0</h3>
+                                <p>طلبات مكتملة</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- المنتجات -->
+                <div id="products-tab" class="admin-tab">
+                    <div class="admin-actions">
+                        <button class="btn-primary" onclick="switchTab('add-product')">
+                            <i class="fas fa-plus"></i> إضافة منتج جديد
+                        </button>
+                        <button class="btn-primary" onclick="loadProducts()" style="background: #3b82f6; color: white;">
+                            <i class="fas fa-sync"></i> تحديث
+                        </button>
+                    </div>
+                    <div class="admin-table-wrapper">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>الصورة</th>
+                                    <th>الاسم</th>
+                                    <th>التصنيف</th>
+                                    <th>السعر</th>
+                                    <th>المخزون</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productsTableBody">
+                                <tr><td colspan="8" style="text-align:center;">جاري التحميل...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- إضافة منتج -->
+                <div id="add-product-tab" class="admin-tab">
+                    <h2>➕ إضافة منتج جديد</h2>
+                    <form id="addProductForm" class="admin-form">
+                        <div class="form-group">
+                            <label>اسم المنتج *</label>
+                            <input type="text" id="productName" required placeholder="أدخل اسم المنتج" />
+                        </div>
+                        <div class="form-group">
+                            <label>الوصف</label>
+                            <textarea id="productDescription" placeholder="وصف المنتج"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>التصنيف *</label>
+                            <select id="productCategory" required>
+                                <option value="كلاسيكي">كلاسيكي</option>
+                                <option value="خيالي">خيالي</option>
+                                <option value="ملوكي">ملوكي</option>
+                                <option value="حديث">حديث</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>السعر (د.ل) *</label>
+                            <input type="number" id="productPrice" required step="0.01" placeholder="0.00" />
+                        </div>
+                        
+                        <!-- صورة المنتج - ملف أو رابط -->
+                        <div class="form-group" style="border: 1px solid rgba(255,215,0,0.15); border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                            <label style="color: #ffd700;">🖼️ صورة المنتج *</label>
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <div>
+                                    <label style="font-size: 13px; color: var(--gray);">📁 رفع ملف صورة</label>
+                                    <input type="file" id="productImageFile" accept="image/*" style="padding: 8px; background: #0F0F1A; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; width: 100%;" />
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="flex: 1;">
+                                        <label style="font-size: 13px; color: var(--gray);">🔗 أو أدخل رابط الصورة</label>
+                                        <input type="url" id="productImage" placeholder="https://example.com/image.jpg" style="width: 100%;" />
+                                    </div>
+                                </div>
+                                <div id="imagePreview" style="margin-top: 5px; min-height: 60px;">
+                                    <!-- معاينة الصورة تظهر هنا -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- قالب التصميم - ملف أو رابط -->
+                        <div class="form-group" style="border: 1px solid rgba(139, 92, 246, 0.15); border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                            <label style="color: #8B5CF6;">🛡️ صورة قالب التصميم (اختياري)</label>
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <div>
+                                    <label style="font-size: 13px; color: var(--gray);">📁 رفع ملف قالب</label>
+                                    <input type="file" id="templateImageFile" accept="image/*" style="padding: 8px; background: #0F0F1A; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; width: 100%;" />
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="flex: 1;">
+                                        <label style="font-size: 13px; color: var(--gray);">🔗 أو أدخل رابط القالب</label>
+                                        <input type="url" id="templateImageUrl" placeholder="https://example.com/template.png" style="width: 100%;" />
+                                    </div>
+                                </div>
+                                <div id="templatePreview" style="margin-top: 5px; min-height: 60px;">
+                                    <!-- معاينة القالب تظهر هنا -->
+                                </div>
+                            </div>
+                            <small style="color: var(--gray);">صورة القالب التي تظهر في مصمم الدروع</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>المخزون *</label>
+                            <input type="number" id="productStock" required min="0" placeholder="0" />
+                        </div>
+                        <button type="submit" class="btn-primary" id="addProductBtn">
+                            <i class="fas fa-save"></i> إضافة المنتج
+                        </button>
+                    </form>
+                </div>
+
+                <!-- ===== الحقول المخصصة ===== -->
+                <div id="custom-fields-tab" class="admin-tab">
+                    <div class="admin-header-tab">
+                        <h2>📋 إدارة الحقول المخصصة للمنتج</h2>
+                        <button class="btn-primary" onclick="openCustomFieldForm()" style="background: #8B5CF6; color: white;">
+                            <i class="fas fa-plus"></i> إضافة حقل
+                        </button>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label>اختر المنتج:</label>
+                        <select id="fieldProductSelector" onchange="loadProductFields()" style="width:100%;padding:12px;border-radius:8px;background:#0F0F1A;color:#fff;border:1px solid rgba(255,215,0,0.1);font-family:'Cairo',sans-serif;">
+                            <option value="">-- اختر منتج --</option>
+                        </select>
+                    </div>
+                    
+                    <div class="admin-table-wrapper" id="fieldsContainer">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>اسم الحقل</th>
+                                    <th>النوع</th>
+                                    <th>مطلوب</th>
+                                    <th>ترتيب</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fieldsTableBody">
+                                <tr><td colspan="7" style="text-align:center;color:var(--gray);">اختر منتجاً لعرض حقوله المخصصة</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- الطلبات -->
+                <div id="orders-tab" class="admin-tab">
+                    <div class="admin-actions">
+                        <button class="btn-primary" onclick="loadOrders()" style="background: #3b82f6; color: white;">
+                            <i class="fas fa-sync"></i> تحديث
+                        </button>
+                    </div>
+                    <div class="admin-table-wrapper">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>رقم الطلب</th>
+                                    <th>العميل</th>
+                                    <th>المجموع</th>
+                                    <th>الخصم</th>
+                                    <th>الحالة</th>
+                                    <th>التاريخ</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody">
+                                <tr><td colspan="7" style="text-align:center;">جاري التحميل...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- التحليلات -->
+                <div id="analytics-tab" class="admin-tab">
+                    <h2>📊 التحليلات والإحصائيات</h2>
+                    <div class="analytics-grid">
+                        <div class="analytics-card">
+                            <h4>💰 إجمالي المبيعات</h4>
+                            <p id="totalSales">0 د.ل</p>
+                        </div>
+                        <div class="analytics-card">
+                            <h4>📊 متوسط قيمة الطلب</h4>
+                            <p id="avgOrder">0 د.ل</p>
+                        </div>
+                        <div class="analytics-card">
+                            <h4>🏆 أكثر منتج مبيعاً</h4>
+                            <p id="topProduct">-</p>
+                        </div>
+                        <div class="analytics-card">
+                            <h4>👥 عدد العملاء</h4>
+                            <p id="totalCustomers">0</p>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h4>📈 المبيعات اليومية (آخر 7 أيام)</h4>
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- البنرات -->
+                <div id="banners-tab" class="admin-tab">
+                    <div class="admin-header-tab">
+                        <h2>📢 إدارة البنرات</h2>
+                        <button class="btn-primary" onclick="openBannerForm()">
+                            <i class="fas fa-plus"></i> إضافة بنر جديد
+                        </button>
+                    </div>
+                    <div class="admin-table-wrapper">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>العنوان</th>
+                                    <th>الأيقونة</th>
+                                    <th>الحالة</th>
+                                    <th>الترتيب</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bannersTableBody">
+                                <tr><td colspan="6" style="text-align:center;">جاري التحميل...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- القوائم -->
+                <div id="menus-tab" class="admin-tab">
+                    <div class="admin-header-tab">
+                        <h2>📋 إدارة القوائم</h2>
+                        <button class="btn-primary" onclick="openMenuForm()">
+                            <i class="fas fa-plus"></i> إضافة رابط جديد
+                        </button>
+                    </div>
+                    <div class="admin-table-wrapper">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>الرابط</th>
+                                    <th>الاسم</th>
+                                    <th>الأيقونة</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="menusTableBody">
+                                <tr><td colspan="6" style="text-align:center;">جاري التحميل...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- العملاء -->
+                <div id="customers-tab" class="admin-tab">
+                    <div class="admin-header-tab">
+                        <h2>👥 إدارة العملاء</h2>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                            <input type="text" id="customerSearch" placeholder="🔍 بحث عن عميل..." style="padding:8px 12px;border-radius:6px;background:#0F0F1A;color:#F5F0EB;border:1px solid rgba(255,215,0,0.15);font-family:'Cairo',sans-serif;width:200px;" oninput="filterCustomers()" />
+                            <button class="btn-primary" onclick="exportCustomersCSV()" style="background:#10b981;color:white;">
+                                <i class="fas fa-file-export"></i> تصدير CSV
+                            </button>
+                        </div>
+                    </div>
+                    <div class="admin-table-wrapper">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>الاسم</th>
+                                    <th>البريد الإلكتروني</th>
+                                    <th>رقم الهاتف</th>
+                                    <th>عدد الطلبات</th>
+                                    <th>إجمالي المشتريات</th>
+                                    <th>آخر طلب</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customersTableBody">
+                                <tr><td colspan="8" style="text-align:center;">جاري التحميل...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- الإعدادات -->
+                <div id="settings-tab" class="admin-tab">
+                    <h2>⚙️ الإعدادات العامة</h2>
+                    <form id="settingsForm" class="admin-form" onsubmit="saveSettings(event)">
+                        <div id="settingsFields">
+                            <!-- سيتم تعبئتها بواسطة JavaScript -->
+                        </div>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i> حفظ الإعدادات
+                        </button>
+                    </form>
+                </div>
+
+                <!-- قوالب التصميم -->
+                <div id="design-templates-tab" class="admin-tab">
+                    <div class="admin-header-tab">
+                        <h2>🎨 إدارة قوالب التصميم</h2>
+                        <button class="btn-primary" onclick="openTemplateForm()">
+                            <i class="fas fa-plus"></i> إضافة قالب
+                        </button>
+                    </div>
+                    <div class="admin-table-wrapper">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>الصورة</th>
+                                    <th>الاسم</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="templatesTableBody">
+                                <tr><td colspan="5" style="text-align:center;">جاري التحميل...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- محرر الأكواد -->
+                <div id="code-editor-tab" class="admin-tab">
+                    <div class="admin-header-tab">
+                        <h2>💻 محرر الأكواد - حقن وتعديل الكود</h2>
+                        <button class="btn-primary" onclick="saveCodeChanges()" style="background: #10b981; color: white;">
+                            <i class="fas fa-save"></i> حفظ التغييرات
+                        </button>
+                        <button class="btn-secondary" onclick="previewChanges()" style="background: #3b82f6; color: white; border-color: #3b82f6;">
+                            <i class="fas fa-eye"></i> معاينة
+                        </button>
+                        <button class="btn-danger" onclick="resetToOriginal()" style="background: #ef4444; color: white; border-color: #ef4444;">
+                            <i class="fas fa-undo"></i> استعادة
+                        </button>
+                    </div>
+                    
+                    <div class="code-editor-container">
+                        <div class="code-editor-sidebar">
+                            <h3>📂 الملفات المتاحة</h3>
+                            <div id="fileList" class="file-list">
+                                <!-- سيتم تعبئتها بواسطة JavaScript -->
+                            </div>
+                            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,215,0,0.1);">
+                                <p style="color: var(--gray); font-size: 12px;">
+                                    <i class="fas fa-info-circle"></i> اختر ملفاً لعرض مواقع التعديل المتاحة
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="code-editor-main">
+                            <div class="code-editor-header">
+                                <span id="currentFileDisplay">📄 اختر ملفاً للتعديل</span>
+                                <span id="editStatus" style="font-size: 12px; color: var(--gray);"></span>
+                            </div>
+                            
+                            <div class="code-editor-body">
+                                <div class="code-areas">
+                                    <div class="code-area">
+                                        <label>🔍 موقع التعديل (المعرف)</label>
+                                        <input type="text" id="editLocation" placeholder="مثال: renderProducts" />
+                                        <small style="color: var(--gray);">أدخل اسم الدالة أو المعرف المراد التعديل عليه</small>
+                                    </div>
+                                    
+                                    <div class="code-area">
+                                        <label>📝 الكود الجديد</label>
+                                        <textarea id="codeEditor" rows="12" placeholder="// اكتب الكود الجديد هنا..." spellcheck="false"></textarea>
+                                    </div>
+                                    
+                                    <div class="code-area">
+                                        <label>📝 الكود الأصلي (للرجوع)</label>
+                                        <textarea id="originalCodeDisplay" rows="5" readonly style="color: var(--gray);"></textarea>
+                                    </div>
+                                    
+                                    <div class="edit-locations-hint" id="editLocationsHint">
+                                        <h4>📌 مواقع التعديل المتاحة</h4>
+                                        <p style="color: var(--gray); font-size: 13px;">اختر ملفاً من القائمة لعرض مواقع التعديل المتاحة</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- إعدادات المتجر -->
+                <div id="store-settings-tab" class="admin-tab">
+                    <div class="admin-header-tab">
+                        <h2>🏪 إعدادات المتجر</h2>
+                        <button class="btn-primary" onclick="saveAllStoreSettings()" style="background: #10b981; color: white;">
+                            <i class="fas fa-save"></i> حفظ جميع الإعدادات
+                        </button>
+                    </div>
+                    <div id="storeSettingsContainer">
+                        <form class="admin-form" id="storeSettingsForm">
+                            <div class="form-group">
+                                <label>اسم المتجر</label>
+                                <input type="text" id="storeName" value="Tithkari" />
+                            </div>
+                            <div class="form-group">
+                                <label>الوصف</label>
+                                <textarea id="storeDescription" rows="3">متجر متخصص في بيع الدروع الفاخرة</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>العملة</label>
+                                <select id="storeCurrency">
+                                    <option value="د.ل">دينار ليبي (د.ل)</option>
+                                    <option value="$">دولار أمريكي ($)</option>
+                                    <option value="€">يورو (€)</option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- الإعدادات المتقدمة -->
+                <div id="advanced-settings-tab" class="admin-tab">
+                    <div class="admin-header-tab">
+                        <h2>🎨 إعدادات المتجر المتقدمة</h2>
+                        <button class="btn-primary" onclick="saveAdvancedSettings()" style="background: #10b981; color: white;">
+                            <i class="fas fa-save"></i> حفظ جميع الإعدادات
+                        </button>
+                    </div>
+                    <div id="advancedSettingsContainer">
+                        <!-- سيتم تعبئتها بواسطة JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ===== نافذة تعديل المنتج ===== -->
+    <div class="modal-overlay" id="editProductModal">
+        <div class="modal-content" style="max-width:650px;">
+            <button class="modal-close" onclick="closeEditProductForm()"><i class="fas fa-times"></i></button>
+            <div class="modal-body">
+                <h2 id="editProductFormTitle">✏️ تعديل المنتج</h2>
+                <form id="editProductForm" class="admin-form" onsubmit="updateProduct(event)">
+                    <input type="hidden" id="editProductId" />
+                    <div class="form-group">
+                        <label>اسم المنتج *</label>
+                        <input type="text" id="editProductName" required placeholder="أدخل اسم المنتج" />
+                    </div>
+                    <div class="form-group">
+                        <label>الوصف</label>
+                        <textarea id="editProductDescription" placeholder="وصف المنتج"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>التصنيف *</label>
+                        <select id="editProductCategory" required>
+                            <option value="كلاسيكي">كلاسيكي</option>
+                            <option value="خيالي">خيالي</option>
+                            <option value="ملوكي">ملوكي</option>
+                            <option value="حديث">حديث</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>السعر (د.ل) *</label>
+                        <input type="number" id="editProductPrice" required step="0.01" placeholder="0.00" />
+                    </div>
+                    
+                    <!-- صورة المنتج في التعديل -->
+                    <div class="form-group" style="border: 1px solid rgba(255,215,0,0.15); border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                        <label style="color: #ffd700;">🖼️ صورة المنتج</label>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <div>
+                                <label style="font-size: 13px; color: var(--gray);">📁 رفع ملف صورة جديد</label>
+                                <input type="file" id="editProductImageFile" accept="image/*" style="padding: 8px; background: #0F0F1A; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; width: 100%;" />
+                            </div>
+                            <div>
+                                <label style="font-size: 13px; color: var(--gray);">🔗 رابط الصورة الحالي أو الجديد</label>
+                                <input type="url" id="editProductImage" placeholder="https://example.com/image.jpg" style="width: 100%;" />
+                            </div>
+                            <div id="editImagePreview" style="margin-top: 5px; min-height: 60px;">
+                                <!-- معاينة الصورة تظهر هنا -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- قالب التصميم في التعديل -->
+                    <div class="form-group" style="border: 1px solid rgba(139, 92, 246, 0.15); border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                        <label style="color: #8B5CF6;">🛡️ صورة قالب التصميم</label>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <div>
+                                <label style="font-size: 13px; color: var(--gray);">📁 رفع ملف قالب جديد</label>
+                                <input type="file" id="editTemplateImageFile" accept="image/*" style="padding: 8px; background: #0F0F1A; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; width: 100%;" />
+                            </div>
+                            <div>
+                                <label style="font-size: 13px; color: var(--gray);">🔗 رابط القالب الحالي أو الجديد</label>
+                                <input type="url" id="editProductTemplateImage" placeholder="https://example.com/template.png" style="width: 100%;" />
+                            </div>
+                            <div id="editTemplatePreview" style="margin-top: 5px; min-height: 60px;">
+                                <!-- معاينة القالب تظهر هنا -->
+                            </div>
+                        </div>
+                        <small style="color:var(--gray);">صورة القالب التي تظهر في مصمم الدروع</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>المخزون *</label>
+                        <input type="number" id="editProductStock" required min="0" placeholder="0" />
+                    </div>
+                    <div class="form-group">
+                        <label>الحالة</label>
+                        <select id="editProductStatus">
+                            <option value="active">نشط</option>
+                            <option value="inactive">غير نشط</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary" id="editProductBtn">
+                        <i class="fas fa-save"></i> تحديث المنتج
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== نافذة إضافة/تعديل حقل مخصص ===== -->
+    <div class="modal-overlay" id="customFieldModal">
+        <div class="modal-content" style="max-width:550px;">
+            <button class="modal-close" onclick="closeCustomFieldForm()"><i class="fas fa-times"></i></button>
+            <div class="modal-body">
+                <h2 id="customFieldFormTitle">➕ إضافة حقل مخصص</h2>
+                <form id="customFieldForm" class="admin-form" onsubmit="saveCustomField(event)">
+                    <input type="hidden" id="customFieldId" />
+                    <input type="hidden" id="customFieldProductId" />
+                    
+                    <div class="form-group">
+                        <label>اسم الحقل *</label>
+                        <input type="text" id="customFieldName" required placeholder="مثال: اسم على الدرع" />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>نوع الحقل *</label>
+                        <select id="customFieldType" required>
+                            <option value="text">📝 نص قصير</option>
+                            <option value="textarea">📄 نص طويل</option>
+                            <option value="select">📋 قائمة منسدلة</option>
+                            <option value="file">📎 رفع ملف</option>
+                            <option value="color">🎨 اختيار لون</option>
+                            <option value="date">📅 تاريخ</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="fieldOptionsGroup" style="display:none;">
+                        <label>خيارات القائمة (مفصولة بفاصلة)</label>
+                        <input type="text" id="customFieldOptions" placeholder="خيار1, خيار2, خيار3" />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>نص مساعد</label>
+                        <input type="text" id="customFieldHelp" placeholder="مثال: اكتب الاسم الذي تريده على الدرع" />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>مكان الحجز</label>
+                        <input type="text" id="customFieldPlaceholder" placeholder="مثال: أدخل اسمك..." />
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label style="display:flex;align-items:center;gap:8px;">
+                                <input type="checkbox" id="customFieldRequired" checked />
+                                حقل مطلوب
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label style="display:flex;align-items:center;gap:8px;">
+                                <input type="checkbox" id="customFieldActive" checked />
+                                مفعل
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>ترتيب العرض</label>
+                        <input type="number" id="customFieldOrder" value="0" min="0" />
+                    </div>
+                    
+                    <button type="submit" class="btn-primary" style="width:100%;justify-content:center;">
+                        <i class="fas fa-save"></i> حفظ الحقل
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== نافذة تفاصيل العميل ===== -->
+    <div class="modal-overlay" id="customerDetailsModal">
+        <div class="modal-content" style="max-width:700px;">
+            <button class="modal-close" onclick="closeCustomerDetails()"><i class="fas fa-times"></i></button>
+            <div class="modal-body">
+                <h2 id="customerDetailsTitle">👤 تفاصيل العميل</h2>
+                <div id="customerDetailsContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== نافذة إضافة/تعديل بنر ===== -->
+    <div class="modal-overlay" id="bannerModal">
+        <div class="modal-content" style="max-width:600px;">
+            <button class="modal-close" onclick="closeBannerForm()"><i class="fas fa-times"></i></button>
+            <div class="modal-body">
+                <h2 id="bannerFormTitle">➕ إضافة بنر جديد</h2>
+                <form id="bannerForm" class="admin-form" onsubmit="addBanner(event)">
+                    <input type="hidden" id="bannerId" />
+                    <div class="form-group">
+                        <label>العنوان *</label>
+                        <input type="text" id="bannerTitle" required placeholder="عنوان البنر" />
+                    </div>
+                    <div class="form-group">
+                        <label>النص الفرعي</label>
+                        <input type="text" id="bannerSubtitle" placeholder="نص فرعي قصير" />
+                    </div>
+                    <div class="form-group">
+                        <label>الأيقونة</label>
+                        <input type="text" id="bannerIcon" placeholder="⚔️" />
+                    </div>
+                    <div class="form-group">
+                        <label>لون الخلفية</label>
+                        <input type="color" id="bannerBgColor" value="#1A1A2E" />
+                    </div>
+                    <div class="form-group">
+                        <label>رابط الزر</label>
+                        <input type="text" id="bannerLink" placeholder="#products" />
+                    </div>
+                    <div class="form-group">
+                        <label>نص الزر</label>
+                        <input type="text" id="bannerLinkText" placeholder="عرض المزيد" />
+                    </div>
+                    <div class="form-group">
+                        <label>الموقع</label>
+                        <select id="bannerPosition">
+                            <option value="home">الصفحة الرئيسية</option>
+                            <option value="products">المنتجات</option>
+                            <option value="footer">التذييل</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>حالة البنر</label>
+                        <select id="bannerStatus">
+                            <option value="true">نشط</option>
+                            <option value="false">غير نشط</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i> حفظ البنر
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة إضافة/تعديل بنر متطور -->
+    <div class="modal-overlay" id="advancedBannerModal">
+        <div class="modal-content" style="max-width:700px;">
+            <button class="modal-close" onclick="closeAdvancedBannerForm()"><i class="fas fa-times"></i></button>
+            <div class="modal-body">
+                <h2 id="advancedBannerFormTitle">➕ إضافة بنر متطور</h2>
+                <form id="advBannerForm" class="admin-form">
+                    <input type="hidden" id="advBannerId" />
+                    
+                    <div class="form-group">
+                        <label>🏷️ عنوان البنر *</label>
+                        <input type="text" id="advBannerTitle" required placeholder="عنوان البنر" />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>📝 النص الفرعي</label>
+                        <input type="text" id="advBannerSubtitle" placeholder="نص فرعي قصير" />
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>🖼️ نوع البنر</label>
+                            <select id="advBannerType">
+                                <option value="image">صورة فقط</option>
+                                <option value="product">منتج</option>
+                                <option value="category">تصنيف</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>🎨 لون الخلفية</label>
+                            <input type="color" id="advBannerBgColor" value="#1A1A2E" />
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>🖼️ رابط الصورة</label>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                            <input type="file" id="advBannerImageFile" accept="image/*" style="flex:1;" />
+                            <input type="url" id="advBannerImage" placeholder="أو أدخل رابط الصورة" style="flex:2;" />
+                        </div>
+                        <div id="advBannerPreview" style="margin-top:8px;"></div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>🔘 نص الزر</label>
+                            <input type="text" id="advBannerButtonText" placeholder="عرض المزيد" />
+                        </div>
+                        <div class="form-group">
+                            <label>🔗 رابط الزر</label>
+                            <input type="text" id="advBannerButtonUrl" placeholder="#products" />
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>📦 ربط بمنتج</label>
+                            <select id="advBannerProductId">
+                                <option value="">-- اختر منتج --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>📂 ربط بتصنيف</label>
+                            <select id="advBannerCategoryId">
+                                <option value="">-- اختر تصنيف --</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>📐 العرض</label>
+                            <input type="text" id="advBannerWidth" value="100%" placeholder="100% أو 500px" />
+                        </div>
+                        <div class="form-group">
+                            <label>📏 الارتفاع</label>
+                            <input type="text" id="advBannerHeight" value="auto" placeholder="auto أو 300px" />
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>📍 الموقع</label>
+                            <select id="advBannerPosition">
+                                <option value="home">الصفحة الرئيسية</option>
+                                <option value="products">المنتجات</option>
+                                <option value="footer">التذييل</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>⭐ الحالة</label>
+                            <select id="advBannerStatus">
+                                <option value="true">نشط</option>
+                                <option value="false">غير نشط</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary" style="width:100%;justify-content:center;">
+                        <i class="fas fa-save"></i> حفظ البنر
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== نافذة إضافة/تعديل قائمة ===== -->
+    <div class="modal-overlay" id="menuModal">
+        <div class="modal-content" style="max-width:500px;">
+            <button class="modal-close" onclick="closeMenuForm()"><i class="fas fa-times"></i></button>
+            <div class="modal-body">
+                <h2 id="menuFormTitle">➕ إضافة رابط جديد</h2>
+                <form id="menuForm" class="admin-form" onsubmit="addMenu(event)">
+                    <input type="hidden" id="menuId" />
+                    <div class="form-group">
+                        <label>الاسم *</label>
+                        <input type="text" id="menuLabel" required placeholder="الرئيسية" />
+                    </div>
+                    <div class="form-group">
+                        <label>الرابط *</label>
+                        <input type="text" id="menuUrl" required placeholder="# أو /products" />
+                    </div>
+                    <div class="form-group">
+                        <label>الأيقونة</label>
+                        <input type="text" id="menuIcon" placeholder="🏠" />
+                    </div>
+                    <div class="form-group">
+                        <label>الموقع</label>
+                        <select id="menuPosition">
+                            <option value="header">القائمة الرئيسية</option>
+                            <option value="footer">التذييل</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>حالة الرابط</label>
+                        <select id="menuStatus">
+                            <option value="active">نشط</option>
+                            <option value="inactive">غير نشط</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i> حفظ الرابط
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== نافذة إضافة/تعديل قالب تصميم ===== -->
+    <div class="modal-overlay" id="templateModal">
+        <div class="modal-content" style="max-width:500px;">
+            <button class="modal-close" onclick="closeTemplateForm()"><i class="fas fa-times"></i></button>
+            <div class="modal-body">
+                <h2 id="templateFormTitle">➕ إضافة قالب جديد</h2>
+                <form id="templateForm" class="admin-form" onsubmit="addTemplate(event)">
+                    <input type="hidden" id="templateId" />
+                    <div class="form-group">
+                        <label>اسم القالب *</label>
+                        <input type="text" id="templateName" required placeholder="مثال: درع الفارس الذهبي" />
+                    </div>
+                    <div class="form-group">
+                        <label>رابط صورة القالب *</label>
+                        <input type="url" id="templateImage" required placeholder="https://example.com/shield.png" />
+                    </div>
+                    <div class="form-group">
+                        <label>رابط الصورة المرجعية</label>
+                        <input type="url" id="templateRef" placeholder="https://example.com/reference.png" />
+                    </div>
+                    <div class="form-group">
+                        <label>حالة القالب</label>
+                        <select id="templateStatus">
+                            <option value="active">نشط</option>
+                            <option value="inactive">غير نشط</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i> حفظ القالب
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة إضافة/تعديل عنصر تذييل -->
+    <div class="modal-overlay" id="footerItemModal">
+        <div class="modal-content" style="max-width:500px;">
+            <button class="modal-close" onclick="closeFooterItemForm()"><i class="fas fa-times"></i></button>
+            <div class="modal-body">
+                <h2 id="footerItemFormTitle">➕ إضافة عنصر تذييل</h2>
+                <form id="footerItemForm" class="admin-form">
+                    <input type="hidden" id="footerItemId" />
+                    
+                    <div class="form-group">
+                        <label>🏷️ اسم العنصر *</label>
+                        <input type="text" id="footerItemLabel" required placeholder="مثال: من نحن" />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>🎨 الأيقونة</label>
+                        <input type="text" id="footerItemIcon" placeholder="📄 أو fa-..." />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>📝 المحتوى</label>
+                        <textarea id="footerItemContent" rows="3" placeholder="محتوى العنصر..."></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>📂 النوع</label>
+                            <select id="footerItemType">
+                                <option value="text">نص</option>
+                                <option value="link">رابط</option>
+                                <option value="contact">اتصال</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>⭐ الحالة</label>
+                            <select id="footerItemStatus">
+                                <option value="true">نشط</option>
+                                <option value="false">غير نشط</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>🔗 الرابط (للنوع Link)</label>
+                        <input type="text" id="footerItemLink" placeholder="/about" />
+                    </div>
+                    
+                    <button type="submit" class="btn-primary" style="width:100%;justify-content:center;">
+                        <i class="fas fa-save"></i> حفظ العنصر
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة إضافة/تعديل تصنيف -->
+    <div class="modal-overlay" id="categoryModal">
+        <div class="modal-content" style="max-width:500px;">
+            <button class="modal-close" onclick="closeCategoryForm()"><i class="fas fa-times"></i></button>
+            <div class="modal-body">
+                <h2 id="categoryFormTitle">➕ إضافة تصنيف جديد</h2>
+                <form id="categoryForm" class="admin-form">
+                    <input type="hidden" id="categoryId" />
+                    <div class="form-group">
+                        <label>اسم التصنيف *</label>
+                        <input type="text" id="categoryName" required placeholder="مثال: كلاسيكي" />
+                    </div>
+                    <div class="form-group">
+                        <label>المعرف (Slug)</label>
+                        <input type="text" id="categorySlug" placeholder="مثال: classic" />
+                        <small style="color:var(--gray);">سيتم توليده تلقائياً إذا تركته فارغاً</small>
+                    </div>
+                    <div class="form-group">
+                        <label>الوصف</label>
+                        <textarea id="categoryDescription" rows="2" placeholder="وصف التصنيف"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>الأيقونة</label>
+                        <input type="text" id="categoryIcon" placeholder="fa-tag" />
+                        <small style="color:var(--gray);">مثال: fa-helmet-safety</small>
+                    </div>
+                    <div class="form-group">
+                        <label>رابط الصورة</label>
+                        <input type="url" id="categoryImageUrl" placeholder="https://example.com/image.png" />
+                    </div>
+                    <div class="form-group">
+                        <label>ترتيب العرض</label>
+                        <input type="number" id="categoryDisplayOrder" value="0" min="0" />
+                    </div>
+                    <div class="form-group">
+                        <label>الحالة</label>
+                        <select id="categoryStatus">
+                            <option value="true">نشط</option>
+                            <option value="false">غير نشط</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary" style="width:100%;justify-content:center;">
+                        <i class="fas fa-save"></i> حفظ التصنيف
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="../js/admin.js"></script>
+    
+    <!-- تعريف الدوال في النطاق العام -->
+    <script>
+        console.log('✅ Admin HTML loaded - all functions will be defined by admin.js');
+    </script>
+    
+    <!-- إضافة بعض التعديلات لتحسين الأداء والمظهر -->
+    <style>
+        /* تحسينات إضافية للوحة التحكم */
+        .admin-tab {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .admin-tab.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .admin-sidebar {
+            transition: all 0.3s ease;
+        }
+        .admin-nav a {
+            transition: all 0.2s ease;
+            border-radius: 8px;
+            margin: 2px 8px;
+        }
+        .admin-nav a:hover {
+            background: rgba(255,215,0,0.08);
+            transform: translateX(-5px);
+        }
+        .admin-nav a.active {
+            background: rgba(255,215,0,0.15);
+            border-right: 3px solid #ffd700;
+        }
+        .stat-card {
+            transition: all 0.3s ease;
+            cursor: default;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(255,215,0,0.15);
+        }
+        .btn-primary {
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(255,215,0,0.3);
+        }
+        .admin-table th {
+            background: rgba(255,215,0,0.08);
+        }
+        .admin-table tr:hover {
+            background: rgba(255,215,0,0.05);
+        }
+        .modal-content {
+            animation: modalFadeIn 0.3s ease;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.95) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .code-editor-container {
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255,215,0,0.1);
+        }
+        .code-editor-sidebar {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .file-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .file-list::-webkit-scrollbar {
+            width: 5px;
+        }
+        .file-list::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+        }
+        .file-list::-webkit-scrollbar-thumb {
+            background: rgba(255,215,0,0.3);
+            border-radius: 10px;
+        }
+        .file-item {
+            padding: 8px 12px;
+            margin: 4px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text);
+        }
+        .file-item:hover {
+            background: rgba(255,215,0,0.1);
+        }
+        .file-item.active {
+            background: rgba(255,215,0,0.15);
+            border-right: 2px solid #ffd700;
+        }
+        .code-area textarea {
+            background: rgba(0,0,0,0.4);
+            color: #e0e0e0;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            width: 100%;
+            resize: vertical;
+        }
+        .code-area textarea:focus {
+            border-color: #ffd700;
+            outline: none;
+            box-shadow: 0 0 15px rgba(255,215,0,0.1);
+        }
+        .code-area label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--gold);
+            font-weight: 600;
+        }
+        .edit-locations-hint {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+        }
+        .edit-locations-hint h4 {
+            color: var(--gold);
+            margin-bottom: 8px;
+        }
+        .edit-locations-hint ul {
+            list-style: none;
+            padding: 0;
+        }
+        .edit-locations-hint ul li {
+            padding: 4px 0;
+            font-size: 13px;
+            color: var(--gray);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .admin-header-tab {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        /* تنسيقات الحالة */
+        .status-badge {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .status-active {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        .status-inactive {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        /* أزرار الإجراءات */
+        .btn-edit-product {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+            font-family: 'Cairo', sans-serif;
+            margin: 0 3px;
+        }
+        .btn-edit-product:hover {
+            opacity: 0.85;
+            transform: scale(1.05);
+        }
+        .btn-delete-product {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+            font-family: 'Cairo', sans-serif;
+            margin: 0 3px;
+        }
+        .btn-delete-product:hover {
+            opacity: 0.85;
+            transform: scale(1.05);
+        }
+
+        /* تنسيقات العملاء */
+        .customer-search {
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: #0F0F1A;
+            color: #F5F0EB;
+            border: 1px solid rgba(255,215,0,0.15);
+            font-family: 'Cairo', sans-serif;
+            width: 200px;
+            transition: all 0.3s ease;
+        }
+        .customer-search:focus {
+            border-color: #ffd700;
+            outline: none;
+            box-shadow: 0 0 20px rgba(255,215,0,0.05);
+        }
+
+        /* نافذة تفاصيل العميل */
+        #customerDetailsContent {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        #customerDetailsContent .customer-info {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255,215,0,0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(255,215,0,0.1);
+        }
+        #customerDetailsContent .customer-info p {
+            margin: 5px 0;
+            color: #d0d0d0;
+        }
+        #customerDetailsContent .customer-info strong {
+            color: #ffd700;
+        }
+        #customerDetailsContent .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        #customerDetailsContent .orders-table th {
+            background: rgba(255,215,0,0.05);
+            padding: 8px;
+            text-align: right;
+            color: #ffd700;
+            font-weight: 700;
+            border-bottom: 1px solid rgba(255,215,0,0.1);
+        }
+        #customerDetailsContent .orders-table td {
+            padding: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* تنسيقات رفع الملفات */
+        input[type="file"] {
+            color: var(--gray);
+            font-family: 'Cairo', sans-serif;
+        }
+        input[type="file"]::-webkit-file-upload-button {
+            background: rgba(255,215,0,0.15);
+            color: #ffd700;
+            border: 1px solid rgba(255,215,0,0.2);
+            border-radius: 4px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.2s ease;
+        }
+        input[type="file"]::-webkit-file-upload-button:hover {
+            background: rgba(255,215,0,0.25);
+        }
+
+        /* تنسيقات الإعدادات المتقدمة */
+        .settings-section {
+            background: rgba(255,255,255,0.02);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,215,0,0.05);
+        }
+        .settings-section h3 {
+            color: var(--gold);
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .settings-section .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .footer-item-card {
+            transition: all 0.2s ease;
+        }
+        .footer-item-card:hover {
+            background: rgba(255,215,0,0.05) !important;
+            border-color: rgba(255,215,0,0.15) !important;
+        }
+        .banner-item-card {
+            transition: all 0.2s ease;
+        }
+        .banner-item-card:hover {
+            background: rgba(255,215,0,0.05) !important;
+            border-color: rgba(255,215,0,0.15) !important;
+        }
+
+        /* تنسيقات التصنيفات */
+        .category-admin-card {
+            transition: all 0.2s ease;
+        }
+        .category-admin-card:hover {
+            background: rgba(255,215,0,0.05) !important;
+            border-color: rgba(255,215,0,0.15) !important;
+        }
+
+        @media (max-width: 768px) {
+            .admin-sidebar {
+                width: 70px;
+            }
+            .admin-sidebar span {
+                display: none;
+            }
+            .admin-main {
+                margin-right: 70px;
+            }
+            .admin-header-tab {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .code-editor-container {
+                flex-direction: column;
+            }
+            .code-editor-sidebar {
+                width: 100% !important;
+                margin-bottom: 15px;
+            }
+            .customer-search {
+                width: 100% !important;
+            }
+            #editProductModal .modal-content {
+                max-width: 95%;
+                padding: 20px;
+            }
+            #customerDetailsModal .modal-content {
+                max-width: 95%;
+                padding: 20px;
+            }
+            .settings-section .form-row {
+                grid-template-columns: 1fr;
+            }
+            #customFieldModal .modal-content {
+                max-width: 95%;
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #editProductModal .modal-content {
+                padding: 15px;
+            }
+            #editProductModal .admin-form .form-group {
+                margin-bottom: 10px;
+            }
+            #customerDetailsModal .modal-content {
+                padding: 15px;
+            }
+            .settings-section {
+                padding: 15px;
+            }
+            #customFieldModal .modal-content {
+                padding: 15px;
+            }
+            #customFieldModal .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</body>
+</html>

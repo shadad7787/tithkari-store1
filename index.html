@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🛡️ Tithkari - متجر تصميم الدروع الفاخرة</title>
+    <meta name="description" content="متجر متخصص في تصميم وبيع الدروع الفاخرة المصنوعة يدوياً" />
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    
+    <!-- Import Map لـ Supabase -->
+    <script type="importmap">
+    {
+        "imports": {
+            "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.39.0"
+        }
+    }
+    </script>
+    
+    <!-- EmailJS للإشعارات -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    
+    <link rel="stylesheet" href="style.css" />
+    
+    <style>
+        /* ===== زر التخصيص أسفل المنتج ===== */
+        .customize-btn-bottom {
+            display: block;
+            width: 100%;
+            margin-top: 8px;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .customize-btn-bottom:hover {
+            transform: scale(1.02);
+            opacity: 0.9;
+        }
+        
+        /* ===== زر التخصيص في البطاقة ===== */
+        .action-btn.customize-btn {
+            background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+            color: white;
+        }
+        .action-btn.customize-btn:hover {
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+        
+        /* ===== تنسيقات الهيدر ===== */
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 24px;
+            font-weight: 800;
+            color: #ffd700;
+        }
+        .logo i {
+            font-size: 28px;
+        }
+        .logo img {
+            height: 40px;
+            width: auto;
+            display: none;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 15px;
+            margin: 0;
+            padding: 0;
+        }
+        nav ul li a {
+            color: #b0b0b0;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        nav ul li a:hover {
+            color: #ffd700;
+        }
+        nav ul li a.active {
+            color: #ffd700;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        /* ===== محدد العملة ===== */
+        .currency-selector {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255,215,0,0.05);
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,215,0,0.1);
+        }
+        .currency-selector select {
+            background: transparent;
+            color: #b0b0b0;
+            border: none;
+            font-family: 'Cairo', sans-serif;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 2px 4px;
+            outline: none;
+        }
+        .currency-selector select:focus {
+            outline: none;
+        }
+        .currency-selector select option {
+            background: #1a1a2e;
+            color: #fff;
+        }
+        .currency-selector .currency-flag {
+            font-size: 16px;
+        }
+        
+        .cart-btn {
+            background: rgba(255,215,0,0.1);
+            border: 1px solid rgba(255,215,0,0.2);
+            color: #ffd700;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .cart-btn:hover {
+            background: rgba(255,215,0,0.2);
+        }
+        .cart-count {
+            background: #ffd700;
+            color: #1a1a2e;
+            border-radius: 50%;
+            padding: 1px 7px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .login-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #b0b0b0;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+        .login-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        
+        /* ===== زر لوحة التحكم ===== */
+        .admin-btn {
+            background: rgba(139,92,246,0.15);
+            border: 1px solid rgba(139,92,246,0.2);
+            color: #8B5CF6;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+            font-family: 'Cairo', sans-serif;
+        }
+        .admin-btn:hover {
+            background: rgba(139,92,246,0.25);
+            transform: scale(1.02);
+        }
+        .admin-btn i {
+            font-size: 16px;
+        }
+        
+        /* ===== زر تحديث التذييل ===== */
+        .refresh-footer-btn {
+            background: rgba(255,215,0,0.1);
+            border: 1px solid rgba(255,215,0,0.2);
+            color: #ffd700;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .refresh-footer-btn:hover {
+            background: rgba(255,215,0,0.2);
+            transform: scale(1.02);
+        }
+        .refresh-footer-btn i {
+            font-size: 14px;
+        }
+        .refresh-footer-btn .fa-spinner {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* ===== التصنيفات ===== */
+        .categories-section {
+            padding: 20px 0;
+            background: rgba(255,255,255,0.02);
+            border-bottom: 1px solid rgba(255,215,0,0.05);
+        }
+        .categories-container {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding: 10px 0;
+            scrollbar-width: thin;
+            scrollbar-color: #ffd700 transparent;
+            -webkit-overflow-scrolling: touch;
+        }
+        .categories-container::-webkit-scrollbar {
+            height: 4px;
+        }
+        .categories-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .categories-container::-webkit-scrollbar-thumb {
+            background: #ffd700;
+            border-radius: 10px;
+        }
+        .category-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            min-width: 80px;
+            padding: 12px 16px;
+            background: #1a1a2e;
+            border-radius: 12px;
+            border: 1px solid rgba(255,215,0,0.05);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: #fff;
+            flex-shrink: 0;
+        }
+        .category-item:hover {
+            border-color: #ffd700;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255,215,0,0.1);
+        }
+        .category-item img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        .category-item i {
+            font-size: 24px;
+            color: #ffd700;
+        }
+        .category-item span {
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        /* ===== بنرات متطورة ===== */
+        .banner-card.image-banner {
+            padding: 0;
+            overflow: hidden;
+            position: relative;
+            min-height: 200px;
+        }
+        .banner-card.image-banner img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            inset: 0;
+        }
+        .banner-card.image-banner .banner-content {
+            position: relative;
+            z-index: 2;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(0,0,0,0.7), rgba(0,0,0,0.3));
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .banner-card.image-banner .banner-content h3 {
+            font-size: 28px;
+            color: #ffd700;
+            margin-bottom: 8px;
+        }
+        .banner-card.image-banner .banner-content p {
+            font-size: 16px;
+            color: #fff;
+            opacity: 0.9;
+            max-width: 70%;
+        }
+        .banner-card .banner-products {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .banner-card .banner-products .mini-product {
+            background: rgba(255,255,255,0.05);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .banner-card .banner-products .mini-product:hover {
+            border-color: #ffd700;
+        }
+        
+        /* ===== تذييل متطور ===== */
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+        .footer-column h4 {
+            color: #ffd700;
+            font-size: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .footer-column .footer-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 0;
+            color: #8a8a9b;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        .footer-column .footer-item:hover {
+            color: #ffd700;
+        }
+        .footer-column .footer-item i {
+            width: 20px;
+            color: #ffd700;
+            font-size: 14px;
+            margin-top: 2px;
+        }
+        .footer-column .footer-item .item-content {
+            font-size: 13px;
+            flex: 1;
+        }
+        .footer-column .footer-item .item-content strong {
+            display: block;
+            color: #fff;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .footer-column .footer-item .item-content a {
+            color: #8a8a9b;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .footer-column .footer-item .item-content a:hover {
+            color: #ffd700;
+        }
+        
+        /* ===== نافذة إتمام الطلب ===== */
+        #checkoutModal .modal-content {
+            max-width: 550px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        #checkoutModal .form-group {
+            margin-bottom: 14px;
+        }
+        #checkoutModal .form-group label {
+            display: block;
+            color: var(--gray);
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        #checkoutModal .form-group input,
+        #checkoutModal .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            background: var(--dark);
+            color: var(--white);
+            border: 1px solid rgba(255, 215, 0, 0.08);
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        #checkoutModal .form-group input:focus,
+        #checkoutModal .form-group textarea:focus {
+            border-color: var(--gold);
+            outline: none;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.05);
+        }
+        #checkoutModal .form-group textarea {
+            resize: vertical;
+            min-height: 40px;
+        }
+        #checkoutSummary .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        #checkoutSummary .summary-item:last-child {
+            border-bottom: none;
+        }
+        
+        /* ===== الحقول المخصصة في النافذة ===== */
+        .custom-fields-section {
+            margin: 12px 0;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+        }
+        .custom-fields-section h4 {
+            color: var(--gold);
+            font-size: 14px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .custom-field-group {
+            margin-bottom: 10px;
+        }
+        .custom-field-group:last-child {
+            margin-bottom: 0;
+        }
+        .custom-field-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gray);
+            margin-bottom: 3px;
+        }
+        .custom-field-label .required-star {
+            color: #f44336;
+            margin-right: 2px;
+        }
+        .custom-field-label .field-help {
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--gray);
+            margin-right: 4px;
+        }
+        .custom-field-input {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: var(--dark);
+            color: var(--white);
+            border: 1px solid rgba(255, 215, 0, 0.08);
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+        .custom-field-input:focus {
+            border-color: var(--gold);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255,215,0,0.05);
+        }
+        .custom-field-input[type="color"] {
+            height: 36px;
+            padding: 2px;
+            cursor: pointer;
+        }
+        .custom-field-input[type="file"] {
+            padding: 6px;
+            cursor: pointer;
+        }
+        .custom-field-input[type="file"]:hover {
+            border-color: var(--gold);
+        }
+        .custom-field-input.error {
+            border-color: #f44336;
+            box-shadow: 0 0 0 2px rgba(244,67,54,0.15);
+        }
+        .custom-field-input select {
+            appearance: auto;
+        }
+        
+        /* ===== عرض الحقول المخصصة في السلة ===== */
+        .cart-item-custom-fields {
+            margin-top: 4px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px;
+        }
+        .cart-item-custom-fields .custom-field-tag {
+            font-size: 10px;
+            color: var(--gray);
+            background: rgba(255,255,255,0.03);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+        .cart-item-custom-fields .custom-field-tag strong {
+            color: var(--gold);
+            font-weight: 600;
+        }
+        
+        @media (max-width: 768px) {
+            nav ul {
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+            nav ul li a {
+                font-size: 12px;
+            }
+            .logo {
+                font-size: 18px;
+            }
+            .currency-selector select {
+                font-size: 10px;
+                max-width: 70px;
+            }
+            .banner-card.image-banner .banner-content h3 {
+                font-size: 20px;
+            }
+            .banner-card.image-banner .banner-content p {
+                font-size: 14px;
+                max-width: 100%;
+            }
+            .footer-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+            }
+            .category-item {
+                min-width: 60px;
+                padding: 8px 12px;
+            }
+            .category-item img {
+                width: 30px;
+                height: 30px;
+            }
+            .category-item i {
+                font-size: 18px;
+            }
+            .category-item span {
+                font-size: 10px;
+            }
+            .refresh-footer-btn {
+                font-size: 10px;
+                padding: 4px 8px;
+            }
+            .refresh-footer-btn span {
+                display: none;
+            }
+            #checkoutModal .modal-content {
+                max-width: 95%;
+                padding: 20px;
+            }
+            .admin-btn {
+                font-size: 12px;
+                padding: 6px 10px;
+            }
+            .admin-btn span {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+            .banner-card.image-banner .banner-content {
+                padding: 20px;
+                min-height: 150px;
+            }
+            .banner-card.image-banner .banner-content h3 {
+                font-size: 18px;
+            }
+            .banner-card.image-banner .banner-content p {
+                font-size: 13px;
+            }
+            .currency-selector {
+                padding: 2px 6px;
+            }
+            .currency-selector select {
+                font-size: 9px;
+                max-width: 50px;
+            }
+            .refresh-footer-btn {
+                font-size: 9px;
+                padding: 3px 6px;
+            }
+            .refresh-footer-btn span {
+                display: none;
+            }
+            #checkoutModal .modal-content {
+                max-width: 100%;
+                padding: 15px;
+            }
+            #checkoutModal .form-group input,
+            #checkoutModal .form-group textarea {
+                font-size: 13px;
+                padding: 8px 12px;
+            }
+            .admin-btn {
+                font-size: 11px;
+                padding: 4px 8px;
+            }
+            .admin-btn span {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== الهيدر ===== -->
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <i class="fas fa-shield-halved"></i>
+                <img class="store-logo" src="" alt="شعار المتجر" style="display:none;" />
+                <span class="logo-text">Tithkari</span>
+            </div>
+            
+            <nav>
+                <ul id="mainMenu">
+                    <!-- سيتم تعبئتها بواسطة JavaScript من قاعدة البيانات -->
+                    <li><a href="#" class="active">الرئيسية</a></li>
+                    <li><a href="#products">المنتجات</a></li>
+                    <li><a href="design-studio.html">🎨 صمم درعك</a></li>
+                    <li><a href="#reviews">التقييمات</a></li>
+                    <li><a href="#contact">اتصل بنا</a></li>
+                </ul>
+            </nav>
+            
+            <div class="header-actions">
+                <!-- محدد العملة -->
+                <div class="currency-selector">
+                    <span class="currency-flag">🇸🇦</span>
+                    <select id="currencySelector" onchange="changeCurrency(this.value)">
+                        <option value="SAR">ر.س</option>
+                        <option value="BHD">د.ب</option>
+                        <option value="QAR">ر.ق</option>
+                        <option value="AED">د.إ</option>
+                        <option value="KWD">د.ك</option>
+                        <option value="OMR">ر.ع</option>
+                        <option value="USD">$</option>
+                        <option value="EUR">€</option>
+                    </select>
+                </div>
+                
+                <!-- زر لوحة التحكم -->
+                <a href="admin-products.html" class="admin-btn" title="لوحة تحكم المنتجات">
+                    <i class="fas fa-cog"></i>
+                    <span>لوحة التحكم</span>
+                </a>
+                
+                <!-- زر تحديث التذييل -->
+                <button class="refresh-footer-btn" onclick="forceReloadFooter()" title="تحديث التذييل">
+                    <i class="fas fa-sync"></i>
+                    <span>تحديث التذييل</span>
+                </button>
+                
+                <button class="cart-btn" id="cartToggle">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count" id="cartCount">0</span>
+                </button>
+                <button class="login-btn" id="loginBtn" onclick="window.location.href='/login.html'">
+                    <i class="fas fa-user"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== التصنيفات ===== -->
+    <section class="categories-section" id="categoriesSection">
+        <div class="container">
+            <div class="categories-container" id="categoriesContainer">
+                <!-- سيتم تعبئتها بواسطة JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== القسم الرئيسي ===== -->
+    <main>
+        <!-- البانر الرئيسي -->
+        <section class="hero">
+            <div class="container hero-content">
+                <div class="hero-text">
+                    <span class="hero-badge">🛡️ تشكيلة 2026</span>
+                    <h1>صمم درعك المثالي</h1>
+                    <p>اختر التصميم، الألوان، والنقوش التي تعبر عن شخصيتك. دروع فريدة ومصنوعة يدوياً بجودة عالية.</p>
+                    <div class="hero-buttons">
+                        <a href="#products" class="btn-primary">
+                            <i class="fas fa-arrow-down"></i> استعرض المنتجات
+                        </a>
+                        <a href="design-studio.html" class="btn-primary" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+                            <i class="fas fa-paint-brush"></i> صمم درعك بنفسك
+                        </a>
+                        <a href="#designTool" class="btn-secondary">
+                            <i class="fas fa-paint-brush"></i> تصميم سريع
+                        </a>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="stat-item">
+                            <span class="stat-number">500+</span>
+                            <span class="stat-label">درع مصمم</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">98%</span>
+                            <span class="stat-label">رضا العملاء</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">4.9⭐</span>
+                            <span class="stat-label">تقييمات</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <div class="shield-hero">
+                        🛡️
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== بنرات متحركة ===== -->
+        <section class="banner-carousel">
+            <div class="container">
+                <div class="carousel-container">
+                    <div class="carousel-track" id="carouselTrack">
+                        <!-- سيتم تعبئتها بواسطة JavaScript من قاعدة البيانات -->
+                    </div>
+                    <button class="carousel-btn prev" id="carouselPrev"><i class="fas fa-chevron-right"></i></button>
+                    <button class="carousel-btn next" id="carouselNext"><i class="fas fa-chevron-left"></i></button>
+                    <div class="carousel-dots" id="carouselDots"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== شريط البحث والتصفية ===== -->
+        <section class="search-section">
+            <div class="container">
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="🔍 ابحث عن درعك المثالي..." />
+                    <select id="categoryFilter">
+                        <option value="">📂 جميع التصنيفات</option>
+                        <!-- سيتم تعبئتها بواسطة JavaScript -->
+                    </select>
+                    <button onclick="searchProducts()" class="btn-primary">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                
+                <!-- أزرار التصفية السريعة -->
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all">الكل</button>
+                    <button class="filter-btn" data-filter="كلاسيكي">🏛️ كلاسيكي</button>
+                    <button class="filter-btn" data-filter="خيالي">🐉 خيالي</button>
+                    <button class="filter-btn" data-filter="ملوكي">👑 ملوكي</button>
+                    <button class="filter-btn" data-filter="حديث">⚡ حديث</button>
+                    <button class="filter-btn" data-filter="مخصص">🎨 مخصص</button>
+                </div>
+                
+                <!-- خيارات العرض -->
+                <div class="view-options">
+                    <button class="view-btn active" data-view="grid" title="شبكة">
+                        <i class="fas fa-th"></i>
+                    </button>
+                    <button class="view-btn" data-view="list" title="قائمة">
+                        <i class="fas fa-list"></i>
+                    </button>
+                    <button class="view-btn" data-view="compact" title="مضغوط">
+                        <i class="fas fa-th-list"></i>
+                    </button>
+                    <span class="product-count" id="productCount">0 منتج</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== المنتجات ===== -->
+        <section id="products" class="products-section">
+            <div class="container">
+                <h2 class="section-title">🛒 منتجاتنا</h2>
+                <div class="products-grid grid-view" id="productsGrid">
+                    <p style="text-align:center; color: var(--gray); grid-column: 1/-1;">جاري تحميل المنتجات...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== أداة التصميم ===== -->
+        <section id="designTool" class="design-tool">
+            <div class="container">
+                <h2 class="section-title">🎨 صمم درعك بنفسك</h2>
+                <div class="design-container">
+                    <div class="design-canvas">
+                        <div class="shield-preview" id="shieldPreview">
+                            <div class="shield-shape">
+                                <div class="shield-color" id="shieldColor"></div>
+                                <div class="shield-pattern" id="shieldPattern"></div>
+                                <div class="shield-symbol" id="shieldSymbol">⚔️</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="design-controls">
+                        <div class="control-group">
+                            <label>🎨 اللون الأساسي</label>
+                            <input type="color" id="colorPicker" value="#8B0000" />
+                        </div>
+                        <div class="control-group">
+                            <label>📐 النقش</label>
+                            <select id="patternSelect">
+                                <option value="none">بدون نقش</option>
+                                <option value="stripes">خطوط</option>
+                                <option value="dots">نقاط</option>
+                                <option value="checks">مربعات</option>
+                                <option value="diagonal">قطري</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label>⚔️ الرمز</label>
+                            <select id="symbolSelect">
+                                <option value="⚔️">سيف</option>
+                                <option value="🛡️">درع</option>
+                                <option value="🐉">تنين</option>
+                                <option value="👑">تاج</option>
+                                <option value="⭐">نجمة</option>
+                                <option value="🦅">نسر</option>
+                                <option value="🔥">نار</option>
+                            </select>
+                        </div>
+                        <button class="btn-primary" id="addToCartDesign">
+                            <i class="fas fa-cart-plus"></i> أضف للسلة
+                        </button>
+                        <a href="design-studio.html" class="btn-primary" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9); width:100%; text-align:center; justify-content:center; margin-top:8px;">
+                            <i class="fas fa-paint-brush"></i> افتح المصمم المتقدم
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== التقييمات ===== -->
+        <section id="reviews" class="reviews-section">
+            <div class="container">
+                <h2 class="section-title">⭐ تقييمات العملاء</h2>
+                <div class="reviews-grid" id="reviewsGrid">
+                    <p style="text-align:center;color:var(--gray);grid-column:1/-1;">جاري تحميل التقييمات...</p>
+                </div>
+                
+                <div class="review-form-container">
+                    <h3>أضف تقييمك</h3>
+                    <form id="reviewForm">
+                        <div class="form-group">
+                            <label>اسمك *</label>
+                            <input type="text" id="reviewName" required placeholder="أدخل اسمك" />
+                        </div>
+                        <div class="form-group">
+                            <label>تقييمك *</label>
+                            <div class="star-rating">
+                                <input type="radio" name="rating" value="5" id="star5" /><label for="star5">⭐</label>
+                                <input type="radio" name="rating" value="4" id="star4" /><label for="star4">⭐</label>
+                                <input type="radio" name="rating" value="3" id="star3" /><label for="star3">⭐</label>
+                                <input type="radio" name="rating" value="2" id="star2" /><label for="star2">⭐</label>
+                                <input type="radio" name="rating" value="1" id="star1" /><label for="star1">⭐</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>تعليقك</label>
+                            <textarea id="reviewComment" rows="3" placeholder="شاركنا رأيك..."></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-paper-plane"></i> إرسال التقييم
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ===== نافذة تفاصيل المنتج ===== -->
+    <div class="modal-overlay" id="productModal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose"><i class="fas fa-times"></i></button>
+            <div class="modal-body" id="modalBody">
+                <!-- يتم تعبئتها بواسطة JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== سلة التسوق ===== -->
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3><i class="fas fa-shopping-cart"></i> سلة التسوق</h3>
+            <button class="close-cart" id="closeCart"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <p class="empty-cart">🛒 السلة فارغة</p>
+        </div>
+        <div class="cart-footer">
+            <div class="coupon-section">
+                <div class="coupon-input">
+                    <input type="text" id="couponInput" placeholder="🎟️ أدخل كود الخصم" />
+                    <button onclick="applyCoupon()" class="btn-coupon">تطبيق</button>
+                </div>
+                <div id="couponMessage"></div>
+            </div>
+            
+            <div class="cart-total">
+                <span>المجموع:</span>
+                <span id="cartTotal">0.00 ر.س</span>
+            </div>
+            <button class="btn-primary checkout-btn" id="checkoutBtn">
+                <i class="fas fa-credit-card"></i> إتمام الشراء
+            </button>
+        </div>
+    </div>
+    <div class="cart-overlay" id="cartOverlay"></div>
+
+    <!-- ===== الفوتر المتطور ===== -->
+    <footer id="contact">
+        <div class="container footer-content">
+            <div class="footer-grid" id="footerColumns">
+                <!-- سيتم تعبئتها بواسطة JavaScript -->
+                <div class="footer-column">
+                    <h4>📋 عن المتجر</h4>
+                    <p style="color:var(--gray);font-size:13px;">متجر متخصص في تصميم وبيع الدروع الفاخرة</p>
+                </div>
+            </div>
+        </div>
+        <div class="container footer-bottom">
+            <p id="footerCopyright">© 2026 Tithkari. جميع الحقوق محفوظة</p>
+        </div>
+    </footer>
+
+    <!-- ===== نافذة إتمام الطلب ===== -->
+    <div class="modal-overlay" id="checkoutModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeCheckoutModal()"><i class="fas fa-times"></i></button>
+            <div class="modal-body">
+                <h2 style="color: #ffd700; margin-bottom: 5px; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-credit-card"></i> إتمام الطلب
+                </h2>
+                <p style="color: var(--gray); font-size: 14px; margin-bottom: 20px;">أدخل بياناتك لإتمام عملية الشراء</p>
+                
+                <form id="checkoutForm" onsubmit="submitCheckout(event)">
+                    <!-- الاسم -->
+                    <div class="form-group">
+                        <label>👤 الاسم الكامل *</label>
+                        <input type="text" id="checkoutName" required placeholder="أدخل اسمك الكامل" />
+                    </div>
+                    
+                    <!-- البريد الإلكتروني -->
+                    <div class="form-group">
+                        <label>📧 البريد الإلكتروني *</label>
+                        <input type="email" id="checkoutEmail" required placeholder="example@email.com" />
+                    </div>
+                    
+                    <!-- رقم الهاتف -->
+                    <div class="form-group">
+                        <label>📱 رقم الهاتف *</label>
+                        <input type="tel" id="checkoutPhone" required placeholder="05xxxxxxxx" />
+                    </div>
+                    
+                    <!-- عنوان الشحن -->
+                    <div class="form-group">
+                        <label>📍 عنوان الشحن *</label>
+                        <textarea id="checkoutAddress" rows="2" required placeholder="أدخل عنوانك بالتفصيل"></textarea>
+                    </div>
+                    
+                    <!-- ملاحظات إضافية -->
+                    <div class="form-group">
+                        <label>📝 ملاحظات إضافية (اختياري)</label>
+                        <textarea id="checkoutNotes" rows="2" placeholder="أي ملاحظات إضافية للطلب..."></textarea>
+                    </div>
+                    
+                    <!-- ملخص الطلب -->
+                    <div style="background: rgba(0,0,0,0.3); border-radius: 10px; padding: 15px; margin: 15px 0; border: 1px solid rgba(255,215,0,0.05);">
+                        <h4 style="color: var(--gold); margin-bottom: 10px; font-size: 15px;">📋 ملخص الطلب</h4>
+                        <div id="checkoutSummary" style="color: var(--gray); font-size: 13px;">
+                            <!-- يتم تعبئتها بواسطة JavaScript -->
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding-top: 10px; margin-top: 10px; border-top: 1px solid rgba(255,215,0,0.1);">
+                            <span style="color: var(--gray); font-weight: 600;">المجموع النهائي:</span>
+                            <span style="color: var(--gold); font-size: 18px; font-weight: 700;" id="checkoutTotal">0.00 ر.س</span>
+                        </div>
+                    </div>
+                    
+                    <!-- أزرار -->
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button type="submit" class="btn-primary" style="flex: 2; justify-content: center; background: linear-gradient(135deg, #10b981, #059669);">
+                            <i class="fas fa-check-circle"></i> تأكيد الطلب
+                        </button>
+                        <button type="button" class="btn-secondary" onclick="closeCheckoutModal()" style="flex: 1; justify-content: center;">
+                            إلغاء
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>

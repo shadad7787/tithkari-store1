@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الحقول المخصصة - Tithkari</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #8B0000;
+            --gold: #FFD700;
+            --dark: #0F0F1A;
+            --dark-light: #1A1A2E;
+            --gray: #8A8A9B;
+            --white: #FFFFFF;
+            --radius: 16px;
+            --transition: all 0.3s ease;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Cairo', sans-serif; background: var(--dark); color: var(--white); direction: rtl; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 2px solid var(--gold); margin-bottom: 30px; }
+        .header h1 { color: var(--gold); display: flex; align-items: center; gap: 10px; }
+        .header a { color: var(--gray); text-decoration: none; transition: var(--transition); }
+        .header a:hover { color: var(--gold); }
+        
+        .product-selector { margin-bottom: 30px; }
+        .product-selector select { width: 100%; padding: 14px; border-radius: 12px; background: var(--dark-light); color: var(--white); border: 1px solid rgba(255,215,0,0.1); font-family: 'Cairo', sans-serif; font-size: 16px; }
+        .product-selector select:focus { border-color: var(--gold); outline: none; }
+        
+        .fields-list { margin-bottom: 30px; }
+        .field-card { background: var(--dark-light); border-radius: var(--radius); padding: 20px; margin-bottom: 15px; border: 1px solid rgba(255,215,0,0.05); transition: var(--transition); }
+        .field-card:hover { border-color: rgba(255,215,0,0.2); }
+        .field-card .field-header { display: flex; justify-content: space-between; align-items: center; }
+        .field-card .field-name { font-size: 18px; font-weight: 700; color: var(--gold); }
+        .field-card .field-type { font-size: 13px; color: var(--gray); background: rgba(255,255,255,0.05); padding: 2px 12px; border-radius: 12px; }
+        .field-card .field-details { margin-top: 10px; color: var(--gray); font-size: 14px; }
+        .field-card .field-actions { margin-top: 12px; display: flex; gap: 10px; }
+        .field-card .field-actions button { padding: 6px 16px; border: none; border-radius: 6px; cursor: pointer; font-family: 'Cairo', sans-serif; font-weight: 600; transition: var(--transition); }
+        .btn-edit { background: rgba(255,215,0,0.1); color: var(--gold); }
+        .btn-edit:hover { background: var(--gold); color: var(--dark); }
+        .btn-delete { background: rgba(244,67,54,0.1); color: #f44336; }
+        .btn-delete:hover { background: #f44336; color: white; }
+        .btn-toggle { background: rgba(76,175,80,0.1); color: #4CAF50; }
+        .btn-toggle:hover { background: #4CAF50; color: white; }
+        .btn-toggle.inactive { background: rgba(255,152,0,0.1); color: #FF9800; }
+        .btn-toggle.inactive:hover { background: #FF9800; color: white; }
+        
+        .add-field-form { background: var(--dark-light); border-radius: var(--radius); padding: 25px; border: 1px solid rgba(255,215,0,0.05); }
+        .add-field-form h3 { color: var(--gold); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; color: var(--gray); font-weight: 600; font-size: 14px; margin-bottom: 5px; }
+        .form-group label .required { color: #f44336; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border-radius: 8px; background: var(--dark); color: var(--white); border: 1px solid rgba(255,215,0,0.1); font-family: 'Cairo', sans-serif; font-size: 14px; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--gold); outline: none; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .btn-submit { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--gold), #FFED4A); color: var(--dark); border: none; border-radius: 12px; font-size: 18px; font-weight: 700; cursor: pointer; transition: var(--transition); font-family: 'Cairo', sans-serif; }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,215,0,0.3); }
+        
+        .empty-state { text-align: center; padding: 40px; color: var(--gray); }
+        .empty-state i { font-size: 48px; display: block; margin-bottom: 15px; opacity: 0.3; }
+        
+        @media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-pencil-alt"></i> إدارة الحقول المخصصة</h1>
+            <a href="index.html"><i class="fas fa-arrow-right"></i> العودة للمتجر</a>
+        </div>
+        
+        <!-- اختيار المنتج -->
+        <div class="product-selector">
+            <label style="color:var(--gray);font-weight:600;display:block;margin-bottom:8px;">اختر المنتج:</label>
+            <select id="productSelect" onchange="loadFields()">
+                <option value="">-- اختر منتج --</option>
+            </select>
+        </div>
+        
+        <!-- قائمة الحقول -->
+        <div id="fieldsList" class="fields-list"></div>
+        
+        <!-- إضافة حقل جديد -->
+        <div class="add-field-form">
+            <h3><i class="fas fa-plus-circle"></i> إضافة حقل مخصص</h3>
+            <form id="addFieldForm" onsubmit="addField(event)">
+                <div class="form-group">
+                    <label>اسم الحقل <span class="required">*</span></label>
+                    <input type="text" id="fieldName" placeholder="مثال: اسم على الدرع" required />
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>نوع الحقل <span class="required">*</span></label>
+                        <select id="fieldType" required>
+                            <option value="text">نص قصير</option>
+                            <option value="textarea">نص طويل</option>
+                            <option value="select">قائمة منسدلة</option>
+                            <option value="file">رفع ملف</option>
+                            <option value="color">اختيار لون</option>
+                            <option value="date">تاريخ</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>ترتيب العرض</label>
+                        <input type="number" id="displayOrder" value="0" min="0" />
+                    </div>
+                </div>
+                
+                <div class="form-group" id="optionsGroup" style="display:none;">
+                    <label>خيارات القائمة (مفصولة بفاصلة)</label>
+                    <input type="text" id="fieldOptions" placeholder="خيار1, خيار2, خيار3" />
+                </div>
+                
+                <div class="form-group">
+                    <label>نص مساعد</label>
+                    <input type="text" id="helpText" placeholder="مثال: اكتب الاسم الذي تريده على الدرع" />
+                </div>
+                
+                <div class="form-group">
+                    <label>مكان الحجز</label>
+                    <input type="text" id="placeholder" placeholder="مثال: أدخل اسمك..." />
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label style="display:flex;align-items:center;gap:8px;">
+                            <input type="checkbox" id="isRequired" checked />
+                            حقل مطلوب
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label style="display:flex;align-items:center;gap:8px;">
+                            <input type="checkbox" id="isActive" checked />
+                            مفعل
+                        </label>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-submit">➕ إضافة الحقل</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // اتصال Supabase
+        // ============================================
+        const supabaseUrl = 'https://savtqajghyloevzwrzvt.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhdnRxYWpnaHlsb2V2endyenZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3ODA1OTMsImV4cCI6MjA5ODM1NjU5M30.CBq7eKyr3RR11op_SevMBBcKQNKF7uftpaa-URemEww';
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+        
+        let products = [];
+        let currentProductId = '';
+        
+        // ============================================
+        // تحميل المنتجات
+        // ============================================
+        async function loadProducts() {
+            const { data, error } = await supabase.from('products').select('id, name').order('name');
+            if (error) return console.error('خطأ في تحميل المنتجات:', error);
+            products = data || [];
+            
+            const select = document.getElementById('productSelect');
+            select.innerHTML = '<option value="">-- اختر منتج --</option>';
+            products.forEach(p => {
+                select.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+            });
+        }
+        
+        // ============================================
+        // تحميل الحقول
+        // ============================================
+        async function loadFields() {
+            const productId = document.getElementById('productSelect').value;
+            currentProductId = productId;
+            
+            if (!productId) {
+                document.getElementById('fieldsList').innerHTML = '<div class="empty-state"><i class="fas fa-arrow-right"></i> اختر منتجاً لعرض حقوله</div>';
+                return;
+            }
+            
+            const { data, error } = await supabase
+                .from('product_custom_fields')
+                .select('*')
+                .eq('product_id', productId)
+                .order('display_order', { ascending: true });
+            
+            if (error) return console.error('خطأ في تحميل الحقول:', error);
+            
+            const container = document.getElementById('fieldsList');
+            
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-pencil-alt"></i> لا توجد حقول مخصصة لهذا المنتج</div>';
+                return;
+            }
+            
+            container.innerHTML = data.map(field => `
+                <div class="field-card">
+                    <div class="field-header">
+                        <span class="field-name">${field.field_name}</span>
+                        <span class="field-type">${field.field_type}</span>
+                    </div>
+                    <div class="field-details">
+                        ${field.is_required ? '🔴 مطلوب' : '⚪ اختياري'} | 
+                        ${field.is_active ? '🟢 مفعل' : '🔴 غير مفعل'} |
+                        ترتيب: ${field.display_order || 0}
+                        ${field.help_text ? `| ${field.help_text}` : ''}
+                    </div>
+                    <div class="field-actions">
+                        <button class="btn-edit" onclick="editField('${field.id}')"><i class="fas fa-edit"></i> تعديل</button>
+                        <button class="btn-toggle ${field.is_active ? '' : 'inactive'}" onclick="toggleField('${field.id}', ${field.is_active})">
+                            <i class="fas ${field.is_active ? 'fa-toggle-on' : 'fa-toggle-off'}"></i> 
+                            ${field.is_active ? 'إلغاء تفعيل' : 'تفعيل'}
+                        </button>
+                        <button class="btn-delete" onclick="deleteField('${field.id}')"><i class="fas fa-trash"></i> حذف</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // ============================================
+        // إضافة حقل
+        // ============================================
+        async function addField(e) {
+            e.preventDefault();
+            
+            const productId = document.getElementById('productSelect').value;
+            if (!productId) {
+                alert('⚠️ الرجاء اختيار منتج أولاً');
+                return;
+            }
+            
+            const fieldName = document.getElementById('fieldName').value.trim();
+            const fieldType = document.getElementById('fieldType').value;
+            const displayOrder = parseInt(document.getElementById('displayOrder').value) || 0;
+            const helpText = document.getElementById('helpText').value.trim();
+            const placeholder = document.getElementById('placeholder').value.trim();
+            const isRequired = document.getElementById('isRequired').checked;
+            const isActive = document.getElementById('isActive').checked;
+            const options = document.getElementById('fieldOptions').value.trim();
+            
+            if (!fieldName) {
+                alert('⚠️ الرجاء إدخال اسم الحقل');
+                return;
+            }
+            
+            const { data, error } = await supabase
+                .from('product_custom_fields')
+                .insert({
+                    product_id: productId,
+                    field_name: fieldName,
+                    field_type: fieldType,
+                    display_order: displayOrder,
+                    help_text: helpText,
+                    placeholder: placeholder,
+                    is_required: isRequired,
+                    is_active: isActive,
+                    options: options || null
+                })
+                .select();
+            
+            if (error) {
+                console.error('خطأ في إضافة الحقل:', error);
+                alert('❌ حدث خطأ: ' + error.message);
+                return;
+            }
+            
+            alert('✅ تم إضافة الحقل بنجاح');
+            document.getElementById('addFieldForm').reset();
+            document.getElementById('optionsGroup').style.display = 'none';
+            loadFields();
+        }
+        
+        // ============================================
+        // تبديل حالة الحقل
+        // ============================================
+        async function toggleField(fieldId, currentStatus) {
+            const { error } = await supabase
+                .from('product_custom_fields')
+                .update({ is_active: !currentStatus })
+                .eq('id', fieldId);
+            
+            if (error) {
+                console.error('خطأ في تبديل الحالة:', error);
+                alert('❌ حدث خطأ');
+                return;
+            }
+            
+            loadFields();
+        }
+        
+        // ============================================
+        // حذف حقل
+        // ============================================
+        async function deleteField(fieldId) {
+            if (!confirm('⚠️ هل أنت متأكد من حذف هذا الحقل؟')) return;
+            
+            const { error } = await supabase
+                .from('product_custom_fields')
+                .delete()
+                .eq('id', fieldId);
+            
+            if (error) {
+                console.error('خطأ في حذف الحقل:', error);
+                alert('❌ حدث خطأ');
+                return;
+            }
+            
+            alert('✅ تم حذف الحقل');
+            loadFields();
+        }
+        
+        // ============================================
+        // تعديل حقل (توجيه لصفحة التعديل)
+        // ============================================
+        function editField(fieldId) {
+            window.location.href = `custom-field-edit.html?id=${fieldId}`;
+        }
+        
+        // ============================================
+        // إظهار/إخفاء خيارات القائمة
+        // ============================================
+        document.getElementById('fieldType').addEventListener('change', function() {
+            const optionsGroup = document.getElementById('optionsGroup');
+            optionsGroup.style.display = this.value === 'select' ? 'block' : 'none';
+        });
+        
+        // ============================================
+        // تهيئة الصفحة
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProducts();
+        });
+    </script>
+</body>
+</html>

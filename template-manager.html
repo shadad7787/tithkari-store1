@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>مدير القوالب - Tithkari Studio</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --gold: #FFD700;
+            --gold-light: #FFED4A;
+            --dark: #0A0A14;
+            --dark-light: #141425;
+            --dark-card: #1A1A2E;
+            --gray: #8A8A9B;
+            --gray-light: #B0B0C0;
+            --white: #FFFFFF;
+            --radius: 16px;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: var(--dark);
+            color: var(--white);
+            direction: rtl;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* الهيدر */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.1);
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .page-header h1 {
+            color: var(--gold);
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .page-header .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        /* الأزرار */
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: var(--dark);
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: 'Cairo', sans-serif;
+            text-decoration: none;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+        }
+        
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            background: var(--dark-card);
+            color: var(--white);
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: 'Cairo', sans-serif;
+            text-decoration: none;
+        }
+        
+        .btn-secondary:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+        
+        .btn-danger {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            background: #F44336;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: 'Cairo', sans-serif;
+        }
+        
+        .btn-danger:hover {
+            background: #D32F2F;
+            transform: translateY(-3px);
+        }
+        
+        .btn-success {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: 'Cairo', sans-serif;
+        }
+        
+        .btn-success:hover {
+            background: #388E3C;
+            transform: translateY(-3px);
+        }
+        
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        
+        .btn-purple {
+            background: #8B5CF6;
+            color: white;
+        }
+        
+        .btn-purple:hover {
+            background: #7C3AED;
+            transform: translateY(-3px);
+        }
+        
+        /* شبكة القوالب */
+        .templates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        
+        .template-card {
+            background: var(--dark-card);
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 1px solid rgba(255, 215, 0, 0.06);
+            transition: var(--transition);
+        }
+        
+        .template-card:hover {
+            border-color: rgba(255, 215, 0, 0.2);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .template-card .preview {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: var(--dark);
+        }
+        
+        .template-card .info {
+            padding: 20px;
+        }
+        
+        .template-card .info h3 {
+            color: var(--gold);
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        
+        .template-card .info p {
+            color: var(--gray);
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+        
+        .template-card .info .meta {
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+            color: var(--gray);
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .template-card .info .meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .template-card .actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        /* ===== نافذة إضافة/تعديل ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--dark-card);
+            border-radius: var(--radius);
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 30px;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            animation: modalFade 0.3s ease;
+        }
+        
+        @keyframes modalFade {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        .modal-content h2 {
+            color: var(--gold);
+            margin-bottom: 20px;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .modal-close {
+            float: left;
+            background: transparent;
+            border: none;
+            color: var(--gray);
+            font-size: 24px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .modal-close:hover {
+            color: #F44336;
+            transform: rotate(90deg);
+        }
+        
+        .form-group {
+            margin-bottom: 18px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: var(--gray);
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            background: var(--dark);
+            color: var(--white);
+            border: 1px solid rgba(255, 215, 0, 0.06);
+            font-family: 'Cairo', sans-serif;
+            font-size: 15px;
+            transition: var(--transition);
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: var(--gold);
+            outline: none;
+        }
+        
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        /* ===== نافذة تأكيد الحذف ===== */
+        .confirm-box {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .confirm-box i {
+            font-size: 48px;
+            color: #F44336;
+            margin-bottom: 15px;
+        }
+        
+        .confirm-box h3 {
+            color: var(--white);
+            margin-bottom: 10px;
+        }
+        
+        .confirm-box p {
+            color: var(--gray);
+            margin-bottom: 20px;
+        }
+        
+        .confirm-box .actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        /* ===== ريسپونسيف ===== */
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .page-header .actions {
+                justify-content: center;
+            }
+            
+            .templates-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-content {
+                padding: 20px;
+                margin: 10px;
+            }
+        }
+        
+        /* ===== إشعار ===== */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 16px 24px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 700;
+            z-index: 2000;
+            animation: slideUp 0.5s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .toast.success {
+            background: #4CAF50;
+        }
+        
+        .toast.error {
+            background: #F44336;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* ===== فارغ ===== */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray);
+        }
+        
+        .empty-state i {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 15px;
+            opacity: 0.3;
+        }
+        
+        .empty-state h3 {
+            color: var(--white);
+            margin-bottom: 5px;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-badge.active {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .status-badge.inactive {
+            background: #F44336;
+            color: white;
+        }
+
+        /* ===== دالة مساعدة للحصول على صورة افتراضية (SVG) ===== */
+        function getPlaceholderSVG(text = '🛡️', width = 400, height = 200) {
+            return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}' viewBox='0 0 ${width} ${height}'%3E%3Crect width='${width}' height='${height}' fill='%231A1A2E'/%3E%3Ctext x='${width/2}' y='${height/2 + 8}' text-anchor='middle' font-size='${Math.min(width, height) * 0.3}'%3E${encodeURIComponent(text)}%3C/text%3E%3C/svg%3E`;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- ===== الهيدر ===== -->
+        <div class="page-header">
+            <h1>
+                <i class="fas fa-cubes"></i>
+                مدير القوالب - Tithkari Studio
+            </h1>
+            <div class="actions">
+                <button class="btn-primary" onclick="openAddTemplateModal()">
+                    <i class="fas fa-plus"></i> قالب جديد
+                </button>
+                <button class="btn-secondary" onclick="exportTemplates()">
+                    <i class="fas fa-download"></i> تصدير
+                </button>
+                <button class="btn-secondary" onclick="importTemplates()">
+                    <i class="fas fa-upload"></i> استيراد
+                </button>
+                <button class="btn-purple btn-secondary" onclick="goToAdmin()">
+                    <i class="fas fa-arrow-left"></i> لوحة التحكم
+                </button>
+                <button class="btn-secondary" onclick="goToStore()">
+                    <i class="fas fa-store"></i> المتجر
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== شبكة القوالب ===== -->
+        <div id="templatesGrid" class="templates-grid">
+            <!-- سيتم تعبئتها بواسطة JavaScript -->
+        </div>
+    </div>
+
+    <!-- ===== نافذة إضافة/تعديل قالب ===== -->
+    <div class="modal-overlay" id="templateModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeTemplateModal()"><i class="fas fa-times"></i></button>
+            <h2 id="templateModalTitle">➕ إضافة قالب جديد</h2>
+            
+            <form id="templateForm" onsubmit="saveTemplate(event)">
+                <input type="hidden" id="templateId" />
+                
+                <div class="form-group">
+                    <label>🏷️ اسم القالب *</label>
+                    <input type="text" id="templateName" required placeholder="مثال: درع الفارس الذهبي" />
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>🖼️ رابط خلفية الدرع *</label>
+                        <input type="url" id="templateBgUrl" required placeholder="https://example.com/shield.png" />
+                    </div>
+                    <div class="form-group">
+                        <label>📸 رابط الصورة المرجعية</label>
+                        <input type="url" id="templateRefUrl" placeholder="https://example.com/reference.png" />
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>📝 وصف القالب</label>
+                    <textarea id="templateDescription" placeholder="وصف مختصر للقالب..."></textarea>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📂 التصنيف</label>
+                        <select id="templateCategory">
+                            <option value="كلاسيكي">كلاسيكي</option>
+                            <option value="خيالي">خيالي</option>
+                            <option value="ملوكي">ملوكي</option>
+                            <option value="حديث">حديث</option>
+                            <option value="مخصص">مخصص</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>⭐ الحالة</label>
+                        <select id="templateStatus">
+                            <option value="active">نشط</option>
+                            <option value="inactive">غير نشط</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button type="submit" class="btn-success" style="flex:1;">
+                        <i class="fas fa-save"></i> حفظ القالب
+                    </button>
+                    <button type="button" class="btn-secondary" onclick="closeTemplateModal()">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== نافذة تأكيد الحذف ===== -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal-content" style="max-width:450px;">
+            <div class="confirm-box">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>⚠️ تأكيد الحذف</h3>
+                <p>هل أنت متأكد من حذف هذا القالب؟ هذا الإجراء لا يمكن التراجع عنه.</p>
+                <div class="actions">
+                    <button class="btn-danger" onclick="confirmDelete()">
+                        <i class="fas fa-trash"></i> حذف
+                    </button>
+                    <button class="btn-secondary" onclick="closeConfirmModal()">إلغاء</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // 🛠️ دالة مساعدة للحصول على صورة افتراضية
+        // ============================================
+        function getPlaceholder(text = '🛡️', width = 400, height = 200) {
+            return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}' viewBox='0 0 ${width} ${height}'%3E%3Crect width='${width}' height='${height}' fill='%231A1A2E'/%3E%3Ctext x='${width/2}' y='${height/2 + 8}' text-anchor='middle' font-size='${Math.min(width, height) * 0.3}'%3E${encodeURIComponent(text)}%3C/text%3E%3C/svg%3E`;
+        }
+
+        // ============================================
+        // البيانات
+        // ============================================
+        let templates = [];
+        let deleteTargetId = null;
+        const PLACEHOLDER = getPlaceholder('🛡️', 400, 200);
+
+        // ============================================
+        // تحميل البيانات من localStorage
+        // ============================================
+        function loadTemplates() {
+            const saved = localStorage.getItem('tithkari_templates');
+            if (saved) {
+                try {
+                    templates = JSON.parse(saved);
+                } catch (e) {
+                    templates = getDefaultTemplates();
+                }
+            } else {
+                templates = getDefaultTemplates();
+            }
+            renderTemplates();
+        }
+
+        // ============================================
+        // القوالب الافتراضية
+        // ============================================
+        function getDefaultTemplates() {
+            return [
+                {
+                    id: 'template_1',
+                    name: 'درع الفارس الذهبي',
+                    description: 'درع فاخر مطعم بالذهب عيار 24',
+                    bgUrl: 'https://i.ibb.co/vxn3p7C7/Gemini-Generated-Image-g2xtelg2xtelg2xt.png',
+                    refUrl: 'https://i.ibb.co/RTRLKHyx/photo-5852448705733136453-y.jpg',
+                    category: 'كلاسيكي',
+                    status: 'active',
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: 'template_2',
+                    name: 'درع التنين الأسود',
+                    description: 'مستوحى من أساطير التنين',
+                    bgUrl: 'https://i.ibb.co/dwkh437W/Gemini-Generated-Image-bt95o2bt95o2bt95-1.png',
+                    refUrl: 'https://i.ibb.co/5fhzjcr/photo-5852448705733136456-x-1.jpg',
+                    category: 'خيالي',
+                    status: 'active',
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: 'template_3',
+                    name: 'درع الوفاء الفخم',
+                    description: 'تصميم فخم يناسب المناسبات الرسمية',
+                    bgUrl: 'https://i.ibb.co/Y7Xm6f8f/Gemini-Generated-Image-bt95o2bt95o2bt95.png',
+                    refUrl: 'https://i.ibb.co/gL0mGz6N/photo-5852448705733136455-x.jpg',
+                    category: 'ملوكي',
+                    status: 'active',
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: 'template_4',
+                    name: 'درع التكريم الكلاسيكي',
+                    description: 'تصميم كلاسيكي أنيق للتكريم',
+                    bgUrl: 'https://i.ibb.co/v6yX3Wf4/Gemini-Generated-Image-g2xtelg2xtelg2xt-1.png',
+                    refUrl: 'https://i.ibb.co/KzsH8G9k/photo-5852448705733136454-x.jpg',
+                    category: 'كلاسيكي',
+                    status: 'active',
+                    createdAt: new Date().toISOString()
+                }
+            ];
+        }
+
+        // ============================================
+        // حفظ البيانات في localStorage
+        // ============================================
+        function saveTemplates() {
+            localStorage.setItem('tithkari_templates', JSON.stringify(templates));
+        }
+
+        // ============================================
+        // عرض القوالب
+        // ============================================
+        function renderTemplates() {
+            const grid = document.getElementById('templatesGrid');
+            
+            if (templates.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-cube"></i>
+                        <h3>لا توجد قوالب</h3>
+                        <p>ابدأ بإضافة قالب جديد باستخدام الزر أعلاه</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            grid.innerHTML = templates.map(template => `
+                <div class="template-card">
+                    <img src="${template.refUrl || template.bgUrl || PLACEHOLDER}" 
+                         alt="${template.name}" 
+                         class="preview"
+                         onerror="this.src='${PLACEHOLDER}'" />
+                    <div class="info">
+                        <h3>${template.name}</h3>
+                        <p>${template.description || 'لا يوجد وصف'}</p>
+                        <div class="meta">
+                            <span><i class="fas fa-tag"></i> ${template.category || 'غير مصنف'}</span>
+                            <span><i class="fas fa-calendar"></i> ${new Date(template.createdAt).toLocaleDateString('ar-SA')}</span>
+                            <span class="status-badge ${template.status === 'active' ? 'active' : 'inactive'}">
+                                ${template.status === 'active' ? '✅ نشط' : '❌ غير نشط'}
+                            </span>
+                        </div>
+                        <div class="actions">
+                            <button class="btn-secondary btn-sm" onclick="editTemplate('${template.id}')">
+                                <i class="fas fa-edit"></i> تعديل
+                            </button>
+                            <button class="btn-danger btn-sm" onclick="openConfirmModal('${template.id}')">
+                                <i class="fas fa-trash"></i> حذف
+                            </button>
+                            <button class="btn-primary btn-sm" onclick="useTemplate('${template.id}')">
+                                <i class="fas fa-arrow-right"></i> استخدام
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ============================================
+        // فتح نافذة إضافة قالب
+        // ============================================
+        function openAddTemplateModal() {
+            document.getElementById('templateModalTitle').textContent = '➕ إضافة قالب جديد';
+            document.getElementById('templateForm').reset();
+            document.getElementById('templateId').value = '';
+            document.getElementById('templateStatus').value = 'active';
+            document.getElementById('templateModal').classList.add('active');
+        }
+
+        // ============================================
+        // فتح نافذة تعديل قالب
+        // ============================================
+        function editTemplate(id) {
+            const template = templates.find(t => t.id === id);
+            if (!template) return;
+            
+            document.getElementById('templateModalTitle').textContent = '✏️ تعديل القالب';
+            document.getElementById('templateId').value = id;
+            document.getElementById('templateName').value = template.name || '';
+            document.getElementById('templateBgUrl').value = template.bgUrl || '';
+            document.getElementById('templateRefUrl').value = template.refUrl || '';
+            document.getElementById('templateDescription').value = template.description || '';
+            document.getElementById('templateCategory').value = template.category || 'كلاسيكي';
+            document.getElementById('templateStatus').value = template.status || 'active';
+            document.getElementById('templateModal').classList.add('active');
+        }
+
+        // ============================================
+        // إغلاق نافذة القالب
+        // ============================================
+        function closeTemplateModal() {
+            document.getElementById('templateModal').classList.remove('active');
+        }
+
+        // ============================================
+        // حفظ القالب
+        // ============================================
+        function saveTemplate(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('templateId').value;
+            const name = document.getElementById('templateName').value.trim();
+            const bgUrl = document.getElementById('templateBgUrl').value.trim();
+            const refUrl = document.getElementById('templateRefUrl').value.trim();
+            const description = document.getElementById('templateDescription').value.trim();
+            const category = document.getElementById('templateCategory').value;
+            const status = document.getElementById('templateStatus').value;
+            
+            if (!name || !bgUrl) {
+                showToast('⚠️ الرجاء تعبئة جميع الحقول المطلوبة', 'error');
+                return;
+            }
+            
+            if (id) {
+                // تعديل
+                const index = templates.findIndex(t => t.id === id);
+                if (index !== -1) {
+                    templates[index] = {
+                        ...templates[index],
+                        name,
+                        bgUrl,
+                        refUrl: refUrl || bgUrl,
+                        description,
+                        category,
+                        status
+                    };
+                }
+                showToast('✅ تم تحديث القالب بنجاح', 'success');
+            } else {
+                // إضافة
+                const newTemplate = {
+                    id: 'template_' + Date.now(),
+                    name,
+                    bgUrl,
+                    refUrl: refUrl || bgUrl,
+                    description,
+                    category,
+                    status,
+                    createdAt: new Date().toISOString()
+                };
+                templates.push(newTemplate);
+                showToast('✅ تم إضافة القالب بنجاح', 'success');
+            }
+            
+            saveTemplates();
+            renderTemplates();
+            closeTemplateModal();
+        }
+
+        // ============================================
+        // فتح نافذة تأكيد الحذف
+        // ============================================
+        function openConfirmModal(id) {
+            deleteTargetId = id;
+            document.getElementById('confirmModal').classList.add('active');
+        }
+
+        // ============================================
+        // إغلاق نافذة تأكيد الحذف
+        // ============================================
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.remove('active');
+            deleteTargetId = null;
+        }
+
+        // ============================================
+        // تأكيد الحذف
+        // ============================================
+        function confirmDelete() {
+            if (deleteTargetId) {
+                templates = templates.filter(t => t.id !== deleteTargetId);
+                saveTemplates();
+                renderTemplates();
+                showToast('✅ تم حذف القالب', 'success');
+            }
+            closeConfirmModal();
+        }
+
+        // ============================================
+        // استخدام القالب
+        // ============================================
+        function useTemplate(id) {
+            const template = templates.find(t => t.id === id);
+            if (!template) return;
+            
+            localStorage.setItem('tithkari_selected_template', JSON.stringify(template));
+            showToast(`✅ تم اختيار "${template.name}" للتصميم`, 'success');
+            
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1000);
+        }
+
+        // ============================================
+        // تصدير القوالب
+        // ============================================
+        function exportTemplates() {
+            const data = JSON.stringify(templates, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `tithkari_templates_${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('✅ تم تصدير القوالب بنجاح', 'success');
+        }
+
+        // ============================================
+        // استيراد القوالب
+        // ============================================
+        function importTemplates() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    try {
+                        const imported = JSON.parse(event.target.result);
+                        if (Array.isArray(imported)) {
+                            templates = imported;
+                            saveTemplates();
+                            renderTemplates();
+                            showToast(`✅ تم استيراد ${imported.length} قالب`, 'success');
+                        } else {
+                            showToast('❌ ملف غير صالح', 'error');
+                        }
+                    } catch (err) {
+                        showToast('❌ خطأ في قراءة الملف', 'error');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        // ============================================
+        // الانتقال إلى لوحة التحكم
+        // ============================================
+        function goToAdmin() {
+            window.location.href = 'admin.html';
+        }
+
+        // ============================================
+        // الانتقال إلى المتجر
+        // ============================================
+        function goToStore() {
+            window.location.href = 'index.html';
+        }
+
+        // ============================================
+        // إشعار (Toast)
+        // ============================================
+        function showToast(message, type = 'success') {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+            
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(30px)';
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
+        }
+
+        // ============================================
+        // تهيئة الصفحة
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTemplates();
+            
+            // إغلاق النوافذ بالنقر خارجها
+            document.getElementById('templateModal').addEventListener('click', function(e) {
+                if (e.target === this) closeTemplateModal();
+            });
+            
+            document.getElementById('confirmModal').addEventListener('click', function(e) {
+                if (e.target === this) closeConfirmModal();
+            });
+        });
+    </script>
+
+</body>
+</html>
