@@ -115,6 +115,11 @@
                     <i class="fas fa-envelope" style="color: #3b82f6;"></i>
                     <span style="color: #3b82f6;">إعدادات البريد</span>
                 </a>
+                <!-- ===== ✅ إضافة قسم إدارة الأدوات ===== -->
+                <a href="#" onclick="switchTab('tools'); return false;" style="background: rgba(139, 92, 246, 0.1); border-right: 2px solid #8B5CF6;">
+                    <i class="fas fa-plug" style="color: #8B5CF6;"></i>
+                    <span style="color: #8B5CF6;">إدارة الأدوات</span>
+                </a>
             </nav>
             <div class="admin-bottom">
                 <a href="../design-studio.html" class="admin-back" target="_blank" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: white;">
@@ -589,7 +594,7 @@
                     </div>
                 </div>
 
-                <!-- ===== إدارة التذييل (جديد) ===== -->
+                <!-- ===== إدارة التذييل ===== -->
                 <div id="footer-tab" class="admin-tab">
                     <div class="admin-header-tab">
                         <h2>🦶 إدارة التذييل</h2>
@@ -620,7 +625,7 @@
                     </div>
                 </div>
 
-                <!-- ===== إدارة التصنيفات (جديد) ===== -->
+                <!-- ===== إدارة التصنيفات ===== -->
                 <div id="categories-tab" class="admin-tab">
                     <div class="admin-header-tab">
                         <h2>🏷️ إدارة التصنيفات</h2>
@@ -652,7 +657,7 @@
                     </div>
                 </div>
 
-                <!-- ===== إدارة الكوبونات (جديد) ===== -->
+                <!-- ===== إدارة الكوبونات ===== -->
                 <div id="coupons-tab" class="admin-tab">
                     <div class="admin-header-tab">
                         <h2>🎫 إدارة الكوبونات</h2>
@@ -685,7 +690,7 @@
                     </div>
                 </div>
 
-                <!-- ===== إدارة التقييمات (جديد) ===== -->
+                <!-- ===== إدارة التقييمات ===== -->
                 <div id="reviews-tab" class="admin-tab">
                     <div class="admin-header-tab">
                         <h2>⭐ إدارة التقييمات</h2>
@@ -714,7 +719,7 @@
                     </div>
                 </div>
 
-                <!-- ===== إعدادات الدفع (جديد) ===== -->
+                <!-- ===== إعدادات الدفع ===== -->
                 <div id="payment-settings-tab" class="admin-tab">
                     <div class="admin-header-tab">
                         <h2>💳 إعدادات الدفع</h2>
@@ -804,7 +809,7 @@
                     </div>
                 </div>
 
-                <!-- ===== إعدادات البريد (جديد) ===== -->
+                <!-- ===== إعدادات البريد ===== -->
                 <div id="email-settings-tab" class="admin-tab">
                     <div class="admin-header-tab">
                         <h2>📧 إعدادات البريد الإلكتروني</h2>
@@ -869,6 +874,52 @@
                                 </div>
                             </div>
                         </form>
+                    </div>
+                </div>
+
+                <!-- ===== ✅ إضافة قسم إدارة الأدوات ===== -->
+                <div id="tools-tab" class="admin-tab">
+                    <div class="admin-header-tab">
+                        <h2>🔌 إدارة الأدوات والتطبيقات</h2>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                            <button class="btn-primary" onclick="window.location.href='tools-manager.html'" style="background: #8B5CF6; color: white;">
+                                <i class="fas fa-plug"></i> فتح إدارة الأدوات
+                            </button>
+                            <button class="btn-primary" onclick="window.open('../tools-manager.html', '_blank')" style="background: #10b981; color: white;">
+                                <i class="fas fa-external-link-alt"></i> فتح في نافذة جديدة
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #1A1A2E; border-radius: 16px; padding: 30px; border: 1px solid rgba(255, 215, 0, 0.05); text-align: center;">
+                        <i class="fas fa-plug" style="font-size: 64px; color: #8B5CF6; opacity: 0.5; display: block; margin-bottom: 20px;"></i>
+                        <h3 style="color: #FFFFFF; margin-bottom: 10px;">إدارة الأدوات والتطبيقات</h3>
+                        <p style="color: #8A8A9B; max-width: 500px; margin: 0 auto 20px;">
+                            أضف وأدر جميع أدوات التحليل والتسويق والتسجيل مثل Google Analytics، 
+                            Facebook Pixel، Hotjar، Stripe، وغيرها من مكان واحد.
+                        </p>
+                        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                            <span class="status-badge status-active" style="padding: 6px 16px;">
+                                <i class="fas fa-google"></i> Google Analytics
+                            </span>
+                            <span class="status-badge status-active" style="padding: 6px 16px;">
+                                <i class="fab fa-facebook"></i> Facebook Pixel
+                            </span>
+                            <span class="status-badge status-active" style="padding: 6px 16px;">
+                                <i class="fas fa-chart-line"></i> Clarity
+                            </span>
+                            <span class="status-badge status-pending" style="padding: 6px 16px;">
+                                <i class="fas fa-fire"></i> Hotjar
+                            </span>
+                            <span class="status-badge status-inactive" style="padding: 6px 16px;">
+                                <i class="fab fa-tiktok"></i> TikTok Pixel
+                            </span>
+                        </div>
+                        <div style="margin-top: 20px;">
+                            <a href="tools-manager.html" class="btn-primary" style="display: inline-flex; align-items: center; gap: 10px; text-decoration: none;">
+                                <i class="fas fa-arrow-left"></i> الذهاب إلى إدارة الأدوات
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1280,7 +1331,7 @@
         </div>
     </div>
 
-    <!-- ===== نافذة إضافة/تعديل عنصر تذييل (جديد) ===== -->
+    <!-- ===== نافذة إضافة/تعديل عنصر تذييل ===== -->
     <div class="modal-overlay" id="footerItemModal">
         <div class="modal-content" style="max-width:500px;">
             <button class="modal-close" onclick="closeFooterItemForm()"><i class="fas fa-times"></i></button>
@@ -1335,7 +1386,7 @@
         </div>
     </div>
 
-    <!-- ===== نافذة إضافة/تعديل تصنيف (جديد) ===== -->
+    <!-- ===== نافذة إضافة/تعديل تصنيف ===== -->
     <div class="modal-overlay" id="categoryModal">
         <div class="modal-content" style="max-width:500px;">
             <button class="modal-close" onclick="closeCategoryForm()"><i class="fas fa-times"></i></button>
@@ -1384,7 +1435,7 @@
         </div>
     </div>
 
-    <!-- ===== نافذة إضافة/تعديل كوبون (جديد) ===== -->
+    <!-- ===== نافذة إضافة/تعديل كوبون ===== -->
     <div class="modal-overlay" id="couponModal">
         <div class="modal-content" style="max-width:500px;">
             <button class="modal-close" onclick="closeCouponForm()"><i class="fas fa-times"></i></button>
@@ -1450,7 +1501,7 @@
         </div>
     </div>
 
-    <!-- ===== نافذة تعديل تقييم (جديد) ===== -->
+    <!-- ===== نافذة تعديل تقييم ===== -->
     <div class="modal-overlay" id="reviewModal">
         <div class="modal-content" style="max-width:500px;">
             <button class="modal-close" onclick="closeReviewForm()"><i class="fas fa-times"></i></button>
