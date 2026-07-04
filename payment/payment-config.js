@@ -7,7 +7,7 @@ export const PAYMENT_CONFIG = {
     stripe: {
         enabled: true,
         publicKey: 'pk_test_XXXXXXXXXXXXXXXXXXXXXXXX',
-        secretKey: 'sk_test_XXXXXXXXXXXXXXXXXXXXXXXX',
+        secretKey: '',
         currency: 'usd',
         successUrl: 'https://shadad7787.github.io/tithkari-store1/thank-you.html',
         cancelUrl: 'https://shadad7787.github.io/tithkari-store1/checkout.html'
