@@ -50,6 +50,7 @@ let siteSettings = {};
 let categories = [];
 let footerItems = [];
 let currentCurrency = 'SAR';
+let selectedPaymentMethod = 'cod';
 let storeSettings = {
     storeInfo: { name: 'Tithkari', description: '', currency: 'SAR' },
     branding: { logo: '', primary_color: '#FFD700', secondary_color: '#8B0000', bg_color: '#0F0F1A', text_color: '#FFFFFF', font_family: 'Cairo', font_size: 16 },
@@ -105,7 +106,6 @@ function updateCurrencyDisplay() {
     document.querySelectorAll('.price-currency').forEach(el => {
         el.textContent = currencySymbol;
     });
-    // تحديث المحدد
     const selector = document.getElementById('currencySelector');
     if (selector) {
         selector.value = currentCurrency;
@@ -128,28 +128,22 @@ async function loadStoreSettings() {
             return;
         }
         
-        // تحديث الإعدادات المحلية
         data.forEach(item => {
-            if (item.key === 'storeInfo' || item.key === 'branding' || item.key === 'display' || item.key === 'currencies') {
+            if (item.key === 'storeInfo' || item.key === 'branding' || item.key === 'display' || item.key === 'currencies' || item.key === 'payment_settings') {
                 storeSettings[item.key] = item.value;
             }
         });
         
         console.log('✅ تم تحميل إعدادات المتجر:', storeSettings);
         
-        // تحديث العملة الحالية
         currentCurrency = storeSettings.currencies?.default || 'SAR';
         
-        // استعادة العملة من localStorage
         const savedCurrency = localStorage.getItem('tithkari_currency');
         if (savedCurrency && CURRENCIES[savedCurrency]) {
             currentCurrency = savedCurrency;
         }
         
-        // تطبيق الإعدادات على الموقع
         applyStoreSettingsToStore();
-        
-        // تحديث محدد العملة
         updateCurrencyDisplay();
         
         return storeSettings;
@@ -170,11 +164,9 @@ function applyStoreSettingsToStore() {
     
     console.log('🎨 جاري تطبيق إعدادات المتجر على المتجر...', branding);
     
-    // ===== 1. الألوان =====
     if (branding.primary_color) {
         document.documentElement.style.setProperty('--gold', branding.primary_color);
         document.documentElement.style.setProperty('--accent-color', branding.primary_color);
-        // تحديث لون شريط التمرير
         document.querySelector('meta[name="theme-color"]')?.setAttribute('content', branding.primary_color);
     }
     if (branding.secondary_color) {
@@ -189,11 +181,9 @@ function applyStoreSettingsToStore() {
         document.documentElement.style.setProperty('--text-color', branding.text_color);
     }
     
-    // ===== 2. الخط =====
     if (branding.font_family) {
         document.documentElement.style.setProperty('--font-family', branding.font_family);
         document.body.style.fontFamily = `${branding.font_family}, sans-serif`;
-        // تحديث جميع العناصر التي تستخدم الخط
         document.querySelectorAll('[style*="font-family"]').forEach(el => {
             el.style.fontFamily = `${branding.font_family}, sans-serif`;
         });
@@ -202,7 +192,6 @@ function applyStoreSettingsToStore() {
         document.documentElement.style.fontSize = `${branding.font_size}px`;
     }
     
-    // ===== 3. الشعار =====
     if (branding.logo && branding.logo.startsWith('http')) {
         const logoImg = document.querySelector('.logo img');
         if (logoImg) {
@@ -220,7 +209,6 @@ function applyStoreSettingsToStore() {
             logoIcon.style.display = 'none';
         }
     } else {
-        // إظهار النص إذا لم يوجد شعار
         const logoText = document.querySelector('.logo .logo-text');
         if (logoText) {
             logoText.style.display = 'inline';
@@ -235,15 +223,12 @@ function applyStoreSettingsToStore() {
         }
     }
     
-    // ===== 4. اسم المتجر =====
     if (storeInfo.name) {
         document.title = `🛡️ ${storeInfo.name} - متجر تصميم الدروع`;
         const logoText = document.querySelector('.logo .logo-text');
         if (logoText) logoText.textContent = storeInfo.name;
-        // تحديث اسم المتجر في التذييل
         const footerLogo = document.querySelector('.footer-info h3');
         if (footerLogo) footerLogo.textContent = storeInfo.name;
-        // تحديث اسم المتجر في الهيدر
         const headerLogo = document.querySelector('.logo .logo-text');
         if (headerLogo) headerLogo.textContent = storeInfo.name;
     }
@@ -251,42 +236,30 @@ function applyStoreSettingsToStore() {
     if (storeInfo.description) {
         const footerDesc = document.querySelector('.footer-info p');
         if (footerDesc) footerDesc.textContent = storeInfo.description;
-        // تحديث meta description
         document.querySelector('meta[name="description"]')?.setAttribute('content', storeInfo.description);
     }
     
-    // ===== 5. طريقة العرض =====
     if (display.default_view) {
         const grid = document.getElementById('productsGrid');
         if (grid) {
             grid.className = `products-grid ${display.default_view}-view`;
         }
-        // تحديث أزرار العرض
         document.querySelectorAll('.view-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.view === display.default_view);
         });
     }
     
-    // ===== 6. عرض التصنيفات =====
     const categoriesSection = document.getElementById('categoriesSection');
     if (categoriesSection) {
         categoriesSection.style.display = display.show_categories !== false ? 'block' : 'none';
     }
     
-    // ===== 7. تحديث العملة =====
     updateCurrencyDisplay();
     
-    // ===== 8. تحديث عدد المنتجات في الصفحة =====
     if (display.products_per_page) {
-        const grid = document.getElementById('productsGrid');
-        if (grid) {
-            // يمكن استخدام هذا لتحديد عدد المنتجات المعروضة
-            console.log(`📦 عدد المنتجات في الصفحة: ${display.products_per_page}`);
-        }
+        console.log(`📦 عدد المنتجات في الصفحة: ${display.products_per_page}`);
     }
     
-    // ===== 9. تطبيق ألوان إضافية =====
-    // تحديث لون الحدود الذهبية
     document.querySelectorAll('[style*="border-color"]').forEach(el => {
         if (el.style.borderColor && el.style.borderColor.includes('gold')) {
             el.style.borderColor = branding.primary_color || '#FFD700';
@@ -374,7 +347,7 @@ async function loadBannersFromDB() {
 }
 
 // ============================================
-// ===== البنرات المتحركة (Carousel) - نسخة معدلة =====
+// ===== البنرات المتحركة (Carousel) =====
 // ============================================
 async function initCarousel() {
     const banners = await loadBannersFromDB();
@@ -386,7 +359,6 @@ async function initCarousel() {
         return;
     }
     
-    // ✅ التحقق من وجود بنرات
     if (!banners || banners.length === 0) {
         track.innerHTML = `
             <div class="carousel-slide">
@@ -402,7 +374,6 @@ async function initCarousel() {
         return;
     }
     
-    // ✅ التأكد من أن banners مصفوفة
     if (!Array.isArray(banners)) {
         console.error('❌ البنرات ليست مصفوفة:', banners);
         return;
@@ -444,7 +415,6 @@ async function initCarousel() {
         </div>
     `}).join('');
     
-    // ✅ التحقق من وجود slides باستخدام Array.from
     const slides = track.querySelectorAll('.carousel-slide');
     if (slides && slides.length > 0) {
         if (dots) {
@@ -584,7 +554,6 @@ async function loadCategories() {
         
         if (error) {
             console.error('❌ خطأ في تحميل التصنيفات:', error);
-            // استخدام تصنيفات افتراضية
             categories = getDefaultCategories();
             renderCategories();
             renderCategoryFilter();
@@ -593,7 +562,6 @@ async function loadCategories() {
         
         categories = data || [];
         
-        // إذا لم توجد تصنيفات، استخدام الافتراضية
         if (categories.length === 0) {
             categories = getDefaultCategories();
         }
@@ -675,7 +643,6 @@ async function loadFooterItems() {
     try {
         console.log('📋 جاري تحميل عناصر التذييل...');
         
-        // ✅ مسح التخزين المؤقت المحلي
         localStorage.removeItem('tithkari_footer_cache');
         localStorage.removeItem('tithkari_footer_items');
         localStorage.removeItem('tithkari_footer_updated');
@@ -706,7 +673,6 @@ async function loadFooterItems() {
             footerItems = getDefaultFooterItems();
         }
         
-        // ✅ تخزين نسخة في localStorage للمقارنة
         localStorage.setItem('tithkari_footer_items', JSON.stringify(footerItems));
         
         renderFooter();
@@ -755,7 +721,6 @@ function renderFooter() {
         return;
     }
     
-    // تجميع العناصر في أعمدة (كل 4 عناصر في عمود)
     const itemsPerColumn = Math.ceil(footerItems.length / 4);
     const columns = [];
     
@@ -998,7 +963,7 @@ async function applyCoupon() {
             .from('coupons')
             .select('*')
             .eq('code', code)
-            .eq('is_active', true)
+            .eq('status', 'active')
             .single();
         
         if (error || !data) {
@@ -1009,7 +974,7 @@ async function applyCoupon() {
             return;
         }
         
-        if (data.valid_until && new Date(data.valid_until) < new Date()) {
+        if (data.expiry_date && new Date(data.expiry_date) < new Date()) {
             message.textContent = '❌ انتهت صلاحية الكود';
             message.className = 'error';
             appliedCoupon = null;
@@ -1017,7 +982,7 @@ async function applyCoupon() {
             return;
         }
         
-        if (data.usage_limit && data.used_count >= data.usage_limit) {
+        if (data.max_uses && data.used_count >= data.max_uses) {
             message.textContent = '❌ تم استخدام هذا الكود الحد الأقصى من المرات';
             message.className = 'error';
             appliedCoupon = null;
@@ -1063,7 +1028,6 @@ function calculateDiscount(total) {
 // ===== نظام الحقول المخصصة للمنتجات =====
 // ============================================
 
-// تعريف أنواع الحقول المدعومة
 const FIELD_TYPES = {
     TEXT: 'text',
     TEXTAREA: 'textarea',
@@ -1101,10 +1065,8 @@ async function getProductCustomFields(productId) {
 // ===== عرض الحقول المخصصة في نافذة المنتج =====
 // ============================================
 async function renderCustomFields(productId) {
-    // ✅ انتظر حتى يتم إنشاء الحاوية
     let container = document.getElementById('customFieldsContainer');
     
-    // إذا لم توجد الحاوية، قم بإنشائها
     if (!container) {
         const section = document.getElementById('customFieldsSection');
         if (section) {
@@ -1117,7 +1079,6 @@ async function renderCustomFields(productId) {
         }
     }
     
-    // ✅ جلب الحقول من Supabase
     const fields = await getProductCustomFields(productId);
     
     console.log('📋 Fields to render:', fields.length);
@@ -1131,7 +1092,6 @@ async function renderCustomFields(productId) {
         return;
     }
     
-    // ✅ عرض الحقول
     container.innerHTML = fields.map(field => {
         let inputHtml = '';
         const fieldId = `custom_field_${field.id}`;
@@ -1294,7 +1254,6 @@ function collectCustomFields(productId) {
         
         console.log(`  📝 ${fieldName}: ${value || '(فارغ)'}`);
         
-        // التحقق من الحقول المطلوبة
         if (isRequired && !value) {
             field.style.borderColor = '#f44336';
             field.style.boxShadow = '0 0 0 2px rgba(244,67,54,0.2)';
@@ -1320,6 +1279,27 @@ function collectCustomFields(productId) {
 window.collectCustomFields = collectCustomFields;
 
 // ============================================
+// ===== اختيار طريقة الدفع =====
+// ============================================
+function selectPaymentMethod(method) {
+    selectedPaymentMethod = method;
+    
+    document.querySelectorAll('.payment-option').forEach(option => {
+        option.classList.toggle('selected', option.dataset.method === method);
+        const radio = option.querySelector('input[type="radio"]');
+        if (radio) {
+            radio.checked = option.dataset.method === method;
+        }
+    });
+    
+    const bankInfo = document.getElementById('bankTransferInfo');
+    if (bankInfo) {
+        bankInfo.style.display = method === 'bank' ? 'block' : 'none';
+    }
+}
+window.selectPaymentMethod = selectPaymentMethod;
+
+// ============================================
 // ===== تحديث نافذة المنتج لعرض الحقول المخصصة =====
 // ============================================
 async function openProductModal(productId) {
@@ -1334,7 +1314,6 @@ async function openProductModal(productId) {
     const productCurrency = product.currency || 'SAR';
     const priceDisplay = displayPrice(product.price, productCurrency);
     
-    // ✅ بناء محتوى النافذة مع حاوية الحقول المخصصة
     body.innerHTML = `
         <div class="modal-product">
             <div class="modal-image">
@@ -1359,7 +1338,6 @@ async function openProductModal(productId) {
                     </div>
                 </div>
                 
-                <!-- ✅ قسم الحقول المخصصة -->
                 <div class="custom-fields-section" id="customFieldsSection" style="margin:15px 0;padding:15px;background:rgba(255,255,255,0.03);border-radius:12px;border:1px solid rgba(255,215,0,0.05);">
                     <h4 style="color:var(--gold);margin:0 0 12px 0;font-size:16px;display:flex;align-items:center;gap:8px;">
                         <i class="fas fa-pencil-alt"></i> تفاصيل الطلب
@@ -1394,7 +1372,6 @@ async function openProductModal(productId) {
     window.currentModalProduct = product;
     window.currentModalQuantity = 1;
     
-    // ✅ تحميل الحقول المخصصة بعد عرض النافذة (مع تأخير صغير)
     setTimeout(async function() {
         await renderCustomFields(productId);
     }, 200);
@@ -1409,29 +1386,23 @@ function addFromModal(productId) {
     if (!product) return;
     
     try {
-        // ✅ جمع بيانات الحقول المخصصة مباشرة (بدون تأخير)
         const customData = collectCustomFields(productId);
-        
         const quantity = window.currentModalQuantity || 1;
         
-        // إنشاء نسخة من المنتج مع البيانات المخصصة
         const productWithCustom = {
             ...product,
             customFields: customData,
             quantity: quantity
         };
         
-        // التحقق من وجود حقول مطلوبة قبل الإضافة
         const requiredFields = customData.filter(f => f.is_required && !f.value);
         if (requiredFields.length > 0) {
             showToast(`⚠️ الرجاء إكمال جميع الحقول المطلوبة`, 'warning');
             return;
         }
         
-        // ✅ تأكد من أن customFields موجودة قبل الإضافة
         console.log('📝 Adding product with custom fields:', productWithCustom.customFields);
         
-        // إضافة المنتج مع البيانات المخصصة
         addToCart(productWithCustom);
         closeModal();
         
@@ -1450,13 +1421,11 @@ function addToCart(product) {
         return;
     }
     
-    // ✅ التأكد من وجود customFields
     const productWithFields = {
         ...product,
         customFields: product.customFields || []
     };
     
-    // التحقق من وجود بيانات مخصصة مطلوبة
     if (productWithFields.customFields && productWithFields.customFields.length > 0) {
         const requiredMissing = productWithFields.customFields.filter(f => f.is_required && !f.value);
         if (requiredMissing.length > 0) {
@@ -1474,7 +1443,6 @@ function addToCart(product) {
         }
         existing.quantity += 1;
     } else {
-        // ✅ حفظ البيانات المخصصة مع المنتج
         cart.push({ 
             ...productWithFields, 
             quantity: 1,
@@ -1512,7 +1480,6 @@ function updateCartUI() {
         const itemTotal = item.price * item.quantity;
         const priceDisplay = displayPrice(itemTotal, itemCurrency);
         
-        // عرض ملخص الحقول المخصصة
         let customFieldsSummary = '';
         if (item.customFields && item.customFields.length > 0) {
             customFieldsSummary = `
@@ -1587,12 +1554,13 @@ async function saveOrder(orderId, customerName, customerEmail, customerPhone, ad
                     image_url: item.image_url,
                     isCustom: item.isCustom || false,
                     currency: item.currency || 'SAR',
-                    custom_fields: item.customFields || []  // حفظ الحقول المخصصة
+                    custom_fields: item.customFields || []
                 })),
                 total_amount: total,
                 discount_applied: discount,
                 coupon_code: couponCode || null,
                 currency: currentCurrency,
+                payment_method: selectedPaymentMethod,
                 status: 'pending',
                 payment_status: 'pending',
                 created_at: new Date().toISOString()
@@ -1702,13 +1670,11 @@ function openCheckoutPage() {
         return;
     }
     
-    // ✅ التأكد من أن كل منتج يحتوي على customFields
     const cartWithFields = cart.map(item => ({
         ...item,
         customFields: item.customFields || []
     }));
     
-    // حفظ بيانات السلة في localStorage للاستخدام في صفحة الدفع
     localStorage.setItem('tithkari_checkout_cart', JSON.stringify(cartWithFields));
     localStorage.setItem('tithkari_checkout_coupon', JSON.stringify(appliedCoupon));
     
@@ -1717,13 +1683,12 @@ function openCheckoutPage() {
         fields: i.customFields
     })), null, 2));
     
-    // الانتقال إلى صفحة الدفع
     window.location.href = 'checkout.html';
 }
 window.openCheckoutPage = openCheckoutPage;
 
 // ============================================
-// ===== معالجة الدفع (محسّن لاستخدام صفحة الدفع) =====
+// ===== معالجة الدفع =====
 // ============================================
 async function handleCheckout() {
     if (cart.length === 0) {
@@ -1731,7 +1696,6 @@ async function handleCheckout() {
         return;
     }
     
-    // الانتقال إلى صفحة الدفع
     openCheckoutPage();
 }
 window.handleCheckout = handleCheckout;
@@ -1740,7 +1704,6 @@ window.handleCheckout = handleCheckout;
 // ===== الإشعارات =====
 // ============================================
 function showNotification(message) {
-    // استخدام Toast بدلاً من alert
     showToast(message, 'info');
 }
 window.showNotification = showNotification;
@@ -1753,6 +1716,7 @@ async function loadReviews() {
         const { data, error } = await supabase
             .from('reviews')
             .select('*')
+            .eq('status', 'approved')
             .order('created_at', { ascending: false })
             .limit(10);
         
@@ -1811,13 +1775,14 @@ function initReviewForm() {
                 .insert({
                     customer_name: name,
                     rating: parseInt(rating.value),
-                    comment: comment
+                    comment: comment,
+                    status: 'pending'
                 })
                 .select();
             
             if (error) throw error;
             
-            alert('✅ شكراً لتقييمك!');
+            alert('✅ شكراً لتقييمك! سيتم مراجعته قريباً.');
             this.reset();
             loadReviews();
         } catch (error) {
@@ -1913,7 +1878,6 @@ window.closeModal = closeModal;
 // ===== دالة Toast لعرض الإشعارات =====
 // ============================================
 function showToast(message, type = 'info') {
-    // التحقق من وجود عنصر toast
     let toast = document.getElementById('toastContainer');
     if (!toast) {
         toast = document.createElement('div');
@@ -1966,7 +1930,6 @@ function showToast(message, type = 'info') {
     
     toast.appendChild(toastEl);
     
-    // إضافة animation keyframes إذا لم تكن موجودة
     if (!document.getElementById('toastStyles')) {
         const style = document.createElement('style');
         style.id = 'toastStyles';
@@ -2001,18 +1964,13 @@ async function forceReloadFooter() {
     console.log('🔄 جاري إعادة تحميل التذييل...');
     showToast('⏳ جاري تحديث التذييل...', 'info');
     
-    // ✅ مسح التخزين المؤقت المحلي
     localStorage.removeItem('tithkari_footer_cache');
     localStorage.removeItem('tithkari_footer_items');
     localStorage.removeItem('tithkari_footer_updated');
     
-    // إعادة تعيين المتغير
     footerItems = [];
     
-    // إعادة التحميل من Supabase
     await loadFooterItems();
-    
-    // تحديث العرض
     renderFooter();
     
     showToast('✅ تم تحديث التذييل بنجاح!', 'success');
@@ -2029,7 +1987,6 @@ function watchFooterUpdates() {
             const savedTime = parseInt(lastUpdate);
             const currentTime = Date.now();
             
-            // إذا كان التحديث خلال آخر 10 ثواني
             if (currentTime - savedTime < 10000) {
                 console.log('🔄 تم اكتشاف تحديث في التذييل، جاري إعادة التحميل...');
                 localStorage.removeItem('tithkari_footer_updated');
@@ -2046,44 +2003,26 @@ function watchFooterUpdates() {
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('🚀 جاري تهيئة المتجر...');
     
-    // 1. تحميل الإعدادات أولاً
     await loadStoreSettings();
-    
-    // 2. تحميل السلة
     loadCartFromStorage();
-    
-    // 3. تحميل الإعدادات القديمة (للتوافق)
     await loadSettings();
-    
-    // 4. تحميل القوائم
     await renderMenus();
-    
-    // 5. تحميل التصنيفات
     await loadCategories();
-    
-    // 6. تحميل المنتجات
     loadProducts();
-    
-    // 7. تحميل البنرات
     await initCarousel();
-    
-    // 8. تحميل التذييل
     await loadFooterItems();
     
-    // 9. تهيئة الأدوات
     initDesignTool();
     initFilterButtons();
     initViewOptions();
     loadReviews();
     initReviewForm();
     
-    // 10. تحديث محدد العملة
     const currencySelector = document.getElementById('currencySelector');
     if (currencySelector) {
         currencySelector.value = currentCurrency;
     }
     
-    // 11. مراقبة تحديثات التذييل
     watchFooterUpdates();
     
     // ===== أحداث DOM =====
@@ -2171,4 +2110,8 @@ window.debugCustomFields = function() {
     fields.forEach(f => {
         console.log(`  ${f.dataset.fieldName}: ${f.value || '(empty)'}`);
     });
+};
+
+window.debugPaymentMethod = function() {
+    console.log('💳 Payment method:', selectedPaymentMethod);
 };

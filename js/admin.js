@@ -42,7 +42,7 @@ window.logout = function() {
 // ============================================
 // التبويبات - حل بسيط ومباشر
 // ============================================
-const tabs = ['dashboard', 'products', 'orders', 'add-product', 'custom-fields', 'analytics', 'banners', 'menus', 'customers', 'settings', 'design-templates', 'code-editor', 'store-settings', 'advanced-settings'];
+const tabs = ['dashboard', 'products', 'orders', 'add-product', 'custom-fields', 'analytics', 'banners', 'menus', 'customers', 'settings', 'design-templates', 'code-editor', 'store-settings', 'advanced-settings', 'footer', 'categories', 'coupons', 'reviews', 'payment-settings', 'email-settings'];
 const titles = {
     'dashboard': '📊 لوحة المعلومات',
     'products': '📦 المنتجات',
@@ -57,7 +57,13 @@ const titles = {
     'design-templates': '🎨 قوالب التصميم',
     'code-editor': '💻 محرر الأكواد',
     'store-settings': '🏪 إعدادات المتجر',
-    'advanced-settings': '🎨 إعدادات متقدمة'
+    'advanced-settings': '🎨 إعدادات متقدمة',
+    'footer': '🦶 التذييل',
+    'categories': '🏷️ التصنيفات',
+    'coupons': '🎫 الكوبونات',
+    'reviews': '⭐ التقييمات',
+    'payment-settings': '💳 إعدادات الدفع',
+    'email-settings': '📧 إعدادات البريد'
 };
 
 // دالة التبديل بين التبويبات - معرفة عالمياً
@@ -89,47 +95,30 @@ window.switchTab = function(tabName) {
     }
     
     // تحميل البيانات حسب التبويب
-    if (tabName === 'analytics') {
-        loadAnalytics();
-    }
-    if (tabName === 'banners') {
-        loadBanners();
-    }
-    if (tabName === 'menus') {
-        loadMenus();
-    }
-    if (tabName === 'settings') {
-        loadSettings();
-    }
-    if (tabName === 'design-templates') {
-        loadDesignTemplates();
-    }
-    if (tabName === 'code-editor') {
-        initCodeEditor();
-    }
-    if (tabName === 'store-settings') {
-        initStoreSettings();
-    }
-    if (tabName === 'advanced-settings') {
-        initAdvancedSettings();
-    }
-    if (tabName === 'customers') {
-        loadCustomers();
-    }
-    if (tabName === 'products') {
-        loadProducts();
-    }
-    if (tabName === 'dashboard') {
-        loadDashboard();
-    }
-    if (tabName === 'orders') {
-        loadOrders();
-    }
-    if (tabName === 'custom-fields') {
-        // تحميل المنتجات عند فتح تبويب الحقول المخصصة
-        setTimeout(function() {
-            loadProductsForFieldSelector();
-        }, 300);
+    const loaders = {
+        'analytics': loadAnalytics,
+        'banners': loadBanners,
+        'menus': loadMenus,
+        'settings': loadSettings,
+        'design-templates': loadDesignTemplates,
+        'code-editor': initCodeEditor,
+        'store-settings': initStoreSettings,
+        'advanced-settings': initAdvancedSettings,
+        'customers': loadCustomers,
+        'products': loadProducts,
+        'dashboard': loadDashboard,
+        'orders': loadOrders,
+        'custom-fields': () => setTimeout(loadProductsForFieldSelector, 300),
+        'footer': loadFooterItems,
+        'categories': loadCategoriesForAdmin,
+        'coupons': loadCoupons,
+        'reviews': loadReviews,
+        'payment-settings': loadPaymentSettings,
+        'email-settings': loadEmailSettings
+    };
+    
+    if (loaders[tabName]) {
+        loaders[tabName]();
     }
 };
 
@@ -179,13 +168,11 @@ async function loadStats() {
 // ============================================
 async function uploadProductImage(fileOrUrl) {
     try {
-        // إذا كان الرابط موجوداً بالفعل (رابط صور)
         if (typeof fileOrUrl === 'string' && fileOrUrl.startsWith('http')) {
             console.log('✅ استخدام رابط الصورة مباشرة:', fileOrUrl);
             return fileOrUrl;
         }
         
-        // إذا كان Base64 (من معاينة الصورة)
         if (typeof fileOrUrl === 'string' && fileOrUrl.startsWith('data:image')) {
             console.log('⚠️ Base64 image detected - uploading to storage...');
             const blob = dataURLToBlob(fileOrUrl);
@@ -207,7 +194,6 @@ async function uploadProductImage(fileOrUrl) {
             return data.publicUrl;
         }
         
-        // إذا كان ملف (File object)
         if (fileOrUrl && typeof fileOrUrl === 'object' && fileOrUrl instanceof File) {
             const ext = fileOrUrl.name.split('.').pop();
             const fileName = 'product-' + Date.now() + '.' + ext;
@@ -235,7 +221,6 @@ async function uploadProductImage(fileOrUrl) {
     }
 }
 
-// دالة مساعدة لتحويل Base64 إلى Blob
 function dataURLToBlob(dataURL) {
     const parts = dataURL.split(',');
     const mime = parts[0].match(/:(.*?);/)[1];
@@ -738,7 +723,6 @@ window.moveBanner = async function(id, direction) {
 // ===== [جديد] إدارة البنرات المتطورة =====
 // ============================================
 
-// فتح نموذج إضافة بنر متطور
 function openAdvancedBannerForm(bannerData = null) {
     const modal = document.getElementById('advancedBannerModal');
     const title = document.getElementById('advancedBannerFormTitle');
@@ -770,7 +754,6 @@ function openAdvancedBannerForm(bannerData = null) {
         document.getElementById('advBannerStatus').value = 'true';
     }
     
-    // تحميل المنتجات والتصنيفات للربط
     loadProductsForSelect('advBannerProductId');
     loadCategoriesForSelect('advBannerCategoryId');
     
@@ -778,13 +761,11 @@ function openAdvancedBannerForm(bannerData = null) {
 }
 window.openAdvancedBannerForm = openAdvancedBannerForm;
 
-// إغلاق نافذة البنر المتطور
 function closeAdvancedBannerForm() {
     document.getElementById('advancedBannerModal').classList.remove('active');
 }
 window.closeAdvancedBannerForm = closeAdvancedBannerForm;
 
-// تحميل المنتجات للاختيار
 async function loadProductsForSelect(selectId) {
     try {
         const { data, error } = await supabase
@@ -807,7 +788,6 @@ async function loadProductsForSelect(selectId) {
     }
 }
 
-// تحميل التصنيفات للاختيار
 async function loadCategoriesForSelect(selectId) {
     try {
         const { data, error } = await supabase
@@ -830,7 +810,6 @@ async function loadCategoriesForSelect(selectId) {
     }
 }
 
-// حفظ البنر المتطور
 document.getElementById('advBannerForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     
@@ -1153,7 +1132,6 @@ document.getElementById('settingsForm')?.addEventListener('submit', async functi
 // ===== [جديد] الإعدادات المتقدمة =====
 // ============================================
 
-// تحميل إعدادات المتجر من Supabase
 async function loadStoreSettings() {
     try {
         const { data, error } = await supabase
@@ -1174,14 +1152,10 @@ async function loadStoreSettings() {
     }
 }
 
-// ============================================
-// 🛠️ [مُصلح] حفظ إعدادات المتجر - نسخة آمنة
-// ============================================
 async function saveStoreSettings(key, value) {
     try {
         console.log('💾 محاولة حفظ:', key);
         
-        // 1. محاولة التحديث أولاً
         const { data: existing, error: findError } = await supabase
             .from('store_settings')
             .select('key')
@@ -1196,7 +1170,6 @@ async function saveStoreSettings(key, value) {
         let result;
         
         if (existing) {
-            // ✅ التحديث - المفتاح موجود
             console.log('🔄 تحديث المفتاح:', key);
             result = await supabase
                 .from('store_settings')
@@ -1206,7 +1179,6 @@ async function saveStoreSettings(key, value) {
                 })
                 .eq('key', key);
         } else {
-            // ✅ الإدراج - المفتاح غير موجود
             console.log('➕ إدراج مفتاح جديد:', key);
             result = await supabase
                 .from('store_settings')
@@ -1230,7 +1202,6 @@ async function saveStoreSettings(key, value) {
     } catch (error) {
         console.error('❌ خطأ في حفظ الإعدادات:', error);
         
-        // محاولة أخيرة - حذف وإدراج
         try {
             console.log('🔄 محاولة الحل الأخير...');
             await supabase.from('store_settings').delete().eq('key', key);
@@ -1258,9 +1229,6 @@ async function saveStoreSettings(key, value) {
     }
 }
 
-// ============================================
-// دالة مساعدة للحصول على group_name
-// ============================================
 function getGroupName(key) {
     const groups = {
         'branding': 'branding',
@@ -1271,7 +1239,6 @@ function getGroupName(key) {
     return groups[key] || 'general';
 }
 
-// تهيئة تبويب الإعدادات المتقدمة
 async function initAdvancedSettings() {
     const settings = await loadStoreSettings();
     const container = document.getElementById('advancedSettingsContainer');
@@ -1283,7 +1250,6 @@ async function initAdvancedSettings() {
     const currencies = settings.currencies || { default: 'SAR', available: ['SAR', 'BHD', 'QAR', 'AED', 'KWD', 'OMR', 'USD', 'EUR'] };
     
     container.innerHTML = `
-        <!-- ===== هوية المتجر ===== -->
         <div class="settings-section">
             <h3>🏪 هوية المتجر</h3>
             <div class="form-group">
@@ -1306,7 +1272,6 @@ async function initAdvancedSettings() {
             </div>
         </div>
         
-        <!-- ===== الألوان والثيم ===== -->
         <div class="settings-section">
             <h3>🎨 الألوان والثيم</h3>
             <div class="form-row">
@@ -1331,7 +1296,6 @@ async function initAdvancedSettings() {
             </div>
         </div>
         
-        <!-- ===== الخطوط ===== -->
         <div class="settings-section">
             <h3>🔤 الخطوط</h3>
             <div class="form-row">
@@ -1355,7 +1319,6 @@ async function initAdvancedSettings() {
             </div>
         </div>
         
-        <!-- ===== طريقة العرض ===== -->
         <div class="settings-section">
             <h3>📐 طريقة العرض</h3>
             <div class="form-row">
@@ -1380,7 +1343,6 @@ async function initAdvancedSettings() {
             </div>
         </div>
         
-        <!-- ===== العملات ===== -->
         <div class="settings-section">
             <h3>💰 العملات</h3>
             <div class="form-group">
@@ -1413,7 +1375,6 @@ async function initAdvancedSettings() {
             </div>
         </div>
         
-        <!-- ===== إدارة التذييل ===== -->
         <div class="settings-section" style="margin-top:30px;padding-top:30px;border-top:1px solid rgba(255,215,0,0.1);">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:15px;">
                 <h3>📋 إدارة التذييل</h3>
@@ -1422,11 +1383,9 @@ async function initAdvancedSettings() {
                 </button>
             </div>
             <div id="footerItemsContainer">
-                <!-- سيتم تعبئتها بواسطة JavaScript -->
             </div>
         </div>
         
-        <!-- ===== إدارة البنرات المتطورة ===== -->
         <div class="settings-section" style="margin-top:30px;padding-top:30px;border-top:1px solid rgba(255,215,0,0.1);">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:15px;">
                 <h3>📢 البنرات المتطورة</h3>
@@ -1435,11 +1394,9 @@ async function initAdvancedSettings() {
                 </button>
             </div>
             <div id="advancedBannersContainer">
-                <!-- سيتم تعبئتها بواسطة JavaScript (نفس جدول البنرات) -->
             </div>
         </div>
         
-        <!-- ===== إدارة التصنيفات ===== -->
         <div class="settings-section" style="margin-top:30px;padding-top:30px;border-top:1px solid rgba(255,215,0,0.1);">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:15px;">
                 <h3>📂 إدارة التصنيفات</h3>
@@ -1451,17 +1408,14 @@ async function initAdvancedSettings() {
                 </button>
             </div>
             <div id="categoriesContainer" style="margin-top:10px;">
-                <!-- سيتم تعبئتها بواسطة JavaScript -->
             </div>
         </div>
         
-        <!-- ===== زر الحفظ ===== -->
         <button class="btn-primary" onclick="saveAdvancedSettings()" style="margin-top:20px;width:100%;justify-content:center;">
             <i class="fas fa-save"></i> حفظ جميع الإعدادات
         </button>
     `;
     
-    // معاينة الشعار
     document.getElementById('storeLogoFile')?.addEventListener('change', function(e) {
         const file = this.files[0];
         if (file) {
@@ -1475,7 +1429,6 @@ async function initAdvancedSettings() {
         }
     });
     
-    // معاينة من الرابط
     document.getElementById('storeLogoUrl')?.addEventListener('input', function() {
         const url = this.value.trim();
         if (url && (url.startsWith('http') || url.startsWith('data:image'))) {
@@ -1484,7 +1437,6 @@ async function initAdvancedSettings() {
         }
     });
     
-    // تحميل عناصر التذييل والبنرات والتصنيفات
     loadFooterItems();
     loadBannersForAdvanced();
     loadCategoriesForAdmin();
@@ -1495,7 +1447,6 @@ window.initAdvancedSettings = initAdvancedSettings;
 // ===== [جديد] إدارة التصنيفات (Categories) =====
 // ============================================
 
-// تحميل التصنيفات للوحة التحكم
 async function loadCategoriesForAdmin() {
     try {
         const { data, error } = await supabase
@@ -1544,7 +1495,6 @@ async function loadCategoriesForAdmin() {
 }
 window.loadCategoriesForAdmin = loadCategoriesForAdmin;
 
-// فتح نموذج إضافة تصنيف
 function openCategoryForm(categoryData = null) {
     const modal = document.getElementById('categoryModal');
     const title = document.getElementById('categoryFormTitle');
@@ -1572,7 +1522,6 @@ function openCategoryForm(categoryData = null) {
 }
 window.openCategoryForm = openCategoryForm;
 
-// فتح نموذج تعديل تصنيف
 window.openCategoryFormForEdit = async function(id) {
     try {
         const { data, error } = await supabase
@@ -1589,13 +1538,11 @@ window.openCategoryFormForEdit = async function(id) {
     }
 };
 
-// إغلاق نافذة التصنيف
 function closeCategoryForm() {
     document.getElementById('categoryModal').classList.remove('active');
 }
 window.closeCategoryForm = closeCategoryForm;
 
-// حفظ التصنيف
 document.getElementById('categoryForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     
@@ -1649,7 +1596,6 @@ document.getElementById('categoryForm')?.addEventListener('submit', async functi
     }
 });
 
-// دالة مساعدة لتوليد slug
 function generateSlug(text) {
     return text
         .toLowerCase()
@@ -1658,7 +1604,6 @@ function generateSlug(text) {
         .substring(0, 50);
 }
 
-// حذف تصنيف
 window.deleteCategory = async function(id) {
     if (!confirm('⚠️ هل أنت متأكد من حذف هذا التصنيف؟ سيتم حذف جميع المنتجات المرتبطة به.')) return;
     
@@ -1678,10 +1623,8 @@ window.deleteCategory = async function(id) {
     }
 };
 
-// تبديل حالة التصنيف
 window.toggleCategoryStatus = async function(id) {
     try {
-        // جلب الحالة الحالية
         const { data, error: fetchError } = await supabase
             .from('categories')
             .select('is_active')
@@ -1711,7 +1654,6 @@ window.toggleCategoryStatus = async function(id) {
 // ===== [جديد] إدارة التذييل =====
 // ============================================
 
-// تحميل عناصر التذييل
 async function loadFooterItems() {
     try {
         const { data, error } = await supabase
@@ -1754,8 +1696,8 @@ async function loadFooterItems() {
         console.error('❌ خطأ في تحميل عناصر التذييل:', error);
     }
 }
+window.loadFooterItems = loadFooterItems;
 
-// فتح نموذج إضافة عنصر تذييل
 function openFooterItemForm(itemData = null) {
     const modal = document.getElementById('footerItemModal');
     const title = document.getElementById('footerItemFormTitle');
@@ -1781,13 +1723,11 @@ function openFooterItemForm(itemData = null) {
 }
 window.openFooterItemForm = openFooterItemForm;
 
-// إغلاق نافذة عنصر التذييل
 function closeFooterItemForm() {
     document.getElementById('footerItemModal').classList.remove('active');
 }
 window.closeFooterItemForm = closeFooterItemForm;
 
-// حفظ عنصر التذييل
 document.getElementById('footerItemForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     
@@ -1832,7 +1772,6 @@ document.getElementById('footerItemForm')?.addEventListener('submit', async func
     }
 });
 
-// حذف عنصر تذييل
 window.deleteFooterItem = async function(id) {
     if (!confirm('⚠️ هل أنت متأكد من حذف هذا العنصر؟')) return;
     
@@ -1852,7 +1791,6 @@ window.deleteFooterItem = async function(id) {
     }
 };
 
-// تعديل عنصر تذييل
 window.editFooterItem = async function(id) {
     try {
         const { data, error } = await supabase
@@ -1916,7 +1854,6 @@ async function loadBannersForAdvanced() {
     }
 }
 
-// فتح تعديل بنر متطور
 window.openAdvancedBannerFormForEdit = async function(id) {
     try {
         const { data, error } = await supabase
@@ -1938,7 +1875,6 @@ window.openAdvancedBannerFormForEdit = async function(id) {
 // ============================================
 
 async function saveAdvancedSettings() {
-    // جمع البيانات
     const branding = {
         logo: document.getElementById('storeLogoUrl')?.value || '',
         primary_color: document.getElementById('primaryColor')?.value || '#FFD700',
@@ -1966,7 +1902,6 @@ async function saveAdvancedSettings() {
         available: Array.from(currencyCheckboxes).map(cb => cb.value)
     };
     
-    // حفظ كل قسم - واحد تلو الآخر مع تأكيد النجاح
     let allSuccess = true;
     
     const sections = [
@@ -2003,7 +1938,6 @@ window.saveAdvancedSettings = saveAdvancedSettings;
 // ===== إدارة قوالب التصميم (Design Templates) =====
 // ============================================
 
-// تحميل قوالب التصميم من Supabase
 async function loadDesignTemplates() {
     try {
         const { data, error } = await supabase
@@ -2057,7 +1991,6 @@ async function loadDesignTemplates() {
     }
 }
 
-// فتح نموذج إضافة قالب
 function openTemplateForm(templateData = null) {
     const modal = document.getElementById('templateModal');
     const title = document.getElementById('templateFormTitle');
@@ -2081,13 +2014,11 @@ function openTemplateForm(templateData = null) {
 }
 window.openTemplateForm = openTemplateForm;
 
-// إغلاق نموذج القالب
 function closeTemplateForm() {
     document.getElementById('templateModal').classList.remove('active');
 }
 window.closeTemplateForm = closeTemplateForm;
 
-// إضافة قالب جديد
 window.addTemplate = async function(event) {
     event.preventDefault();
     
@@ -2122,7 +2053,6 @@ window.addTemplate = async function(event) {
     }
 };
 
-// حذف قالب
 window.deleteTemplate = async function(id) {
     if (!confirm('⚠️ هل أنت متأكد من حذف هذا القالب؟')) return;
     
@@ -2142,7 +2072,6 @@ window.deleteTemplate = async function(id) {
     }
 };
 
-// تعديل قالب
 window.editTemplate = async function(id) {
     try {
         const { data, error } = await supabase
@@ -2167,7 +2096,6 @@ window.editTemplate = async function(id) {
     }
 };
 
-// تبديل حالة القالب
 window.toggleTemplateStatus = async function(id, newStatus) {
     try {
         const { error } = await supabase
@@ -2183,14 +2111,12 @@ window.toggleTemplateStatus = async function(id, newStatus) {
     }
 };
 
-// معالجة نموذج القالب
 document.getElementById('templateForm')?.addEventListener('submit', window.addTemplate);
 
 // ============================================
 // ===== إعدادات المتجر (Store Settings) =====
 // ============================================
 
-// تحميل إعدادات المتجر المحفوظة (من localStorage)
 function loadStoreSettingsLocal() {
     try {
         const settings = JSON.parse(localStorage.getItem('tithkari_store_settings') || '{}');
@@ -2200,14 +2126,12 @@ function loadStoreSettingsLocal() {
     }
 }
 
-// حفظ إعدادات المتجر (في localStorage)
 function saveStoreSettingsLocal(settings) {
     localStorage.setItem('tithkari_store_settings', JSON.stringify(settings));
     applyStoreSettings(settings);
     showToast('✅ تم حفظ إعدادات المتجر', 'success');
 }
 
-// تطبيق إعدادات المتجر على الموقع
 function applyStoreSettings(settings) {
     if (settings.storeName) {
         document.querySelectorAll('.store-name').forEach(el => el.textContent = settings.storeName);
@@ -2269,7 +2193,6 @@ function applyStoreSettings(settings) {
     console.log('🎨 تم تطبيق إعدادات المتجر');
 }
 
-// تهيئة تبويب إعدادات المتجر
 function initStoreSettings() {
     const settings = loadStoreSettingsLocal();
     const container = document.getElementById('storeSettingsContainer');
@@ -2440,6 +2363,537 @@ function saveAllStoreSettings() {
     showToast('✅ تم حفظ جميع إعدادات المتجر بنجاح!', 'success');
 }
 window.saveAllStoreSettings = saveAllStoreSettings;
+
+// ============================================
+// ===== [جديد] إدارة الكوبونات =====
+// ============================================
+
+async function loadCoupons() {
+    try {
+        const { data, error } = await supabase
+            .from('coupons')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        const tbody = document.getElementById('couponsTableBody');
+        if (!tbody) return;
+        
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#8A8A9B;">🎫 لا توجد كوبونات</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = data.map((coupon, index) => `
+            <tr>
+                <td>${index + 1}</td>
+                <td><strong style="color:#ffd700;">${coupon.code}</strong></td>
+                <td>${coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : `${coupon.discount_value} د.ل`}</td>
+                <td>${coupon.discount_type === 'percentage' ? 'نسبة مئوية' : 'قيمة ثابتة'}</td>
+                <td>${coupon.min_order_amount ? `${coupon.min_order_amount} د.ل` : '-'}</td>
+                <td>${coupon.used_count || 0} / ${coupon.max_uses || '∞'}</td>
+                <td>
+                    <span class="status-badge status-${coupon.status || 'active'}">
+                        ${coupon.status === 'active' ? '✅ نشط' : coupon.status === 'expired' ? '⏰ منتهي' : '❌ غير نشط'}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn-edit" onclick="editCoupon('${coupon.id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-delete" onclick="deleteCoupon('${coupon.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+        
+        console.log('✅ Coupons loaded:', data.length);
+    } catch (error) {
+        console.error('❌ Coupons error:', error);
+    }
+}
+window.loadCoupons = loadCoupons;
+
+function openCouponForm(couponData = null) {
+    const modal = document.getElementById('couponModal');
+    const title = document.getElementById('couponFormTitle');
+    
+    if (couponData) {
+        title.textContent = '✏️ تعديل الكوبون';
+        document.getElementById('couponId').value = couponData.id;
+        document.getElementById('couponCode').value = couponData.code || '';
+        document.getElementById('couponType').value = couponData.discount_type || 'percentage';
+        document.getElementById('couponValue').value = couponData.discount_value || '';
+        document.getElementById('couponMaxDiscount').value = couponData.max_discount || '';
+        document.getElementById('couponMinOrder').value = couponData.min_order_amount || '';
+        document.getElementById('couponExpiryDate').value = couponData.expiry_date || '';
+        document.getElementById('couponMaxUses').value = couponData.max_uses || '';
+        document.getElementById('couponStatus').value = couponData.status || 'active';
+    } else {
+        title.textContent = '➕ إضافة كوبون جديد';
+        document.getElementById('couponForm').reset();
+        document.getElementById('couponId').value = '';
+        document.getElementById('couponType').value = 'percentage';
+        document.getElementById('couponStatus').value = 'active';
+    }
+    
+    toggleCouponFields();
+    modal.classList.add('active');
+}
+window.openCouponForm = openCouponForm;
+
+function closeCouponForm() {
+    document.getElementById('couponModal').classList.remove('active');
+}
+window.closeCouponForm = closeCouponForm;
+
+function toggleCouponFields() {
+    const type = document.getElementById('couponType')?.value;
+    const group = document.getElementById('maxDiscountGroup');
+    if (group) {
+        group.style.display = type === 'percentage' ? 'block' : 'none';
+    }
+}
+window.toggleCouponFields = toggleCouponFields;
+
+document.getElementById('couponForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const id = document.getElementById('couponId').value;
+    const code = document.getElementById('couponCode').value.trim().toUpperCase();
+    const discount_type = document.getElementById('couponType').value;
+    const discount_value = parseFloat(document.getElementById('couponValue').value);
+    const max_discount = document.getElementById('couponMaxDiscount').value ? parseFloat(document.getElementById('couponMaxDiscount').value) : null;
+    const min_order_amount = document.getElementById('couponMinOrder').value ? parseFloat(document.getElementById('couponMinOrder').value) : null;
+    const expiry_date = document.getElementById('couponExpiryDate').value || null;
+    const max_uses = document.getElementById('couponMaxUses').value ? parseInt(document.getElementById('couponMaxUses').value) : null;
+    const status = document.getElementById('couponStatus').value;
+    
+    if (!code || !discount_value || discount_value <= 0) {
+        showToast('⚠️ الرجاء إدخال كود وقيمة صحيحة', 'warning');
+        return;
+    }
+    
+    const data = {
+        code,
+        discount_type,
+        discount_value,
+        max_discount,
+        min_order_amount,
+        expiry_date,
+        max_uses,
+        status,
+        updated_at: new Date().toISOString()
+    };
+    
+    try {
+        let result;
+        if (id) {
+            result = await supabase
+                .from('coupons')
+                .update(data)
+                .eq('id', id);
+        } else {
+            data.created_at = new Date().toISOString();
+            data.used_count = 0;
+            result = await supabase
+                .from('coupons')
+                .insert(data);
+        }
+        
+        if (result.error) throw result.error;
+        
+        showToast(id ? '✅ تم تحديث الكوبون' : '✅ تم إضافة الكوبون', 'success');
+        closeCouponForm();
+        loadCoupons();
+    } catch (error) {
+        console.error('❌ خطأ:', error);
+        showToast('❌ حدث خطأ: ' + error.message, 'error');
+    }
+});
+
+window.editCoupon = async function(id) {
+    try {
+        const { data, error } = await supabase
+            .from('coupons')
+            .select('*')
+            .eq('id', id)
+            .single();
+        
+        if (error) throw error;
+        openCouponForm(data);
+    } catch (error) {
+        console.error('❌ خطأ:', error);
+        showToast('❌ حدث خطأ: ' + error.message, 'error');
+    }
+};
+
+window.deleteCoupon = async function(id) {
+    if (!confirm('⚠️ هل أنت متأكد من حذف هذا الكوبون؟')) return;
+    
+    try {
+        const { error } = await supabase
+            .from('coupons')
+            .delete()
+            .eq('id', id);
+        
+        if (error) throw error;
+        
+        showToast('✅ تم حذف الكوبون', 'success');
+        loadCoupons();
+    } catch (error) {
+        console.error('❌ خطأ:', error);
+        showToast('❌ حدث خطأ: ' + error.message, 'error');
+    }
+};
+
+// ============================================
+// ===== [جديد] إدارة التقييمات =====
+// ============================================
+
+async function loadReviews() {
+    try {
+        const { data, error } = await supabase
+            .from('reviews')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        const tbody = document.getElementById('reviewsTableBody');
+        if (!tbody) return;
+        
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#8A8A9B;">⭐ لا توجد تقييمات</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = data.map((review, index) => `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${review.customer_name || 'زائر'}</td>
+                <td>${'⭐'.repeat(Math.round(review.rating || 0))}</td>
+                <td>${review.comment ? review.comment.substring(0, 50) + (review.comment.length > 50 ? '...' : '') : '-'}</td>
+                <td>
+                    <span class="status-badge status-${review.status || 'pending'}">
+                        ${review.status === 'approved' ? '✅ مقبول' : review.status === 'rejected' ? '❌ مرفوض' : '⏳ قيد المراجعة'}
+                    </span>
+                </td>
+                <td>${new Date(review.created_at).toLocaleDateString('ar-SA')}</td>
+                <td>
+                    <button class="btn-edit" onclick="editReview('${review.id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-delete" onclick="deleteReview('${review.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+        
+        console.log('✅ Reviews loaded:', data.length);
+    } catch (error) {
+        console.error('❌ Reviews error:', error);
+    }
+}
+window.loadReviews = loadReviews;
+
+function openReviewForm(reviewData = null) {
+    const modal = document.getElementById('reviewModal');
+    const title = document.getElementById('reviewFormTitle');
+    
+    if (reviewData) {
+        title.textContent = '✏️ تعديل التقييم';
+        document.getElementById('reviewId').value = reviewData.id;
+        document.getElementById('reviewRating').value = reviewData.rating || 5;
+        document.getElementById('reviewComment').value = reviewData.comment || '';
+        document.getElementById('reviewStatus').value = reviewData.status || 'pending';
+    } else {
+        title.textContent = '✏️ تعديل التقييم';
+        document.getElementById('reviewForm').reset();
+        document.getElementById('reviewId').value = '';
+        document.getElementById('reviewRating').value = 5;
+        document.getElementById('reviewStatus').value = 'pending';
+    }
+    
+    modal.classList.add('active');
+}
+window.openReviewForm = openReviewForm;
+
+function closeReviewForm() {
+    document.getElementById('reviewModal').classList.remove('active');
+}
+window.closeReviewForm = closeReviewForm;
+
+document.getElementById('reviewForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const id = document.getElementById('reviewId').value;
+    const rating = parseInt(document.getElementById('reviewRating').value);
+    const comment = document.getElementById('reviewComment').value.trim();
+    const status = document.getElementById('reviewStatus').value;
+    
+    const data = {
+        rating,
+        comment: comment || null,
+        status,
+        updated_at: new Date().toISOString()
+    };
+    
+    try {
+        const { error } = await supabase
+            .from('reviews')
+            .update(data)
+            .eq('id', id);
+        
+        if (error) throw error;
+        
+        showToast('✅ تم تحديث التقييم', 'success');
+        closeReviewForm();
+        loadReviews();
+    } catch (error) {
+        console.error('❌ خطأ:', error);
+        showToast('❌ حدث خطأ: ' + error.message, 'error');
+    }
+});
+
+window.editReview = async function(id) {
+    try {
+        const { data, error } = await supabase
+            .from('reviews')
+            .select('*')
+            .eq('id', id)
+            .single();
+        
+        if (error) throw error;
+        openReviewForm(data);
+    } catch (error) {
+        console.error('❌ خطأ:', error);
+        showToast('❌ حدث خطأ: ' + error.message, 'error');
+    }
+};
+
+window.deleteReview = async function(id) {
+    if (!confirm('⚠️ هل أنت متأكد من حذف هذا التقييم؟')) return;
+    
+    try {
+        const { error } = await supabase
+            .from('reviews')
+            .delete()
+            .eq('id', id);
+        
+        if (error) throw error;
+        
+        showToast('✅ تم حذف التقييم', 'success');
+        loadReviews();
+    } catch (error) {
+        console.error('❌ خطأ:', error);
+        showToast('❌ حدث خطأ: ' + error.message, 'error');
+    }
+};
+
+// ============================================
+// ===== [جديد] إعدادات الدفع =====
+// ============================================
+
+async function loadPaymentSettings() {
+    try {
+        const { data, error } = await supabase
+            .from('store_settings')
+            .select('*')
+            .in('key', ['payment_settings']);
+        
+        if (error) throw error;
+        
+        const settings = {};
+        data.forEach(item => {
+            settings[item.key] = item.value;
+        });
+        
+        const paymentSettings = settings.payment_settings || {};
+        
+        document.getElementById('stripePublishableKey').value = paymentSettings.stripe?.publishableKey || '';
+        document.getElementById('stripeSecretKey').value = paymentSettings.stripe?.secretKey || '';
+        document.getElementById('stripeEnabled').checked = paymentSettings.stripe?.enabled !== false;
+        
+        document.getElementById('paypalClientId').value = paymentSettings.paypal?.clientId || '';
+        document.getElementById('paypalSecretKey').value = paymentSettings.paypal?.secretKey || '';
+        document.getElementById('paypalEnabled').checked = paymentSettings.paypal?.enabled !== false;
+        
+        document.getElementById('codEnabled').checked = paymentSettings.cod?.enabled !== false;
+        
+        document.getElementById('bankTransferEnabled').checked = paymentSettings.bankTransfer?.enabled !== false;
+        document.getElementById('bankName').value = paymentSettings.bankTransfer?.bankName || '';
+        document.getElementById('bankAccountNumber').value = paymentSettings.bankTransfer?.accountNumber || '';
+        document.getElementById('bankIban').value = paymentSettings.bankTransfer?.iban || '';
+        document.getElementById('bankBeneficiary').value = paymentSettings.bankTransfer?.beneficiary || '';
+        
+        console.log('✅ Payment settings loaded');
+    } catch (error) {
+        console.error('❌ Payment settings error:', error);
+    }
+}
+window.loadPaymentSettings = loadPaymentSettings;
+
+async function savePaymentSettings() {
+    const paymentSettings = {
+        stripe: {
+            publishableKey: document.getElementById('stripePublishableKey').value.trim(),
+            secretKey: document.getElementById('stripeSecretKey').value.trim(),
+            enabled: document.getElementById('stripeEnabled').checked
+        },
+        paypal: {
+            clientId: document.getElementById('paypalClientId').value.trim(),
+            secretKey: document.getElementById('paypalSecretKey').value.trim(),
+            enabled: document.getElementById('paypalEnabled').checked
+        },
+        cod: {
+            enabled: document.getElementById('codEnabled').checked
+        },
+        bankTransfer: {
+            enabled: document.getElementById('bankTransferEnabled').checked,
+            bankName: document.getElementById('bankName').value.trim(),
+            accountNumber: document.getElementById('bankAccountNumber').value.trim(),
+            iban: document.getElementById('bankIban').value.trim(),
+            beneficiary: document.getElementById('bankBeneficiary').value.trim()
+        }
+    };
+    
+    const success = await saveStoreSettings('payment_settings', paymentSettings);
+    
+    if (success) {
+        showToast('✅ تم حفظ إعدادات الدفع بنجاح!', 'success');
+    }
+}
+window.savePaymentSettings = savePaymentSettings;
+
+// ============================================
+// ===== [جديد] إعدادات البريد =====
+// ============================================
+
+async function loadEmailSettings() {
+    try {
+        const { data, error } = await supabase
+            .from('store_settings')
+            .select('*')
+            .in('key', ['email_settings']);
+        
+        if (error) throw error;
+        
+        const settings = {};
+        data.forEach(item => {
+            settings[item.key] = item.value;
+        });
+        
+        const emailSettings = settings.email_settings || {};
+        
+        document.getElementById('sendgridApiKey').value = emailSettings.sendgrid?.apiKey || '';
+        document.getElementById('sendgridFromEmail').value = emailSettings.sendgrid?.fromEmail || '';
+        document.getElementById('sendgridFromName').value = emailSettings.sendgrid?.fromName || '';
+        document.getElementById('sendgridEnabled').checked = emailSettings.sendgrid?.enabled !== false;
+        
+        document.getElementById('adminEmail').value = emailSettings.adminEmail || '';
+        document.getElementById('emailSubjectPrefix').value = emailSettings.subjectPrefix || '';
+        
+        console.log('✅ Email settings loaded');
+    } catch (error) {
+        console.error('❌ Email settings error:', error);
+    }
+}
+window.loadEmailSettings = loadEmailSettings;
+
+async function saveEmailSettings() {
+    const emailSettings = {
+        sendgrid: {
+            apiKey: document.getElementById('sendgridApiKey').value.trim(),
+            fromEmail: document.getElementById('sendgridFromEmail').value.trim(),
+            fromName: document.getElementById('sendgridFromName').value.trim(),
+            enabled: document.getElementById('sendgridEnabled').checked
+        },
+        adminEmail: document.getElementById('adminEmail').value.trim(),
+        subjectPrefix: document.getElementById('emailSubjectPrefix').value.trim()
+    };
+    
+    const success = await saveStoreSettings('email_settings', emailSettings);
+    
+    if (success) {
+        showToast('✅ تم حفظ إعدادات البريد بنجاح!', 'success');
+    }
+}
+window.saveEmailSettings = saveEmailSettings;
+
+async function sendTestEmail() {
+    const email = document.getElementById('testEmailInput').value.trim();
+    if (!email) {
+        showToast('⚠️ الرجاء إدخال بريد إلكتروني', 'warning');
+        return;
+    }
+    
+    if (!email.includes('@')) {
+        showToast('⚠️ الرجاء إدخال بريد إلكتروني صحيح', 'warning');
+        return;
+    }
+    
+    showToast('📧 جاري إرسال البريد التجريبي...', 'info');
+    
+    try {
+        const { data: emailSettingsData } = await supabase
+            .from('store_settings')
+            .select('value')
+            .eq('key', 'email_settings')
+            .single();
+        
+        const emailSettings = emailSettingsData?.value || {};
+        const sendgrid = emailSettings.sendgrid || {};
+        
+        if (!sendgrid.apiKey) {
+            showToast('⚠️ الرجاء إدخال مفتاح SendGrid أولاً', 'warning');
+            return;
+        }
+        
+        const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${sendgrid.apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                personalizations: [{ to: [{ email: email }] }],
+                from: { email: sendgrid.fromEmail || 'info@tithkari.com', name: sendgrid.fromName || 'Tithkari' },
+                subject: '📧 بريد تجريبي من Tithkari',
+                content: [{ type: 'text/html', value: `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9f9f9; border-radius: 10px;">
+                        <div style="text-align: center; padding: 20px; background: #1a1a2e; border-radius: 10px 10px 0 0;">
+                            <h1 style="color: #e6b31e; margin: 0;">🛡️ Tithkari</h1>
+                            <p style="color: #fff;">متجر الدروع الفاخرة</p>
+                        </div>
+                        <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px;">
+                            <h2 style="color: #1a1a2e;">✅ بريد تجريبي ناجح!</h2>
+                            <p>تم إرسال هذا البريد بنجاح من نظام Tithkari.</p>
+                            <p style="color: #666;">تم الإرسال في: ${new Date().toLocaleString('ar-SA')}</p>
+                            <div style="background: #f0f0f0; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                                <p style="margin: 0;"><strong>📧 إعدادات البريد تعمل بشكل صحيح</strong></p>
+                            </div>
+                            <p style="color: #666; font-size: 14px;">هذا بريد تجريبي من لوحة تحكم Tithkari</p>
+                        </div>
+                    </div>
+                `}]
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`SendGrid error: ${response.status}`);
+        }
+        
+        showToast('✅ تم إرسال البريد التجريبي بنجاح!', 'success');
+    } catch (error) {
+        console.error('❌ خطأ في إرسال البريد التجريبي:', error);
+        showToast('❌ فشل إرسال البريد: ' + error.message, 'error');
+    }
+}
+window.sendTestEmail = sendTestEmail;
 
 // ============================================
 // ===== محرر الأكواد =====
@@ -2733,7 +3187,6 @@ function initAddProductForm() {
     
     console.log('✅ initAddProductForm called');
     
-    // ✅ معاينة صورة المنتج من الملف
     const productImageFile = document.getElementById('productImageFile');
     if (productImageFile) {
         productImageFile.addEventListener('change', function(e) {
@@ -2757,7 +3210,6 @@ function initAddProductForm() {
         });
     }
     
-    // ✅ معاينة صورة المنتج من الرابط
     const productImageInput = document.getElementById('productImage');
     if (productImageInput) {
         productImageInput.addEventListener('input', function() {
@@ -2771,7 +3223,6 @@ function initAddProductForm() {
         });
     }
     
-    // ✅ معاينة قالب التصميم من الملف
     const templateImageFile = document.getElementById('templateImageFile');
     if (templateImageFile) {
         templateImageFile.addEventListener('change', function(e) {
@@ -2795,7 +3246,6 @@ function initAddProductForm() {
         });
     }
     
-    // ✅ معاينة قالب التصميم من الرابط
     const templateImageUrlInput = document.getElementById('templateImageUrl');
     if (templateImageUrlInput) {
         templateImageUrlInput.addEventListener('input', function() {
@@ -2809,11 +3259,9 @@ function initAddProductForm() {
         });
     }
     
-    // ✅ إزالة أي مستمعات قديمة عن طريق استنساخ النموذج
     const newForm = form.cloneNode(true);
     form.parentNode.replaceChild(newForm, form);
     
-    // ✅ إضافة المستمع الجديد
     newForm.addEventListener('submit', window.addProduct);
     console.log('✅ Add product form initialized');
 }
@@ -2832,7 +3280,6 @@ window.addProduct = async function(event) {
     }
     
     try {
-        // ✅ قراءة القيم مع التحقق من وجود العناصر
         const nameInput = document.getElementById('productName');
         const descriptionInput = document.getElementById('productDescription');
         const categoryInput = document.getElementById('productCategory');
@@ -2869,18 +3316,15 @@ window.addProduct = async function(event) {
             return;
         }
         
-        // ✅ رفع صورة المنتج
         if (imageFileInput && imageFileInput.files[0]) {
             const uploaded = await uploadProductImage(imageFileInput.files[0]);
             if (uploaded) {
                 image_url = uploaded;
             }
         } else if (!image_url) {
-            // صورة افتراضية
             image_url = getPlaceholderSVG('🛡️', 300, 300);
         }
         
-        // ✅ رفع صورة القالب
         if (templateFileInput && templateFileInput.files[0]) {
             const uploaded = await uploadProductImage(templateFileInput.files[0]);
             if (uploaded) {
@@ -2888,7 +3332,6 @@ window.addProduct = async function(event) {
             }
         }
         
-        // ✅ إضافة المنتج إلى Supabase
         const { error } = await supabase
             .from('products')
             .insert({
@@ -2906,7 +3349,6 @@ window.addProduct = async function(event) {
         
         showToast('✅ تم إضافة المنتج بنجاح!', 'success');
         
-        // ✅ إعادة تعيين النموذج
         if (nameInput) nameInput.value = '';
         if (descriptionInput) descriptionInput.value = '';
         if (priceInput) priceInput.value = '';
@@ -2941,7 +3383,6 @@ window.addProduct = async function(event) {
 // ===== دوال الحقول المخصصة (Custom Fields) =====
 // ============================================
 
-// تحميل المنتجات في قائمة الاختيار
 async function loadProductsForFieldSelector() {
     console.log('🔵 loadProductsForFieldSelector called');
     try {
@@ -2975,7 +3416,6 @@ async function loadProductsForFieldSelector() {
 }
 window.loadProductsForFieldSelector = loadProductsForFieldSelector;
 
-// تحميل الحقول المخصصة لمنتج محدد
 async function loadProductFields() {
     const productId = document.getElementById('fieldProductSelector')?.value;
     const tbody = document.getElementById('fieldsTableBody');
@@ -3049,7 +3489,6 @@ async function loadProductFields() {
 }
 window.loadProductFields = loadProductFields;
 
-// فتح نافذة إضافة حقل مخصص
 function openCustomFieldForm(fieldData = null) {
     console.log('🔵 openCustomFieldForm called');
     const modal = document.getElementById('customFieldModal');
@@ -3080,7 +3519,6 @@ function openCustomFieldForm(fieldData = null) {
         document.getElementById('customFieldActive').checked = fieldData.is_active !== false;
         document.getElementById('customFieldOrder').value = fieldData.display_order || 0;
         
-        // إظهار خيارات القائمة إذا كان النوع select
         const optionsGroup = document.getElementById('fieldOptionsGroup');
         if (optionsGroup) {
             optionsGroup.style.display = fieldData.field_type === 'select' ? 'block' : 'none';
@@ -3105,7 +3543,6 @@ function openCustomFieldForm(fieldData = null) {
 }
 window.openCustomFieldForm = openCustomFieldForm;
 
-// إغلاق نافذة الحقل المخصص
 function closeCustomFieldForm() {
     const modal = document.getElementById('customFieldModal');
     if (modal) {
@@ -3114,7 +3551,6 @@ function closeCustomFieldForm() {
 }
 window.closeCustomFieldForm = closeCustomFieldForm;
 
-// حفظ الحقل المخصص
 async function saveCustomField(event) {
     event.preventDefault();
     console.log('🔵 saveCustomField called');
@@ -3180,7 +3616,6 @@ async function saveCustomField(event) {
 }
 window.saveCustomField = saveCustomField;
 
-// تعديل حقل مخصص
 async function editCustomField(fieldId) {
     try {
         const { data, error } = await supabase
@@ -3198,7 +3633,6 @@ async function editCustomField(fieldId) {
 }
 window.editCustomField = editCustomField;
 
-// حذف حقل مخصص
 async function deleteCustomField(fieldId) {
     if (!confirm('⚠️ هل أنت متأكد من حذف هذا الحقل؟')) return;
     
@@ -3219,7 +3653,6 @@ async function deleteCustomField(fieldId) {
 }
 window.deleteCustomField = deleteCustomField;
 
-// تبديل حالة الحقل
 async function toggleCustomField(fieldId, currentStatus) {
     try {
         const { error } = await supabase
@@ -3286,7 +3719,6 @@ function showToast(message, type = 'success') {
 // ===== إدارة القوالب المخصصة =====
 // ============================================
 
-// تحميل القوالب المخصصة من localStorage
 function loadCustomTemplates() {
     try {
         const templates = JSON.parse(localStorage.getItem('tithkari_design_templates') || '[]');
@@ -3297,7 +3729,6 @@ function loadCustomTemplates() {
     }
 }
 
-// عرض القوالب المخصصة في لوحة التحكم
 function renderCustomTemplates() {
     const grid = document.getElementById('customTemplatesGrid');
     if (!grid) return;
@@ -3336,13 +3767,11 @@ function renderCustomTemplates() {
     `).join('');
 }
 
-// تعديل قالب مخصص (يفتح في design-studio)
 function editCustomTemplate(templateId) {
     localStorage.setItem('tithkari_edit_template_id', templateId);
     window.open('design-studio.html', '_blank');
 }
 
-// حذف قالب مخصص
 function deleteCustomTemplate(templateId) {
     if (!confirm('⚠️ هل أنت متأكد من حذف هذا القالب؟')) return;
     
@@ -3354,7 +3783,6 @@ function deleteCustomTemplate(templateId) {
     showToast('✅ تم حذف القالب', 'success');
 }
 
-// حقن قالب في المتجر (Supabase)
 async function injectTemplateToStore(templateId) {
     const templates = JSON.parse(localStorage.getItem('tithkari_design_templates') || '[]');
     const template = templates.find(t => t.id === templateId);
@@ -3402,13 +3830,11 @@ async function injectTemplateToStore(templateId) {
     }
 }
 
-// مزامنة القوالب
 function syncCustomTemplates() {
     renderCustomTemplates();
     showToast('✅ تم تحديث القوالب', 'success');
 }
 
-// حقن القوالب في جدول قوالب التصميم (جماعي)
 async function injectTemplatesToAdmin() {
     const { templates, customProducts } = loadCustomTemplates();
     
@@ -3487,7 +3913,6 @@ async function injectTemplatesToAdmin() {
     }
 }
 
-// مزامنة القوالب مع localStorage
 function syncTemplatesToLocal() {
     const { templates, customProducts } = loadCustomTemplates();
     
@@ -3509,7 +3934,6 @@ function syncTemplatesToLocal() {
 // ===== تعديل المنتج =====
 // ============================================
 
-// فتح نافذة تعديل المنتج
 window.openEditProductForm = async function(productId) {
     try {
         const { data, error } = await supabase
@@ -3530,7 +3954,6 @@ window.openEditProductForm = async function(productId) {
         document.getElementById('editProductStock').value = data.stock || 0;
         document.getElementById('editProductStatus').value = data.status || 'active';
         
-        // عرض معاينة الصور
         if (data.image_url) {
             document.getElementById('editImagePreview').innerHTML = 
                 '<img src="' + data.image_url + '" style="max-width:150px;border-radius:8px;border:1px solid rgba(255,215,0,0.2);" onerror="this.style.display=\'none\'" />';
@@ -3542,7 +3965,6 @@ window.openEditProductForm = async function(productId) {
         
         document.getElementById('editProductModal').classList.add('active');
         
-        // أحداث رفع الصور في نموذج التعديل
         document.getElementById('editProductImageFile')?.addEventListener('change', function(e) {
             const file = this.files[0];
             if (file) {
@@ -3571,7 +3993,6 @@ window.openEditProductForm = async function(productId) {
             }
         });
         
-        // معاينة من الرابط في نموذج التعديل
         document.getElementById('editProductImage')?.addEventListener('input', function() {
             const url = this.value.trim();
             if (url && (url.startsWith('http') || url.startsWith('data:image'))) {
@@ -3594,12 +4015,10 @@ window.openEditProductForm = async function(productId) {
     }
 };
 
-// إغلاق نافذة تعديل المنتج
 window.closeEditProductForm = function() {
     document.getElementById('editProductModal').classList.remove('active');
 };
 
-// تحديث المنتج
 window.updateProduct = async function(event) {
     event.preventDefault();
     
@@ -3625,7 +4044,6 @@ window.updateProduct = async function(event) {
             return;
         }
         
-        // رفع الملفات إذا كانت موجودة
         const imageFile = document.getElementById('editProductImageFile')?.files[0];
         const templateFile = document.getElementById('editTemplateImageFile')?.files[0];
         
@@ -3676,7 +4094,6 @@ window.updateProduct = async function(event) {
 // ===== إدارة العملاء =====
 // ============================================
 
-// تحميل العملاء
 window.loadCustomers = async function() {
     try {
         const { data: orders, error } = await supabase
@@ -3720,7 +4137,6 @@ window.loadCustomers = async function() {
     }
 };
 
-// عرض العملاء
 function renderCustomers(customers) {
     const tbody = document.getElementById('customersTableBody');
     if (!tbody) return;
@@ -3751,7 +4167,6 @@ function renderCustomers(customers) {
     `).join('');
 }
 
-// البحث عن العملاء
 window.filterCustomers = function() {
     const search = document.getElementById('customerSearch').value.toLowerCase().trim();
     const data = window._customersData || [];
@@ -3770,7 +4185,6 @@ window.filterCustomers = function() {
     renderCustomers(filtered);
 };
 
-// عرض تفاصيل العميل
 window.viewCustomerDetails = async function(email) {
     try {
         const { data: orders, error } = await supabase
@@ -3833,18 +4247,15 @@ window.viewCustomerDetails = async function(email) {
     }
 };
 
-// إغلاق نافذة تفاصيل العميل
 window.closeCustomerDetails = function() {
     document.getElementById('customerDetailsModal').classList.remove('active');
 };
 
-// إرسال رسالة للعميل
 window.sendCustomerMessage = function(email) {
     window.location.href = 'mailto:' + email;
     showToast('📧 تم فتح البريد الإلكتروني', 'info');
 };
 
-// تصدير العملاء كملف CSV
 window.exportCustomersCSV = function() {
     const data = window._customersData || [];
     if (data.length === 0) {
@@ -3981,6 +4392,21 @@ window.closeCategoryForm = closeCategoryForm;
 window.deleteCategory = deleteCategory;
 window.toggleCategoryStatus = toggleCategoryStatus;
 window.saveStoreSettings = saveStoreSettings;
+window.loadCoupons = loadCoupons;
+window.openCouponForm = openCouponForm;
+window.closeCouponForm = closeCouponForm;
+window.editCoupon = editCoupon;
+window.deleteCoupon = deleteCoupon;
+window.loadReviews = loadReviews;
+window.openReviewForm = openReviewForm;
+window.closeReviewForm = closeReviewForm;
+window.editReview = editReview;
+window.deleteReview = deleteReview;
+window.loadPaymentSettings = loadPaymentSettings;
+window.savePaymentSettings = savePaymentSettings;
+window.loadEmailSettings = loadEmailSettings;
+window.saveEmailSettings = saveEmailSettings;
+window.sendTestEmail = sendTestEmail;
 
 // ============================================
 // بدء التشغيل
@@ -4025,12 +4451,10 @@ document.addEventListener('DOMContentLoaded', function() {
     loadCustomers();
     loadDashboard();
     
-    // تحميل المنتجات لقائمة الحقول المخصصة
     setTimeout(function() {
         loadProductsForFieldSelector();
     }, 1000);
     
-    // ربط حدث تغيير المنتج في الحقول المخصصة
     const productSelector = document.getElementById('fieldProductSelector');
     if (productSelector) {
         productSelector.addEventListener('change', loadProductFields);
@@ -4039,7 +4463,6 @@ document.addEventListener('DOMContentLoaded', function() {
         console.warn('⚠️ fieldProductSelector not found in DOM');
     }
     
-    // ربط حدث تغيير نوع الحقل لإظهار خيارات القائمة
     const fieldTypeSelect = document.getElementById('customFieldType');
     if (fieldTypeSelect) {
         fieldTypeSelect.addEventListener('change', function() {
@@ -4051,7 +4474,6 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('✅ customFieldType event bound');
     }
     
-    // ربط زر إضافة حقل
     const addFieldBtn = document.getElementById('addFieldBtn');
     if (addFieldBtn) {
         addFieldBtn.addEventListener('click', function() {
@@ -4060,10 +4482,8 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('✅ addFieldBtn event bound');
     }
     
-    // ربط نموذج الحقل المخصص
     const customFieldForm = document.getElementById('customFieldForm');
     if (customFieldForm) {
-        // إزالة أي مستمعات قديمة
         const newForm = customFieldForm.cloneNode(true);
         customFieldForm.parentNode.replaceChild(newForm, customFieldForm);
         newForm.addEventListener('submit', saveCustomField);
@@ -4075,5 +4495,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 1500);
     
     console.log('✅ Admin Panel Ready');
-    console.log('📋 Available tabs:', ['dashboard', 'products', 'orders', 'add-product', 'custom-fields', 'analytics', 'banners', 'menus', 'customers', 'settings', 'design-templates', 'code-editor', 'store-settings', 'advanced-settings'].join(', '));
+    console.log('📋 Available tabs:', ['dashboard', 'products', 'orders', 'add-product', 'custom-fields', 'analytics', 'banners', 'menus', 'customers', 'settings', 'design-templates', 'code-editor', 'store-settings', 'advanced-settings', 'footer', 'categories', 'coupons', 'reviews', 'payment-settings', 'email-settings'].join(', '));
 });

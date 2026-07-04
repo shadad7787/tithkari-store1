@@ -85,6 +85,36 @@
                     <i class="fas fa-cog" style="color: #FFD700;"></i>
                     <span style="color: #FFD700;">إعدادات متقدمة</span>
                 </a>
+                <!-- إضافة قسم إدارة التذييل -->
+                <a href="#" onclick="switchTab('footer'); return false;" style="background: rgba(16, 185, 129, 0.1); border-right: 2px solid #10b981;">
+                    <i class="fas fa-shoe-prints" style="color: #10b981;"></i>
+                    <span style="color: #10b981;">التذييل</span>
+                </a>
+                <!-- إضافة قسم إدارة التصنيفات -->
+                <a href="#" onclick="switchTab('categories'); return false;" style="background: rgba(255, 215, 0, 0.08); border-right: 2px solid #FFD700;">
+                    <i class="fas fa-tags" style="color: #FFD700;"></i>
+                    <span style="color: #FFD700;">التصنيفات</span>
+                </a>
+                <!-- إضافة قسم إدارة الكوبونات -->
+                <a href="#" onclick="switchTab('coupons'); return false;" style="background: rgba(236, 72, 153, 0.1); border-right: 2px solid #ec4899;">
+                    <i class="fas fa-ticket" style="color: #ec4899;"></i>
+                    <span style="color: #ec4899;">الكوبونات</span>
+                </a>
+                <!-- إضافة قسم إدارة التقييمات -->
+                <a href="#" onclick="switchTab('reviews'); return false;" style="background: rgba(251, 191, 36, 0.1); border-right: 2px solid #fbbf24;">
+                    <i class="fas fa-star" style="color: #fbbf24;"></i>
+                    <span style="color: #fbbf24;">التقييمات</span>
+                </a>
+                <!-- إضافة قسم إدارة الدفع -->
+                <a href="#" onclick="switchTab('payment-settings'); return false;" style="background: rgba(139, 92, 246, 0.1); border-right: 2px solid #8B5CF6;">
+                    <i class="fas fa-credit-card" style="color: #8B5CF6;"></i>
+                    <span style="color: #8B5CF6;">إعدادات الدفع</span>
+                </a>
+                <!-- إضافة قسم إدارة البريد -->
+                <a href="#" onclick="switchTab('email-settings'); return false;" style="background: rgba(59, 130, 246, 0.1); border-right: 2px solid #3b82f6;">
+                    <i class="fas fa-envelope" style="color: #3b82f6;"></i>
+                    <span style="color: #3b82f6;">إعدادات البريد</span>
+                </a>
             </nav>
             <div class="admin-bottom">
                 <a href="../design-studio.html" class="admin-back" target="_blank" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: white;">
@@ -428,19 +458,6 @@
                     </div>
                 </div>
 
-                <!-- الإعدادات -->
-                <div id="settings-tab" class="admin-tab">
-                    <h2>⚙️ الإعدادات العامة</h2>
-                    <form id="settingsForm" class="admin-form" onsubmit="saveSettings(event)">
-                        <div id="settingsFields">
-                            <!-- سيتم تعبئتها بواسطة JavaScript -->
-                        </div>
-                        <button type="submit" class="btn-primary">
-                            <i class="fas fa-save"></i> حفظ الإعدادات
-                        </button>
-                    </form>
-                </div>
-
                 <!-- قوالب التصميم -->
                 <div id="design-templates-tab" class="admin-tab">
                     <div class="admin-header-tab">
@@ -569,6 +586,289 @@
                     </div>
                     <div id="advancedSettingsContainer">
                         <!-- سيتم تعبئتها بواسطة JavaScript -->
+                    </div>
+                </div>
+
+                <!-- ===== إدارة التذييل (جديد) ===== -->
+                <div id="footer-tab" class="admin-tab">
+                    <div class="admin-header-tab">
+                        <h2>🦶 إدارة التذييل</h2>
+                        <button class="btn-primary" onclick="openFooterItemForm()" style="background: #10b981; color: white;">
+                            <i class="fas fa-plus"></i> إضافة عنصر
+                        </button>
+                        <button class="btn-primary" onclick="loadFooterItems()" style="background: #3b82f6; color: white;">
+                            <i class="fas fa-sync"></i> تحديث
+                        </button>
+                    </div>
+                    
+                    <div class="admin-table-wrapper">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>الأيقونة</th>
+                                    <th>الاسم</th>
+                                    <th>النوع</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="footerItemsTableBody">
+                                <tr><td colspan="6" style="text-align:center;">جاري التحميل...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ===== إدارة التصنيفات (جديد) ===== -->
+                <div id="categories-tab" class="admin-tab">
+                    <div class="admin-header-tab">
+                        <h2>🏷️ إدارة التصنيفات</h2>
+                        <button class="btn-primary" onclick="openCategoryForm()" style="background: #FFD700; color: #0F0F1A;">
+                            <i class="fas fa-plus"></i> إضافة تصنيف
+                        </button>
+                        <button class="btn-primary" onclick="loadCategories()" style="background: #3b82f6; color: white;">
+                            <i class="fas fa-sync"></i> تحديث
+                        </button>
+                    </div>
+                    
+                    <div class="admin-table-wrapper">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>الأيقونة</th>
+                                    <th>الاسم</th>
+                                    <th>المعرف</th>
+                                    <th>ترتيب</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categoriesTableBody">
+                                <tr><td colspan="7" style="text-align:center;">جاري التحميل...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ===== إدارة الكوبونات (جديد) ===== -->
+                <div id="coupons-tab" class="admin-tab">
+                    <div class="admin-header-tab">
+                        <h2>🎫 إدارة الكوبونات</h2>
+                        <button class="btn-primary" onclick="openCouponForm()" style="background: #ec4899; color: white;">
+                            <i class="fas fa-plus"></i> إضافة كوبون
+                        </button>
+                        <button class="btn-primary" onclick="loadCoupons()" style="background: #3b82f6; color: white;">
+                            <i class="fas fa-sync"></i> تحديث
+                        </button>
+                    </div>
+                    
+                    <div class="admin-table-wrapper">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>الكود</th>
+                                    <th>الخصم</th>
+                                    <th>النوع</th>
+                                    <th>الحد الأدنى</th>
+                                    <th>عدد الاستخدامات</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="couponsTableBody">
+                                <tr><td colspan="8" style="text-align:center;">جاري التحميل...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ===== إدارة التقييمات (جديد) ===== -->
+                <div id="reviews-tab" class="admin-tab">
+                    <div class="admin-header-tab">
+                        <h2>⭐ إدارة التقييمات</h2>
+                        <button class="btn-primary" onclick="loadReviews()" style="background: #3b82f6; color: white;">
+                            <i class="fas fa-sync"></i> تحديث
+                        </button>
+                    </div>
+                    
+                    <div class="admin-table-wrapper">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>العميل</th>
+                                    <th>التقييم</th>
+                                    <th>التعليق</th>
+                                    <th>الحالة</th>
+                                    <th>التاريخ</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reviewsTableBody">
+                                <tr><td colspan="7" style="text-align:center;">جاري التحميل...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ===== إعدادات الدفع (جديد) ===== -->
+                <div id="payment-settings-tab" class="admin-tab">
+                    <div class="admin-header-tab">
+                        <h2>💳 إعدادات الدفع</h2>
+                        <button class="btn-primary" onclick="savePaymentSettings()" style="background: #8B5CF6; color: white;">
+                            <i class="fas fa-save"></i> حفظ الإعدادات
+                        </button>
+                    </div>
+                    
+                    <div id="paymentSettingsContainer">
+                        <form class="admin-form" id="paymentSettingsForm">
+                            <div class="settings-section">
+                                <h3><i class="fab fa-stripe"></i> إعدادات Stripe</h3>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>🔑 المفتاح العام (Publishable Key)</label>
+                                        <input type="text" id="stripePublishableKey" placeholder="pk_test_..." />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>🔐 المفتاح السري (Secret Key)</label>
+                                        <input type="password" id="stripeSecretKey" placeholder="sk_test_..." />
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label style="display:flex;align-items:center;gap:8px;">
+                                        <input type="checkbox" id="stripeEnabled" checked />
+                                        تفعيل Stripe
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="settings-section">
+                                <h3><i class="fab fa-paypal"></i> إعدادات PayPal</h3>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>🆔 Client ID</label>
+                                        <input type="text" id="paypalClientId" placeholder="XXXXXXXXXX" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>🔐 Secret Key</label>
+                                        <input type="password" id="paypalSecretKey" placeholder="XXXXXXXXXX" />
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label style="display:flex;align-items:center;gap:8px;">
+                                        <input type="checkbox" id="paypalEnabled" checked />
+                                        تفعيل PayPal
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="settings-section">
+                                <h3>💵 الدفع عند الاستلام (COD)</h3>
+                                <div class="form-group">
+                                    <label style="display:flex;align-items:center;gap:8px;">
+                                        <input type="checkbox" id="codEnabled" checked />
+                                        تفعيل الدفع عند الاستلام
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="settings-section">
+                                <h3>🏦 التحويل البنكي</h3>
+                                <div class="form-group">
+                                    <label style="display:flex;align-items:center;gap:8px;">
+                                        <input type="checkbox" id="bankTransferEnabled" checked />
+                                        تفعيل التحويل البنكي
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label>اسم البنك</label>
+                                    <input type="text" id="bankName" placeholder="البنك الأهلي السعودي" />
+                                </div>
+                                <div class="form-group">
+                                    <label>رقم الحساب</label>
+                                    <input type="text" id="bankAccountNumber" placeholder="SA12 3456 7890 1234 5678" />
+                                </div>
+                                <div class="form-group">
+                                    <label>IBAN</label>
+                                    <input type="text" id="bankIban" placeholder="SA12 3456 7890 1234 5678" />
+                                </div>
+                                <div class="form-group">
+                                    <label>اسم المستفيد</label>
+                                    <input type="text" id="bankBeneficiary" placeholder="مؤسسة Tithkari للتجارة" />
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- ===== إعدادات البريد (جديد) ===== -->
+                <div id="email-settings-tab" class="admin-tab">
+                    <div class="admin-header-tab">
+                        <h2>📧 إعدادات البريد الإلكتروني</h2>
+                        <button class="btn-primary" onclick="saveEmailSettings()" style="background: #3b82f6; color: white;">
+                            <i class="fas fa-save"></i> حفظ الإعدادات
+                        </button>
+                        <button class="btn-primary" onclick="sendTestEmail()" style="background: #10b981; color: white;">
+                            <i class="fas fa-paper-plane"></i> إرسال بريد تجريبي
+                        </button>
+                    </div>
+                    
+                    <div id="emailSettingsContainer">
+                        <form class="admin-form" id="emailSettingsForm">
+                            <div class="settings-section">
+                                <h3><i class="fas fa-envelope"></i> إعدادات SendGrid</h3>
+                                <div class="form-group">
+                                    <label>🔑 API Key</label>
+                                    <input type="password" id="sendgridApiKey" placeholder="SG.XXXXXXXXXXXXXXXXXXXXXXXX" />
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>📧 البريد المرسل</label>
+                                        <input type="email" id="sendgridFromEmail" placeholder="info@tithkari.com" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>📛 اسم المرسل</label>
+                                        <input type="text" id="sendgridFromName" placeholder="Tithkari - متجر الدروع الفاخرة" />
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label style="display:flex;align-items:center;gap:8px;">
+                                        <input type="checkbox" id="sendgridEnabled" checked />
+                                        تفعيل SendGrid
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="settings-section">
+                                <h3><i class="fas fa-cog"></i> إعدادات البريد الافتراضية</h3>
+                                <div class="form-group">
+                                    <label>📧 البريد الإداري</label>
+                                    <input type="email" id="adminEmail" placeholder="admin@tithkari.com" />
+                                </div>
+                                <div class="form-group">
+                                    <label>🏷️ بادئة الموضوع</label>
+                                    <input type="text" id="emailSubjectPrefix" placeholder="[Tithkari] " />
+                                </div>
+                            </div>
+                            
+                            <div class="settings-section">
+                                <h3>📬 بريد تجريبي</h3>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>📧 البريد المستلم</label>
+                                        <input type="email" id="testEmailInput" placeholder="test@example.com" />
+                                    </div>
+                                    <div class="form-group" style="display:flex;align-items:flex-end;">
+                                        <button type="button" class="btn-primary" onclick="sendTestEmail()" style="background: #10b981; color: white; width:100%;">
+                                            <i class="fas fa-paper-plane"></i> إرسال
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -980,13 +1280,13 @@
         </div>
     </div>
 
-    <!-- نافذة إضافة/تعديل عنصر تذييل -->
+    <!-- ===== نافذة إضافة/تعديل عنصر تذييل (جديد) ===== -->
     <div class="modal-overlay" id="footerItemModal">
         <div class="modal-content" style="max-width:500px;">
             <button class="modal-close" onclick="closeFooterItemForm()"><i class="fas fa-times"></i></button>
             <div class="modal-body">
                 <h2 id="footerItemFormTitle">➕ إضافة عنصر تذييل</h2>
-                <form id="footerItemForm" class="admin-form">
+                <form id="footerItemForm" class="admin-form" onsubmit="saveFooterItem(event)">
                     <input type="hidden" id="footerItemId" />
                     
                     <div class="form-group">
@@ -1035,13 +1335,13 @@
         </div>
     </div>
 
-    <!-- نافذة إضافة/تعديل تصنيف -->
+    <!-- ===== نافذة إضافة/تعديل تصنيف (جديد) ===== -->
     <div class="modal-overlay" id="categoryModal">
         <div class="modal-content" style="max-width:500px;">
             <button class="modal-close" onclick="closeCategoryForm()"><i class="fas fa-times"></i></button>
             <div class="modal-body">
                 <h2 id="categoryFormTitle">➕ إضافة تصنيف جديد</h2>
-                <form id="categoryForm" class="admin-form">
+                <form id="categoryForm" class="admin-form" onsubmit="saveCategory(event)">
                     <input type="hidden" id="categoryId" />
                     <div class="form-group">
                         <label>اسم التصنيف *</label>
@@ -1078,6 +1378,114 @@
                     </div>
                     <button type="submit" class="btn-primary" style="width:100%;justify-content:center;">
                         <i class="fas fa-save"></i> حفظ التصنيف
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== نافذة إضافة/تعديل كوبون (جديد) ===== -->
+    <div class="modal-overlay" id="couponModal">
+        <div class="modal-content" style="max-width:500px;">
+            <button class="modal-close" onclick="closeCouponForm()"><i class="fas fa-times"></i></button>
+            <div class="modal-body">
+                <h2 id="couponFormTitle">➕ إضافة كوبون جديد</h2>
+                <form id="couponForm" class="admin-form" onsubmit="saveCoupon(event)">
+                    <input type="hidden" id="couponId" />
+                    
+                    <div class="form-group">
+                        <label>🏷️ كود الكوبون *</label>
+                        <input type="text" id="couponCode" required placeholder="مثال: SUMMER20" style="text-transform:uppercase;" />
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>📊 نوع الخصم</label>
+                            <select id="couponType" onchange="toggleCouponFields()">
+                                <option value="percentage">نسبة مئوية</option>
+                                <option value="fixed">قيمة ثابتة</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>💰 قيمة الخصم *</label>
+                            <input type="number" id="couponValue" required min="0" step="0.01" placeholder="10" />
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" id="maxDiscountGroup">
+                        <label>📈 الحد الأقصى للخصم (للنسبة المئوية)</label>
+                        <input type="number" id="couponMaxDiscount" min="0" step="0.01" placeholder="50" />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>💰 الحد الأدنى للطلب</label>
+                        <input type="number" id="couponMinOrder" min="0" step="0.01" placeholder="100" />
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>📅 تاريخ الانتهاء</label>
+                            <input type="date" id="couponExpiryDate" />
+                        </div>
+                        <div class="form-group">
+                            <label>🔢 الحد الأقصى للاستخدامات</label>
+                            <input type="number" id="couponMaxUses" min="1" placeholder="100" />
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>⭐ الحالة</label>
+                        <select id="couponStatus">
+                            <option value="active">نشط</option>
+                            <option value="inactive">غير نشط</option>
+                            <option value="expired">منتهي</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary" style="width:100%;justify-content:center;">
+                        <i class="fas fa-save"></i> حفظ الكوبون
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== نافذة تعديل تقييم (جديد) ===== -->
+    <div class="modal-overlay" id="reviewModal">
+        <div class="modal-content" style="max-width:500px;">
+            <button class="modal-close" onclick="closeReviewForm()"><i class="fas fa-times"></i></button>
+            <div class="modal-body">
+                <h2 id="reviewFormTitle">✏️ تعديل التقييم</h2>
+                <form id="reviewForm" class="admin-form" onsubmit="updateReview(event)">
+                    <input type="hidden" id="reviewId" />
+                    
+                    <div class="form-group">
+                        <label>⭐ التقييم</label>
+                        <select id="reviewRating">
+                            <option value="1">⭐ 1</option>
+                            <option value="2">⭐⭐ 2</option>
+                            <option value="3">⭐⭐⭐ 3</option>
+                            <option value="4">⭐⭐⭐⭐ 4</option>
+                            <option value="5">⭐⭐⭐⭐⭐ 5</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>📝 التعليق</label>
+                        <textarea id="reviewComment" rows="3" placeholder="تعليق العميل..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>⭐ الحالة</label>
+                        <select id="reviewStatus">
+                            <option value="pending">قيد المراجعة</option>
+                            <option value="approved">مقبول</option>
+                            <option value="rejected">مرفوض</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary" style="width:100%;justify-content:center;">
+                        <i class="fas fa-save"></i> حفظ التقييم
                     </button>
                 </form>
             </div>
@@ -1255,6 +1663,21 @@
             border: 1px solid rgba(16, 185, 129, 0.2);
         }
         .status-inactive {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        .status-pending {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.2);
+        }
+        .status-completed {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        .status-cancelled {
             background: rgba(239, 68, 68, 0.15);
             color: #ef4444;
             border: 1px solid rgba(239, 68, 68, 0.2);
@@ -1448,6 +1871,12 @@
                 max-width: 95%;
                 padding: 20px;
             }
+            #paymentSettingsContainer .form-row {
+                grid-template-columns: 1fr;
+            }
+            #emailSettingsContainer .form-row {
+                grid-template-columns: 1fr;
+            }
         }
 
         @media (max-width: 480px) {
@@ -1468,6 +1897,13 @@
             }
             #customFieldModal .form-row {
                 grid-template-columns: 1fr;
+            }
+            .admin-header-tab {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .admin-header-tab button {
+                width: 100%;
             }
         }
     </style>

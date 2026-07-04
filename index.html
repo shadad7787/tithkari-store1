@@ -550,6 +550,101 @@
             font-weight: 600;
         }
         
+        /* ===== خيارات الدفع ===== */
+        .payment-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+        .payment-option {
+            flex: 1;
+            min-width: 100px;
+            padding: 10px;
+            background: rgba(255,255,255,0.03);
+            border: 2px solid rgba(255,255,255,0.05);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .payment-option:hover {
+            border-color: rgba(255,215,0,0.3);
+        }
+        .payment-option.selected {
+            border-color: #ffd700;
+            background: rgba(255,215,0,0.05);
+        }
+        .payment-option input[type="radio"] {
+            display: none;
+        }
+        .payment-option .method-icon {
+            font-size: 24px;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .payment-option .method-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #fff;
+        }
+        .payment-option .method-desc {
+            font-size: 10px;
+            color: var(--gray);
+        }
+        
+        /* ===== كود الخصم في السلة ===== */
+        .coupon-section {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255,215,0,0.03);
+            border-radius: 8px;
+            border: 1px solid rgba(255,215,0,0.05);
+        }
+        .coupon-input {
+            display: flex;
+            gap: 8px;
+        }
+        .coupon-input input {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: var(--dark);
+            color: #fff;
+            border: 1px solid rgba(255,215,0,0.1);
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+        }
+        .coupon-input input:focus {
+            border-color: #ffd700;
+            outline: none;
+        }
+        .btn-coupon {
+            padding: 8px 16px;
+            background: #ffd700;
+            color: #0F0F1A;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Cairo', sans-serif;
+        }
+        .btn-coupon:hover {
+            transform: scale(1.02);
+        }
+        #couponMessage {
+            margin-top: 6px;
+            font-size: 12px;
+            min-height: 20px;
+        }
+        #couponMessage.success {
+            color: #10b981;
+        }
+        #couponMessage.error {
+            color: #ef4444;
+        }
+        
         @media (max-width: 768px) {
             nav ul {
                 gap: 8px;
@@ -607,6 +702,12 @@
             }
             .admin-btn span {
                 display: none;
+            }
+            .payment-options {
+                flex-direction: column;
+            }
+            .payment-option {
+                min-width: unset;
             }
         }
         
@@ -696,7 +797,7 @@
                 </div>
                 
                 <!-- زر لوحة التحكم -->
-                <a href="admin-products.html" class="admin-btn" title="لوحة تحكم المنتجات">
+                <a href="admin/admin.html" class="admin-btn" title="لوحة التحكم">
                     <i class="fas fa-cog"></i>
                     <span>لوحة التحكم</span>
                 </a>
@@ -711,7 +812,7 @@
                     <i class="fas fa-shopping-cart"></i>
                     <span class="cart-count" id="cartCount">0</span>
                 </button>
-                <button class="login-btn" id="loginBtn" onclick="window.location.href='/login.html'">
+                <button class="login-btn" id="loginBtn" onclick="window.location.href='login.html'">
                     <i class="fas fa-user"></i>
                 </button>
             </div>
@@ -1018,6 +1119,47 @@
                     <div class="form-group">
                         <label>📝 ملاحظات إضافية (اختياري)</label>
                         <textarea id="checkoutNotes" rows="2" placeholder="أي ملاحظات إضافية للطلب..."></textarea>
+                    </div>
+                    
+                    <!-- ===== خيارات الدفع ===== -->
+                    <div style="margin: 15px 0;">
+                        <label style="color: var(--gray); font-weight: 600; font-size: 13px; display: block; margin-bottom: 8px;">💳 طريقة الدفع</label>
+                        <div class="payment-options" id="paymentOptions">
+                            <div class="payment-option selected" data-method="cod" onclick="selectPaymentMethod('cod')">
+                                <input type="radio" name="payment_method" value="cod" checked />
+                                <span class="method-icon">💵</span>
+                                <span class="method-name">الدفع عند الاستلام</span>
+                                <span class="method-desc">ادفع عند استلام المنتج</span>
+                            </div>
+                            <div class="payment-option" data-method="stripe" onclick="selectPaymentMethod('stripe')">
+                                <input type="radio" name="payment_method" value="stripe" />
+                                <span class="method-icon">💳</span>
+                                <span class="method-name">بطاقة ائتمان</span>
+                                <span class="method-desc">Visa / MasterCard</span>
+                            </div>
+                            <div class="payment-option" data-method="paypal" onclick="selectPaymentMethod('paypal')">
+                                <input type="radio" name="payment_method" value="paypal" />
+                                <span class="method-icon">🅿️</span>
+                                <span class="method-name">PayPal</span>
+                                <span class="method-desc">دفع آمن عبر PayPal</span>
+                            </div>
+                            <div class="payment-option" data-method="bank" onclick="selectPaymentMethod('bank')">
+                                <input type="radio" name="payment_method" value="bank" />
+                                <span class="method-icon">🏦</span>
+                                <span class="method-name">تحويل بنكي</span>
+                                <span class="method-desc">تحويل مباشر للبنك</span>
+                            </div>
+                        </div>
+                        <div id="bankTransferInfo" style="display: none; margin-top: 10px; padding: 12px; background: rgba(255,215,0,0.05); border-radius: 8px; border: 1px solid rgba(255,215,0,0.1);">
+                            <p style="color: #ffd700; font-weight: 600; margin-bottom: 5px;">🏦 معلومات التحويل البنكي:</p>
+                            <div style="font-size: 13px; color: var(--gray);">
+                                <p><strong>اسم البنك:</strong> <span id="bankNameDisplay">البنك الأهلي السعودي</span></p>
+                                <p><strong>رقم الحساب:</strong> <span id="bankAccountDisplay">SA12 3456 7890 1234 5678</span></p>
+                                <p><strong>IBAN:</strong> <span id="bankIbanDisplay">SA12 3456 7890 1234 5678</span></p>
+                                <p><strong>المستفيد:</strong> <span id="bankBeneficiaryDisplay">مؤسسة Tithkari للتجارة</span></p>
+                                <p style="font-size: 12px; margin-top: 5px;">⚠️ يرجى إرسال صورة الإيداع عبر واتساب: <a href="https://wa.me/966500000000" style="color: #25D366;">+966 50 000 0000</a></p>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- ملخص الطلب -->

@@ -35,7 +35,6 @@
             padding: 0 20px;
         }
         
-        /* الهيدر */
         .checkout-header {
             background: rgba(15, 15, 26, 0.95);
             backdrop-filter: blur(10px);
@@ -101,10 +100,6 @@
             color: #0F0F1A;
         }
         
-        .step.active {
-            color: #FFD700;
-        }
-        
         .step.completed .step-number {
             background: #4CAF50;
             border-color: #4CAF50;
@@ -125,7 +120,6 @@
             background: #FFD700;
         }
         
-        /* المحتوى الرئيسي */
         .checkout-main {
             padding: 40px 0 60px;
         }
@@ -137,7 +131,6 @@
             align-items: start;
         }
         
-        /* نموذج الدفع */
         .checkout-form-section {
             background: #1A1A2E;
             border-radius: 16px;
@@ -214,7 +207,6 @@
             gap: 15px;
         }
         
-        /* ===== الحقول الإضافية للطلب ===== */
         .additional-fields-section {
             background: rgba(255, 215, 0, 0.03);
             border-radius: 12px;
@@ -348,7 +340,139 @@
             color: #8A8A9B;
         }
         
-        /* ملخص الطلب */
+        .payment-options-section {
+            background: rgba(255, 215, 0, 0.03);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+        }
+        
+        .payment-options-section h3 {
+            color: #FFD700;
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .payment-methods-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+        }
+        
+        .payment-method-card {
+            background: #0F0F1A;
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+        }
+        
+        .payment-method-card:hover {
+            border-color: rgba(255, 215, 0, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .payment-method-card.selected {
+            border-color: #FFD700;
+            background: rgba(255, 215, 0, 0.05);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.05);
+        }
+        
+        .payment-method-card input[type="radio"] {
+            display: none;
+        }
+        
+        .payment-method-card .method-icon {
+            font-size: 28px;
+            display: block;
+            margin-bottom: 6px;
+        }
+        
+        .payment-method-card .method-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #FFFFFF;
+        }
+        
+        .payment-method-card .method-desc {
+            font-size: 10px;
+            color: #8A8A9B;
+            margin-top: 2px;
+        }
+        
+        .payment-method-card .check-mark {
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            width: 22px;
+            height: 22px;
+            background: #FFD700;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: #0F0F1A;
+            font-size: 12px;
+        }
+        
+        .payment-method-card.selected .check-mark {
+            display: flex;
+        }
+        
+        #stripe-container,
+        #paypal-container {
+            margin-top: 15px;
+            padding: 15px;
+            background: #0F0F1A;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+        }
+        
+        .payment-settings-container {
+            margin-top: 10px;
+            padding: 15px;
+            background: rgba(255, 215, 0, 0.03);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+        }
+        
+        .payment-settings-container .setting-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 13px;
+            color: #8A8A9B;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        
+        .payment-settings-container .setting-row:last-child {
+            border-bottom: none;
+        }
+        
+        .payment-settings-container .setting-row .label {
+            color: #8A8A9B;
+        }
+        
+        .payment-settings-container .setting-row .value {
+            color: #FFD700;
+            font-weight: 600;
+        }
+        
+        .payment-settings-container .setting-row .value.enabled {
+            color: #4CAF50;
+        }
+        
+        .payment-settings-container .setting-row .value.disabled {
+            color: #ef4444;
+        }
+        
         .order-summary {
             background: #1A1A2E;
             border-radius: 16px;
@@ -437,7 +561,6 @@
             flex-shrink: 0;
         }
         
-        /* الحقول المخصصة في الملخص */
         .checkout-custom-fields {
             margin-top: 4px;
             padding: 6px 8px;
@@ -474,7 +597,6 @@
             font-style: italic;
         }
         
-        /* المجاميع */
         .summary-totals {
             border-top: 1px solid rgba(255, 215, 0, 0.1);
             padding-top: 15px;
@@ -522,7 +644,6 @@
             color: #FFD700;
         }
         
-        /* زر الإرسال */
         .submit-order-btn {
             width: 100%;
             padding: 16px;
@@ -567,7 +688,6 @@
             color: #FFD700;
         }
         
-        /* Toast */
         #toastContainer {
             position: fixed;
             bottom: 20px;
@@ -645,6 +765,9 @@
                 width: 60px;
                 height: 60px;
             }
+            .payment-methods-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
         
         @media (max-width: 480px) {
@@ -672,6 +795,19 @@
             .file-preview-item {
                 width: 50px;
                 height: 50px;
+            }
+            .payment-methods-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+            }
+            .payment-method-card {
+                padding: 10px 8px;
+            }
+            .payment-method-card .method-icon {
+                font-size: 20px;
+            }
+            .payment-method-card .method-name {
+                font-size: 11px;
             }
         }
     </style>
@@ -718,6 +854,77 @@
                 
                 <form id="checkoutForm" onsubmit="event.preventDefault(); submitOrderFromCheckout();">
                     
+                    <!-- ===== خيارات الدفع ===== -->
+                    <div class="payment-options-section">
+                        <h3><i class="fas fa-credit-card"></i> طريقة الدفع</h3>
+                        
+                        <div class="payment-settings-container" id="paymentSettingsDisplay">
+                            <div style="color: #8A8A9B; font-size: 13px; padding: 5px 0;">
+                                <i class="fas fa-spinner fa-spin"></i> جاري تحميل إعدادات الدفع...
+                            </div>
+                        </div>
+                        
+                        <div class="payment-methods-grid" id="paymentMethods">
+                            <div class="payment-method-card selected" data-method="cod" onclick="selectPaymentMethod('cod')">
+                                <input type="radio" name="payment_method" value="cod" checked />
+                                <span class="check-mark"><i class="fas fa-check"></i></span>
+                                <span class="method-icon">💵</span>
+                                <span class="method-name">الدفع عند الاستلام</span>
+                                <span class="method-desc">ادفع عند استلام المنتج</span>
+                            </div>
+                            <div class="payment-method-card" data-method="stripe" onclick="selectPaymentMethod('stripe')">
+                                <input type="radio" name="payment_method" value="stripe" />
+                                <span class="check-mark"><i class="fas fa-check"></i></span>
+                                <span class="method-icon">💳</span>
+                                <span class="method-name">بطاقة ائتمان</span>
+                                <span class="method-desc">Visa / MasterCard</span>
+                            </div>
+                            <div class="payment-method-card" data-method="paypal" onclick="selectPaymentMethod('paypal')">
+                                <input type="radio" name="payment_method" value="paypal" />
+                                <span class="check-mark"><i class="fas fa-check"></i></span>
+                                <span class="method-icon">🅿️</span>
+                                <span class="method-name">PayPal</span>
+                                <span class="method-desc">دفع آمن عبر PayPal</span>
+                            </div>
+                            <div class="payment-method-card" data-method="bank" onclick="selectPaymentMethod('bank')">
+                                <input type="radio" name="payment_method" value="bank" />
+                                <span class="check-mark"><i class="fas fa-check"></i></span>
+                                <span class="method-icon">🏦</span>
+                                <span class="method-name">تحويل بنكي</span>
+                                <span class="method-desc">تحويل مباشر للبنك</span>
+                            </div>
+                        </div>
+                        
+                        <div id="stripe-container" style="display: none;">
+                            <div style="text-align: center; padding: 20px; color: #8A8A9B;">
+                                <i class="fas fa-credit-card" style="font-size: 40px; color: #FFD700; display: block; margin-bottom: 10px;"></i>
+                                <p>سيتم تفعيل الدفع عبر بطاقة الائتمان قريباً</p>
+                                <p style="font-size: 12px; margin-top: 5px;">للحصول على تجربة دفع كاملة، يرجى تثبيت Stripe</p>
+                            </div>
+                        </div>
+                        
+                        <div id="paypal-container" style="display: none;">
+                            <div style="text-align: center; padding: 20px; color: #8A8A9B;">
+                                <i class="fab fa-paypal" style="font-size: 40px; color: #0070BA; display: block; margin-bottom: 10px;"></i>
+                                <p>سيتم تفعيل الدفع عبر PayPal قريباً</p>
+                                <p style="font-size: 12px; margin-top: 5px;">للحصول على تجربة دفع كاملة، يرجى تثبيت PayPal</p>
+                            </div>
+                        </div>
+                        
+                        <div id="bank-container" style="display: none;">
+                            <div style="padding: 15px; background: #0F0F1A; border-radius: 8px; margin-top: 10px;">
+                                <p style="color: #FFD700; font-weight: 600;">🏦 معلومات التحويل البنكي:</p>
+                                <div style="background: rgba(255, 215, 0, 0.05); padding: 12px; border-radius: 6px; margin-top: 8px;" id="bankDetailsContainer">
+                                    <p><strong>اسم البنك:</strong> <span id="bankNameDisplay">البنك الأهلي السعودي</span></p>
+                                    <p><strong>رقم الحساب:</strong> <span id="bankAccountDisplay">SA12 3456 7890 1234 5678</span></p>
+                                    <p><strong>IBAN:</strong> <span id="bankIbanDisplay">SA12 3456 7890 1234 5678</span></p>
+                                    <p><strong>المستفيد:</strong> <span id="bankBeneficiaryDisplay">مؤسسة Tithkari للتجارة</span></p>
+                                    <p style="font-size: 12px; color: #8A8A9B; margin-top: 5px;">⚠️ يرجى إرسال صورة الإيداع عبر واتساب: <a href="https://wa.me/966500000000" style="color: #25D366;">+966 50 000 0000</a></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <!-- ===== الحقول الإضافية للطلب ===== -->
                     <div class="additional-fields-section">
                         <h3>
@@ -725,7 +932,6 @@
                             <small>(اختيارية)</small>
                         </h3>
                         
-                        <!-- 1. اختيار المناسبة -->
                         <div class="form-group">
                             <label>🎯 نوع المناسبة <span class="optional">(اختياري)</span></label>
                             <select id="occasionType">
@@ -744,25 +950,21 @@
                             </select>
                         </div>
                         
-                        <!-- 2. مربع نص المناسبة -->
                         <div class="form-group">
                             <label>✏️ اكتب المناسبة <span class="optional">(اختياري)</span></label>
                             <input type="text" id="occasionText" placeholder="مثال: شكر وتقدير للدكتور أحمد" />
                         </div>
                         
-                        <!-- 3. عبارة الإهداء -->
                         <div class="form-group">
                             <label>💝 عبارة الإهداء <span class="optional">(اختياري)</span></label>
                             <textarea id="dedicationText" rows="3" placeholder="اكتب عبارة الإهداء التي تريدها على الدرع..."></textarea>
                         </div>
                         
-                        <!-- 4. اسم الشخص -->
                         <div class="form-group">
                             <label>👤 اسم الشخص <span class="optional">(اختياري)</span></label>
                             <input type="text" id="personName" placeholder="أدخل اسم الشخص المراد إهداؤه" />
                         </div>
                         
-                        <!-- 5. رفع الصور -->
                         <div class="form-group">
                             <label>🖼️ رفع صور (شعار / صورة شخصية) <span class="optional">(اختياري)</span></label>
                             <div class="file-upload-wrapper" id="fileUploadWrapper">
@@ -779,7 +981,6 @@
                             </small>
                         </div>
                         
-                        <!-- 6. ملاحظات إضافية -->
                         <div class="form-group">
                             <label>📝 ملاحظات إضافية <span class="optional">(اختياري)</span></label>
                             <textarea id="additionalNotes" rows="3" placeholder="أي ملاحظات أو تعليمات إضافية للطلب..."></textarea>
@@ -828,7 +1029,7 @@
                 <h3><i class="fas fa-receipt"></i> ملخص الطلب</h3>
                 
                 <div class="checkout-items" id="checkoutItems">
-                    <p style="text-align:center;color:var(--gray);">جاري تحميل البيانات...</p>
+                    <p style="text-align:center;color:#8A8A9B;">جاري تحميل البيانات...</p>
                 </div>
                 
                 <div class="summary-totals">
@@ -861,11 +1062,24 @@
 <!-- ===== Scripts ===== -->
 <script>
     // ============================================
-    // تهيئة Supabase
+    // 🔧 إصلاح: تهيئة Supabase يدوياً
     // ============================================
     const supabaseUrl = 'https://savtqajghyloevzwrzvt.supabase.co';
     const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhdnRxYWpnaHlsb2V2endyenZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3ODA1OTMsImV4cCI6MjA5ODM1NjU5M30.CBq7eKyr3RR11op_SevMBBcKQNKF7uftpaa-URemEww';
-    const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+    
+    // ✅ تهيئة عميل Supabase بشكل صحيح
+    const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+    
+    console.log('✅ Supabase client initialized successfully');
+    
+    // ============================================
+    // 🔧 دالة الحصول على صورة افتراضية (SVG) - تجنب مشكلة 404
+    // ============================================
+    function getPlaceholderSVG() {
+        return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60"%3E%3Crect width="60" height="60" fill="%231a1a2e"/%3E%3Ctext x="30" y="38" text-anchor="middle" font-size="28"%3E🛡️%3C/text%3E%3C/svg%3E';
+    }
+    
+    const PLACEHOLDER_SMALL = getPlaceholderSVG();
     
     // ============================================
     // العملات
@@ -885,9 +1099,8 @@
     let cart = [];
     let appliedCoupon = null;
     let uploadedFiles = [];
-    let uploadedFileUrls = [];
-    
-    const PLACEHOLDER_SMALL = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60"%3E%3Crect width="60" height="60" fill="%231a1a2e"/%3E%3Ctext x="30" y="38" text-anchor="middle" font-size="28"%3E🛡️%3C/text%3E%3C/svg%3E';
+    let selectedPaymentMethod = 'cod';
+    let paymentSettings = {};
     
     // ============================================
     // دوال مساعدة
@@ -952,22 +1165,176 @@
     }
     
     // ============================================
+    // 🔧 [مُصلح] تحميل إعدادات الدفع من Supabase
+    // ============================================
+    async function loadPaymentSettings() {
+        try {
+            console.log('📋 جاري تحميل إعدادات الدفع من Supabase...');
+            
+            const { data, error } = await supabaseClient
+                .from('store_settings')
+                .select('value')
+                .eq('key', 'payment_settings')
+                .maybeSingle();
+            
+            if (error) {
+                console.error('❌ خطأ في تحميل إعدادات الدفع:', error);
+                paymentSettings = getDefaultPaymentSettings();
+                renderPaymentSettings();
+                updateBankDetails();
+                return;
+            }
+            
+            if (data) {
+                paymentSettings = data.value || {};
+                console.log('✅ تم تحميل إعدادات الدفع:', paymentSettings);
+            } else {
+                console.log('⚠️ لا توجد إعدادات دفع، استخدام الافتراضية');
+                paymentSettings = getDefaultPaymentSettings();
+            }
+            
+            renderPaymentSettings();
+            updateBankDetails();
+            
+        } catch (error) {
+            console.error('❌ خطأ في تحميل إعدادات الدفع:', error);
+            paymentSettings = getDefaultPaymentSettings();
+            renderPaymentSettings();
+            updateBankDetails();
+        }
+    }
+    
+    // ============================================
+    // إعدادات دفع افتراضية
+    // ============================================
+    function getDefaultPaymentSettings() {
+        return {
+            stripe: {
+                enabled: true,
+                publishableKey: 'pk_test_XXXXXXXXXXXXXXXXXXXXXXXX',
+                secretKey: 'sk_test_XXXXXXXXXXXXXXXXXXXXXXXX'
+            },
+            paypal: {
+                enabled: true,
+                clientId: 'XXXXXXXXXXXXXXXXXXXXXXXX'
+            },
+            cod: {
+                enabled: true
+            },
+            bankTransfer: {
+                enabled: true,
+                bankName: 'البنك الأهلي السعودي',
+                accountNumber: 'SA12 3456 7890 1234 5678',
+                iban: 'SA12 3456 7890 1234 5678',
+                beneficiary: 'مؤسسة Tithkari للتجارة'
+            }
+        };
+    }
+    
+    // ============================================
+    // عرض إعدادات الدفع
+    // ============================================
+    function renderPaymentSettings() {
+        const container = document.getElementById('paymentSettingsDisplay');
+        if (!container) return;
+        
+        const stripe = paymentSettings.stripe || {};
+        const paypal = paymentSettings.paypal || {};
+        const cod = paymentSettings.cod || {};
+        const bank = paymentSettings.bankTransfer || {};
+        
+        container.innerHTML = `
+            <div class="setting-row">
+                <span class="label">💳 Stripe</span>
+                <span class="value ${stripe.enabled !== false ? 'enabled' : 'disabled'}">
+                    ${stripe.enabled !== false ? '✅ مفعل' : '❌ غير مفعل'}
+                    ${stripe.publishableKey ? ` (🔑 ${stripe.publishableKey.substring(0, 10)}...)` : ''}
+                </span>
+            </div>
+            <div class="setting-row">
+                <span class="label">🅿️ PayPal</span>
+                <span class="value ${paypal.enabled !== false ? 'enabled' : 'disabled'}">
+                    ${paypal.enabled !== false ? '✅ مفعل' : '❌ غير مفعل'}
+                    ${paypal.clientId ? ` (🆔 ${paypal.clientId.substring(0, 8)}...)` : ''}
+                </span>
+            </div>
+            <div class="setting-row">
+                <span class="label">💵 الدفع عند الاستلام</span>
+                <span class="value ${cod.enabled !== false ? 'enabled' : 'disabled'}">
+                    ${cod.enabled !== false ? '✅ مفعل' : '❌ غير مفعل'}
+                </span>
+            </div>
+            <div class="setting-row">
+                <span class="label">🏦 التحويل البنكي</span>
+                <span class="value ${bank.enabled !== false ? 'enabled' : 'disabled'}">
+                    ${bank.enabled !== false ? '✅ مفعل' : '❌ غير مفعل'}
+                    ${bank.bankName ? ` (🏛️ ${bank.bankName})` : ''}
+                </span>
+            </div>
+        `;
+    }
+    
+    // ============================================
+    // تحديث بيانات التحويل البنكي
+    // ============================================
+    function updateBankDetails() {
+        const bank = paymentSettings.bankTransfer || {};
+        
+        const nameEl = document.getElementById('bankNameDisplay');
+        const accountEl = document.getElementById('bankAccountDisplay');
+        const ibanEl = document.getElementById('bankIbanDisplay');
+        const beneficiaryEl = document.getElementById('bankBeneficiaryDisplay');
+        
+        if (nameEl) nameEl.textContent = bank.bankName || 'البنك الأهلي السعودي';
+        if (accountEl) accountEl.textContent = bank.accountNumber || 'SA12 3456 7890 1234 5678';
+        if (ibanEl) ibanEl.textContent = bank.iban || 'SA12 3456 7890 1234 5678';
+        if (beneficiaryEl) beneficiaryEl.textContent = bank.beneficiary || 'مؤسسة Tithkari للتجارة';
+    }
+    
+    // ============================================
+    // اختيار طريقة الدفع
+    // ============================================
+    function selectPaymentMethod(method) {
+        selectedPaymentMethod = method;
+        
+        document.querySelectorAll('.payment-method-card').forEach(card => {
+            card.classList.remove('selected');
+            if (card.dataset.method === method) {
+                card.classList.add('selected');
+                card.querySelector('input[type="radio"]').checked = true;
+            }
+        });
+        
+        document.getElementById('stripe-container').style.display = 'none';
+        document.getElementById('paypal-container').style.display = 'none';
+        document.getElementById('bank-container').style.display = 'none';
+        
+        if (method === 'stripe') {
+            document.getElementById('stripe-container').style.display = 'block';
+        } else if (method === 'paypal') {
+            document.getElementById('paypal-container').style.display = 'block';
+        } else if (method === 'bank') {
+            document.getElementById('bank-container').style.display = 'block';
+        }
+    }
+    window.selectPaymentMethod = selectPaymentMethod;
+    
+    // ============================================
     // رفع الصور إلى Supabase Storage
     // ============================================
     async function uploadFilesToStorage(files) {
         const urls = [];
         const bucketName = 'order-images';
         
-        // التأكد من وجود البكت
         try {
-            const { data: buckets } = await supabase.storage.listBuckets();
+            const { data: buckets } = await supabaseClient.storage.listBuckets();
             const bucketExists = buckets.some(b => b.name === bucketName);
             
             if (!bucketExists) {
-                await supabase.storage.createBucket(bucketName, {
+                await supabaseClient.storage.createBucket(bucketName, {
                     public: true,
                     allowedMimeTypes: ['image/png', 'image/jpeg', 'image/svg+xml'],
-                    fileSizeLimit: 5242880 // 5MB
+                    fileSizeLimit: 5242880
                 });
             }
         } catch (e) {
@@ -979,7 +1346,7 @@
                 const fileName = `order_${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`;
                 const filePath = `${fileName}`;
                 
-                const { data, error } = await supabase.storage
+                const { data, error } = await supabaseClient.storage
                     .from(bucketName)
                     .upload(filePath, file, {
                         cacheControl: '3600',
@@ -988,7 +1355,7 @@
                 
                 if (error) throw error;
                 
-                const { data: urlData } = supabase.storage
+                const { data: urlData } = supabaseClient.storage
                     .from(bucketName)
                     .getPublicUrl(filePath);
                 
@@ -1042,7 +1409,6 @@
         
         e.target.value = '';
         
-        // إضافة مستمعات لأزرار الحذف
         document.querySelectorAll('.remove-file').forEach(btn => {
             btn.addEventListener('click', function() {
                 const index = parseInt(this.dataset.index);
@@ -1072,7 +1438,6 @@
                 `;
                 container.appendChild(div);
                 
-                // إضافة مستمع الحدث
                 div.querySelector('.remove-file').addEventListener('click', function() {
                     removeFile(index);
                 });
@@ -1081,7 +1446,6 @@
         });
     }
     
-    // ربط حدث رفع الصور
     document.getElementById('imageUpload')?.addEventListener('change', handleFileUpload);
     
     // ============================================
@@ -1261,14 +1625,12 @@
         const address = document.getElementById('checkoutAddress')?.value.trim();
         const city = document.getElementById('checkoutCity')?.value.trim();
         
-        // الحقول الإضافية
         const occasionType = document.getElementById('occasionType')?.value || '';
         const occasionText = document.getElementById('occasionText')?.value.trim() || '';
         const dedicationText = document.getElementById('dedicationText')?.value.trim() || '';
         const personName = document.getElementById('personName')?.value.trim() || '';
         const additionalNotes = document.getElementById('additionalNotes')?.value.trim() || '';
         
-        // التحقق من الحقول المطلوبة
         if (!name) {
             showToast('⚠️ الرجاء إدخال الاسم', 'warning');
             document.getElementById('checkoutName')?.focus();
@@ -1300,7 +1662,6 @@
             return;
         }
         
-        // حساب المجموع
         const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         const discount = calculateDiscount(subtotal);
         const total = subtotal - discount;
@@ -1313,15 +1674,13 @@
         }
         
         try {
-            // 1. رفع الصور إلى Supabase Storage
             let uploadedImageUrls = [];
             if (uploadedFiles.length > 0) {
                 uploadedImageUrls = await uploadFilesToStorage(uploadedFiles);
                 console.log('✅ تم رفع الصور:', uploadedImageUrls);
             }
             
-            // 2. حفظ الطلب في Supabase مع جميع البيانات
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('orders')
                 .insert({
                     order_number: orderNumber,
@@ -1346,31 +1705,28 @@
                     currency: currentCurrency,
                     status: 'pending',
                     payment_status: 'pending',
-                    // ===== الحقول الإضافية =====
+                    payment_method: selectedPaymentMethod,
                     occasion_type: occasionType,
                     occasion_text: occasionText,
                     dedication_text: dedicationText,
                     person_name: personName,
-                    uploaded_images: uploadedImageUrls, // روابط الصور المرفوعة
+                    uploaded_images: uploadedImageUrls,
                     uploaded_files_names: uploadedFiles.map(f => f.name),
                     created_at: new Date().toISOString()
                 });
             
             if (error) throw error;
             
-            // 3. تحديث عدد استخدامات الكوبون
             if (appliedCoupon) {
-                await supabase
+                await supabaseClient
                     .from('coupons')
                     .update({ used_count: appliedCoupon.used_count + 1 })
                     .eq('id', appliedCoupon.id);
             }
             
-            // 4. تفريغ السلة والبيانات المؤقتة
             cart = [];
             appliedCoupon = null;
             uploadedFiles = [];
-            uploadedFileUrls = [];
             localStorage.setItem('tithkari_cart', JSON.stringify(cart));
             localStorage.removeItem('tithkari_checkout_cart');
             localStorage.removeItem('tithkari_checkout_coupon');
@@ -1379,7 +1735,7 @@
             showToast(`🎉 تم إتمام الطلب بنجاح! رقم الطلب: ${orderNumber}`, 'success');
             
             setTimeout(() => {
-                window.location.href = `thank-you.html?order=${orderNumber}&total=${total}`;
+                window.location.href = `thank-you.html?order=${orderNumber}&total=${total}&method=${selectedPaymentMethod}`;
             }, 1500);
             
         } catch (error) {
@@ -1397,11 +1753,12 @@
     // ============================================
     // تهيئة الصفحة
     // ============================================
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
         console.log('🚀 Checkout page loaded');
         console.log('📌 للتصحيح، اكتب: debugCheckoutData()');
         window.debugCheckoutData = debugCheckoutData;
         
+        await loadPaymentSettings();
         loadCheckoutData();
     });
 </script>

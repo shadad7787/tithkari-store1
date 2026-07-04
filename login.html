@@ -221,27 +221,22 @@
             }
         }
         
-        /* ===== تحسينات للجوال ===== */
         @media (max-width: 480px) {
             .login-container {
                 padding: 30px 20px;
             }
-            
             .login-logo i {
                 font-size: 40px;
             }
-            
             .login-logo h1 {
                 font-size: 24px;
             }
-            
             .btn-primary {
                 font-size: 16px;
                 padding: 12px;
             }
         }
         
-        /* ===== عرض كلمة المرور ===== */
         .password-wrapper {
             position: relative;
         }
@@ -332,27 +327,13 @@
         window.togglePassword = togglePassword;
     </script>
     
-    <script type="importmap">
-    {
-        "imports": {
-            "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.39.0"
-        }
-    }
-    </script>
-    
-    <script type="module">
+    <!-- ===== كود تسجيل الدخول المدمج (بدون import) ===== -->
+    <script>
         // ============================================
-        // استيراد الإعدادات
+        // إعدادات Supabase - ضع بيانات مشروعك هنا
         // ============================================
-        import { CONFIG } from './config.js';
-        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
-        
-        console.log('🚀 جاري تهيئة صفحة تسجيل الدخول...');
-        
-        // ============================================
-        // تهيئة Supabase مباشرة
-        // ============================================
-        const supabase = createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
+        const SUPABASE_URL = 'https://savtqajghyloevzwrzvt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhdnRxYWpnaHlsb2V2endyenZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3ODA1OTMsImV4cCI6MjA5ODM1NjU5M30.CBq7eKyr3RR11op_SevMBBcKQNKF7uftpaa-URemEww';
         
         // ============================================
         // عناصر DOM
@@ -366,35 +347,16 @@
         const passwordInput = document.getElementById('password');
         
         // ============================================
-        // التحقق من جلسة سابقة
+        // دالة تسجيل الدخول
         // ============================================
-        async function checkExistingSession() {
-            try {
-                const { data } = await supabase.auth.getSession();
-                if (data.session) {
-                    localStorage.setItem('user', JSON.stringify(data.session.user));
-                    localStorage.setItem('session', JSON.stringify(data.session));
-                    console.log('✅ جلسة سابقة موجودة، جاري التوجيه...');
-                    window.location.href = 'admin/admin.html';
-                }
-            } catch (e) {
-                console.log('ℹ️ لا توجد جلسة سابقة');
-            }
-        }
-        
-        checkExistingSession();
-        
-        // ============================================
-        // معالجة تسجيل الدخول
-        // ============================================
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
+        async function handleLogin(event) {
+            event.preventDefault();
             
             // إخفاء الرسائل السابقة
             errorDiv.style.display = 'none';
             successDiv.style.display = 'none';
             
-            // إظهار مؤشر التحميل وتعطيل الزر
+            // إظهار مؤشر التحميل
             loadingDiv.classList.add('show');
             loginBtn.disabled = true;
             loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحميل...';
@@ -402,21 +364,9 @@
             const email = emailInput.value.trim();
             const password = passwordInput.value;
             
-            // التحقق من صحة المدخلات
+            // التحقق من المدخلات
             if (!email || !password) {
                 showError('⚠️ الرجاء إدخال البريد الإلكتروني وكلمة المرور');
-                resetButton();
-                return;
-            }
-            
-            if (!email.includes('@') || !email.includes('.')) {
-                showError('⚠️ الرجاء إدخال بريد إلكتروني صحيح');
-                resetButton();
-                return;
-            }
-            
-            if (password.length < 6) {
-                showError('⚠️ كلمة المرور يجب أن تكون 6 أحرف على الأقل');
                 resetButton();
                 return;
             }
@@ -424,34 +374,33 @@
             try {
                 console.log('📝 محاولة تسجيل الدخول:', email);
                 
+                // ✅ تحميل Supabase بشكل ديناميكي
+                const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.39.0');
+                const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                
+                // ✅ محاولة تسجيل الدخول
                 const { data, error } = await supabase.auth.signInWithPassword({
                     email: email,
                     password: password
                 });
                 
                 if (error) {
-                    console.error('❌ خطأ في تسجيل الدخول:', error);
+                    console.error('❌ خطأ:', error);
                     throw error;
-                }
-                
-                if (!data.session) {
-                    throw new Error('لم يتم إنشاء جلسة');
                 }
                 
                 console.log('✅ تم تسجيل الدخول بنجاح:', data.user.email);
                 
-                // حفظ بيانات الجلسة
+                // ✅ حفظ الجلسة
                 localStorage.setItem('user', JSON.stringify(data.user));
                 localStorage.setItem('session', JSON.stringify(data.session));
                 
-                // عرض رسالة نجاح
+                // ✅ عرض رسالة نجاح
                 successDiv.textContent = '✅ تم تسجيل الدخول بنجاح! جاري التوجيه...';
                 successDiv.style.display = 'block';
-                
-                // إعادة تعيين الزر
                 loginBtn.innerHTML = '✅ جاري التوجيه...';
                 
-                // التوجيه إلى لوحة التحكم
+                // ✅ التوجيه إلى لوحة التحكم
                 setTimeout(() => {
                     window.location.href = 'admin/admin.html';
                 }, 1000);
@@ -467,8 +416,6 @@
                     errorMessage = '❌ الرجاء تأكيد البريد الإلكتروني أولاً';
                 } else if (error.message.includes('network') || error.message.includes('fetch')) {
                     errorMessage = '❌ تحقق من الاتصال بالإنترنت وحاول مرة أخرى';
-                } else if (error.message.includes('rate limit')) {
-                    errorMessage = '❌ تم تجاوز عدد المحاولات. حاول بعد دقائق';
                 } else {
                     errorMessage += error.message;
                 }
@@ -476,7 +423,7 @@
                 showError(errorMessage);
                 resetButton();
             }
-        });
+        }
         
         // ============================================
         // دوال مساعدة
@@ -484,13 +431,6 @@
         function showError(message) {
             errorDiv.textContent = message;
             errorDiv.style.display = 'block';
-            setTimeout(() => {
-                errorDiv.style.opacity = '0';
-                setTimeout(() => {
-                    errorDiv.style.display = 'none';
-                    errorDiv.style.opacity = '1';
-                }, 500);
-            }, 5000);
         }
         
         function resetButton() {
@@ -500,17 +440,14 @@
         }
         
         // ============================================
-        // تسجيل الدخول بالضغط على Enter
+        // ربط النموذج
         // ============================================
+        form.addEventListener('submit', handleLogin);
+        
+        // تسجيل الدخول بالضغط على Enter
         passwordInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 form.dispatchEvent(new Event('submit'));
-            }
-        });
-        
-        emailInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                passwordInput.focus();
             }
         });
         
