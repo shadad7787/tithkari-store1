@@ -34,13 +34,13 @@
             display: block;
             width: 100%;
             margin-top: 8px;
-            padding: 6px 12px;
+            padding: 10px 12px;
             background: linear-gradient(135deg, #8B5CF6, #6D28D9);
             color: white;
             border: none;
             border-radius: 6px;
             font-family: 'Cairo', sans-serif;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -48,6 +48,28 @@
         .customize-btn-bottom:hover {
             transform: scale(1.02);
             opacity: 0.9;
+        }
+        
+        /* ===== زر إتمام الطلب أسفل المنتج ===== */
+        .checkout-btn-bottom {
+            display: block;
+            width: 100%;
+            margin-top: 8px;
+            padding: 10px 12px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .checkout-btn-bottom:hover {
+            transform: scale(1.02);
+            opacity: 0.9;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
         }
         
         /* ===== زر التخصيص في البطاقة ===== */
@@ -58,6 +80,142 @@
         .action-btn.customize-btn:hover {
             opacity: 0.9;
             transform: scale(1.05);
+        }
+        
+        /* ===== معرض الصور المتعددة ===== */
+        .product-image-gallery {
+            position: relative;
+            width: 100%;
+            height: 250px;
+            overflow: hidden;
+            background: #0F0F1A;
+        }
+        
+        .product-image-gallery .gallery-track {
+            display: flex;
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            height: 100%;
+            touch-action: pan-y;
+        }
+        
+        .product-image-gallery .gallery-slide {
+            min-width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .product-image-gallery .gallery-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+        
+        .product-image-gallery .gallery-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .product-card:hover .product-image-gallery .gallery-btn {
+            opacity: 1;
+        }
+        
+        .product-image-gallery .gallery-btn:hover {
+            background: rgba(255, 215, 0, 0.4);
+        }
+        
+        .product-image-gallery .gallery-btn.prev {
+            left: 8px;
+        }
+        
+        .product-image-gallery .gallery-btn.next {
+            right: 8px;
+        }
+        
+        .product-image-gallery .gallery-dots {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+            z-index: 5;
+        }
+        
+        .product-image-gallery .gallery-dots .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .product-image-gallery .gallery-dots .dot.active {
+            background: #FFD700;
+            transform: scale(1.2);
+            border-color: #FFD700;
+        }
+        
+        /* ===== العنوان الترويجي ===== */
+        .product-promo-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            z-index: 4;
+            background: linear-gradient(135deg, #FFD700, #FF6B00);
+            color: #0F0F1A;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+            animation: promoPulse 2s ease-in-out infinite;
+        }
+        
+        .product-promo-badge.limited {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+        
+        .product-promo-badge.custom {
+            background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+            color: white;
+        }
+        
+        .product-promo-badge.best-seller {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+        
+        .product-promo-badge.new {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+        
+        @keyframes promoPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
         
         /* ===== تنسيقات الهيدر ===== */
@@ -645,6 +803,7 @@
             color: #ef4444;
         }
         
+        /* ===== تحسينات التجاوب ===== */
         @media (max-width: 768px) {
             nav ul {
                 gap: 8px;
@@ -709,6 +868,14 @@
             .payment-option {
                 min-width: unset;
             }
+            .product-image-gallery {
+                height: 200px;
+            }
+            .product-image-gallery .gallery-btn {
+                width: 25px;
+                height: 25px;
+                font-size: 12px;
+            }
         }
         
         @media (max-width: 480px) {
@@ -754,6 +921,24 @@
             }
             .admin-btn span {
                 display: none;
+            }
+            .product-image-gallery {
+                height: 180px;
+            }
+            .product-image-gallery .gallery-btn {
+                width: 22px;
+                height: 22px;
+                font-size: 10px;
+                opacity: 0.6;
+            }
+            .product-image-gallery .gallery-dots .dot {
+                width: 6px;
+                height: 6px;
+            }
+            .customize-btn-bottom,
+            .checkout-btn-bottom {
+                font-size: 11px;
+                padding: 8px 10px;
             }
         }
     </style>

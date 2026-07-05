@@ -115,6 +115,11 @@
                     <i class="fas fa-envelope" style="color: #3b82f6;"></i>
                     <span style="color: #3b82f6;">إعدادات البريد</span>
                 </a>
+                <!-- ===== ✅ إضافة قسم إدارة الدفع والشحن ===== -->
+                <a href="#" onclick="switchTab('payment-shipping'); return false;" style="background: rgba(16, 185, 129, 0.1); border-right: 2px solid #10b981;">
+                    <i class="fas fa-credit-card" style="color: #10b981;"></i>
+                    <span style="color: #10b981;">إدارة الدفع والشحن</span>
+                </a>
                 <!-- ===== ✅ إضافة قسم إدارة الأدوات ===== -->
                 <a href="#" onclick="switchTab('tools'); return false;" style="background: rgba(139, 92, 246, 0.1); border-right: 2px solid #8B5CF6;">
                     <i class="fas fa-plug" style="color: #8B5CF6;"></i>
@@ -918,6 +923,45 @@
                         <div style="margin-top: 20px;">
                             <a href="tools-manager.html" class="btn-primary" style="display: inline-flex; align-items: center; gap: 10px; text-decoration: none;">
                                 <i class="fas fa-arrow-left"></i> الذهاب إلى إدارة الأدوات
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== ✅ إضافة قسم إدارة الدفع والشحن ===== -->
+                <div id="payment-shipping-tab" class="admin-tab">
+                    <div class="admin-header-tab">
+                        <h2>💳 إدارة الدفع والشحن</h2>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                            <button class="btn-primary" onclick="window.location.href='payment-methods-manager.html'" style="background: #10b981; color: white;">
+                                <i class="fas fa-credit-card"></i> فتح إدارة الدفع والشحن
+                            </button>
+                            <button class="btn-primary" onclick="window.open('../payment-methods-manager.html', '_blank')" style="background: #8B5CF6; color: white;">
+                                <i class="fas fa-external-link-alt"></i> فتح في نافذة جديدة
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #1A1A2E; border-radius: 16px; padding: 30px; border: 1px solid rgba(255, 215, 0, 0.05); text-align: center;">
+                        <i class="fas fa-credit-card" style="font-size: 64px; color: #10b981; opacity: 0.5; display: block; margin-bottom: 20px;"></i>
+                        <h3 style="color: #FFFFFF; margin-bottom: 10px;">إدارة الدفع والشحن</h3>
+                        <p style="color: #8A8A9B; max-width: 500px; margin: 0 auto 20px;">
+                            أضف وأدر طرق الدفع، شركات الشحن، وحقول الطلب المخصصة من مكان واحد.
+                        </p>
+                        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                            <span class="status-badge status-active" style="padding: 6px 16px;">
+                                <i class="fas fa-credit-card"></i> طرق الدفع
+                            </span>
+                            <span class="status-badge status-active" style="padding: 6px 16px;">
+                                <i class="fas fa-truck"></i> شركات الشحن
+                            </span>
+                            <span class="status-badge status-active" style="padding: 6px 16px;">
+                                <i class="fas fa-pencil-alt"></i> حقول الطلب
+                            </span>
+                        </div>
+                        <div style="margin-top: 20px;">
+                            <a href="payment-methods-manager.html" class="btn-primary" style="display: inline-flex; align-items: center; gap: 10px; text-decoration: none;">
+                                <i class="fas fa-arrow-left"></i> الذهاب إلى إدارة الدفع والشحن
                             </a>
                         </div>
                     </div>

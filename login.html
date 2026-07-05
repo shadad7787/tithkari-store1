@@ -117,6 +117,47 @@
             opacity: 0.5;
         }
         
+        .form-group .help-text {
+            font-size: 12px;
+            color: var(--gray);
+            margin-top: 4px;
+        }
+        
+        .form-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .form-row .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--gray);
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .form-row .remember-me input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--gold);
+            cursor: pointer;
+        }
+        
+        .form-row .forgot-link {
+            color: var(--gold);
+            font-size: 13px;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .form-row .forgot-link:hover {
+            color: var(--gold-light);
+        }
+        
         .btn-primary {
             width: 100%;
             padding: 14px;
@@ -155,6 +196,7 @@
             margin-bottom: 20px;
             display: none;
             font-size: 14px;
+            text-align: center;
         }
         
         .login-success {
@@ -166,31 +208,39 @@
             margin-bottom: 20px;
             display: none;
             font-size: 14px;
+            text-align: center;
         }
         
         .login-footer {
             text-align: center;
             margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 215, 0, 0.05);
+        }
+        
+        .login-footer p {
             color: var(--gray);
             font-size: 13px;
         }
         
-        .login-footer a {
+        .login-footer .register-link {
             color: var(--gold);
             text-decoration: none;
             transition: all 0.3s;
+            font-weight: 600;
         }
         
-        .login-footer a:hover {
+        .login-footer .register-link:hover {
             color: var(--gold-light);
         }
         
         .login-back {
             display: inline-block;
-            margin-top: 15px;
+            margin-top: 10px;
             color: var(--gray);
             text-decoration: none;
             transition: all 0.3s;
+            font-size: 14px;
         }
         
         .login-back:hover {
@@ -221,22 +271,6 @@
             }
         }
         
-        @media (max-width: 480px) {
-            .login-container {
-                padding: 30px 20px;
-            }
-            .login-logo i {
-                font-size: 40px;
-            }
-            .login-logo h1 {
-                font-size: 24px;
-            }
-            .btn-primary {
-                font-size: 16px;
-                padding: 12px;
-            }
-        }
-        
         .password-wrapper {
             position: relative;
         }
@@ -261,6 +295,48 @@
         .password-toggle:hover {
             color: var(--gold);
         }
+        
+        .dev-credentials {
+            background: rgba(255, 215, 0, 0.05);
+            border: 1px dashed rgba(255, 215, 0, 0.2);
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .dev-credentials p {
+            color: var(--gray);
+            font-size: 12px;
+            margin: 0;
+        }
+        
+        .dev-credentials strong {
+            color: var(--gold);
+        }
+        
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 20px;
+            }
+            .login-logo i {
+                font-size: 40px;
+            }
+            .login-logo h1 {
+                font-size: 24px;
+            }
+            .btn-primary {
+                font-size: 16px;
+                padding: 12px;
+            }
+            .form-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .form-row .forgot-link {
+                text-align: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -274,20 +350,30 @@
         <div id="loginError" class="login-error"></div>
         <div id="loginSuccess" class="login-success"></div>
         
-        <form id="loginForm">
+        <form id="loginForm" novalidate>
             <div class="form-group">
                 <label>📧 البريد الإلكتروني</label>
-                <input type="email" id="email" placeholder="admin@tithkari.com" required autocomplete="email" />
+                <input type="email" id="loginEmail" placeholder="admin@tithkari.com" required autocomplete="email" />
             </div>
             <div class="form-group">
                 <label>🔑 كلمة المرور</label>
                 <div class="password-wrapper">
-                    <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password" />
+                    <input type="password" id="loginPassword" placeholder="••••••••" required autocomplete="current-password" />
                     <button type="button" class="password-toggle" onclick="togglePassword()">
                         <i class="fas fa-eye" id="eyeIcon"></i>
                     </button>
                 </div>
             </div>
+            
+            <!-- ✅ تذكرني ونسيت كلمة المرور -->
+            <div class="form-row">
+                <label class="remember-me">
+                    <input type="checkbox" id="rememberMe" checked />
+                    <span>تذكرني</span>
+                </label>
+                <a href="#" class="forgot-link" onclick="handleForgotPassword(event)">نسيت كلمة المرور؟</a>
+            </div>
+            
             <button type="submit" class="btn-primary" id="loginBtn">
                 <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
             </button>
@@ -297,11 +383,16 @@
             <i class="fas fa-spinner"></i> جاري تسجيل الدخول...
         </div>
         
-        <div class="login-footer">
+        <!-- ✅ بيانات المطور -->
+        <div class="dev-credentials">
             <p>⚠️ للمطورين فقط: حساب الأدمن</p>
-            <p style="font-size:12px;color:var(--gray);margin-top:5px;">
+            <p style="font-size:12px;color:var(--gray);margin-top:3px;">
                 البريد: <strong>admin@tithkari.com</strong> | كلمة المرور: <strong>Admin@123456</strong>
             </p>
+        </div>
+        
+        <div class="login-footer">
+            <p>ليس لديك حساب؟ <a href="#" class="register-link" onclick="handleRegister(event)">إنشاء حساب جديد</a></p>
             <a href="index.html" class="login-back">
                 <i class="fas fa-arrow-right"></i> العودة إلى المتجر
             </a>
@@ -313,7 +404,7 @@
         // دالة عرض/إخفاء كلمة المرور
         // ============================================
         function togglePassword() {
-            const passwordInput = document.getElementById('password');
+            const passwordInput = document.getElementById('loginPassword');
             const eyeIcon = document.getElementById('eyeIcon');
             
             if (passwordInput.type === 'password') {
@@ -325,12 +416,27 @@
             }
         }
         window.togglePassword = togglePassword;
+        
+        // ============================================
+        // دوال مساعدة
+        // ============================================
+        function handleForgotPassword(event) {
+            event.preventDefault();
+            showToast('📧 سيتم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني', 'info');
+        }
+        window.handleForgotPassword = handleForgotPassword;
+        
+        function handleRegister(event) {
+            event.preventDefault();
+            showToast('🔧 هذه الميزة قيد التطوير حالياً', 'warning');
+        }
+        window.handleRegister = handleRegister;
     </script>
     
     <!-- ===== كود تسجيل الدخول المدمج (بدون import) ===== -->
     <script>
         // ============================================
-        // إعدادات Supabase - ضع بيانات مشروعك هنا
+        // إعدادات Supabase
         // ============================================
         const SUPABASE_URL = 'https://savtqajghyloevzwrzvt.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhdnRxYWpnaHlsb2V2endyenZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3ODA1OTMsImV4cCI6MjA5ODM1NjU5M30.CBq7eKyr3RR11op_SevMBBcKQNKF7uftpaa-URemEww';
@@ -343,8 +449,55 @@
         const successDiv = document.getElementById('loginSuccess');
         const loadingDiv = document.getElementById('loginLoading');
         const loginBtn = document.getElementById('loginBtn');
-        const emailInput = document.getElementById('email');
-        const passwordInput = document.getElementById('password');
+        const emailInput = document.getElementById('loginEmail');
+        const passwordInput = document.getElementById('loginPassword');
+        const rememberMeCheck = document.getElementById('rememberMe');
+        
+        // ============================================
+        // دالة عرض الإشعارات
+        // ============================================
+        function showToast(message, type = 'info') {
+            const colors = { 
+                success: '#4CAF50', 
+                error: '#f44336', 
+                warning: '#FF9800', 
+                info: '#2196F3' 
+            };
+            
+            const toast = document.createElement('div');
+            const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #1A1A2E;
+                color: #fff;
+                padding: 12px 24px;
+                border-radius: 12px;
+                border-right: 4px solid ${colors[type] || '#2196F3'};
+                box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+                font-size: 14px;
+                z-index: 99999;
+                font-family: 'Cairo', sans-serif;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                direction: rtl;
+                animation: slideDown 0.3s ease;
+                max-width: 90%;
+            `;
+            toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span><span>${message}</span>`;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(-20px)';
+                toast.style.transition = 'all 0.4s ease';
+                setTimeout(() => toast.remove(), 400);
+            }, 3500);
+        }
+        window.showToast = showToast;
         
         // ============================================
         // دالة تسجيل الدخول
@@ -363,10 +516,12 @@
             
             const email = emailInput.value.trim();
             const password = passwordInput.value;
+            const rememberMe = rememberMeCheck.checked;
             
             // التحقق من المدخلات
             if (!email || !password) {
-                showError('⚠️ الرجاء إدخال البريد الإلكتروني وكلمة المرور');
+                errorDiv.textContent = '⚠️ الرجاء إدخال البريد الإلكتروني وكلمة المرور';
+                errorDiv.style.display = 'block';
                 resetButton();
                 return;
             }
@@ -392,6 +547,11 @@
                 console.log('✅ تم تسجيل الدخول بنجاح:', data.user.email);
                 
                 // ✅ حفظ الجلسة
+                if (rememberMe) {
+                    localStorage.setItem('remember_me', 'true');
+                } else {
+                    localStorage.removeItem('remember_me');
+                }
                 localStorage.setItem('user', JSON.stringify(data.user));
                 localStorage.setItem('session', JSON.stringify(data.session));
                 
@@ -403,7 +563,7 @@
                 // ✅ التوجيه إلى لوحة التحكم
                 setTimeout(() => {
                     window.location.href = 'admin/admin.html';
-                }, 1000);
+                }, 800);
                 
             } catch (error) {
                 console.error('❌ خطأ:', error);
@@ -420,7 +580,8 @@
                     errorMessage += error.message;
                 }
                 
-                showError(errorMessage);
+                errorDiv.textContent = errorMessage;
+                errorDiv.style.display = 'block';
                 resetButton();
             }
         }
@@ -428,15 +589,35 @@
         // ============================================
         // دوال مساعدة
         // ============================================
-        function showError(message) {
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
-        }
-        
         function resetButton() {
             loadingDiv.classList.remove('show');
             loginBtn.disabled = false;
             loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> تسجيل الدخول';
+        }
+        
+        // ============================================
+        // التحقق من الجلسة عند تحميل الصفحة
+        // ============================================
+        async function checkExistingSession() {
+            try {
+                const sessionStr = localStorage.getItem('session');
+                if (!sessionStr) return;
+                
+                const session = JSON.parse(sessionStr);
+                if (!session.access_token) return;
+                
+                // التحقق من صلاحية التوكن
+                const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.39.0');
+                const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                
+                const { data, error } = await supabase.auth.getUser(session.access_token);
+                if (data?.user && !error) {
+                    console.log('✅ جلسة نشطة موجودة، التوجيه إلى لوحة التحكم');
+                    window.location.href = 'admin/admin.html';
+                }
+            } catch (e) {
+                console.log('⚠️ لا توجد جلسة نشطة');
+            }
         }
         
         // ============================================
@@ -448,6 +629,33 @@
         passwordInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 form.dispatchEvent(new Event('submit'));
+            }
+        });
+        
+        // ============================================
+        // تهيئة الصفحة
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 صفحة تسجيل الدخول جاهزة');
+            
+            // ملء البريد وكلمة المرور في حالة وجود تذكرني
+            const rememberMe = localStorage.getItem('remember_me');
+            if (rememberMe === 'true') {
+                const savedEmail = localStorage.getItem('saved_email');
+                if (savedEmail) {
+                    emailInput.value = savedEmail;
+                    rememberMeCheck.checked = true;
+                }
+            }
+            
+            // التحقق من الجلسة
+            checkExistingSession();
+        });
+        
+        // حفظ البريد الإلكتروني عند تغييره
+        emailInput.addEventListener('change', function() {
+            if (rememberMeCheck.checked) {
+                localStorage.setItem('saved_email', this.value);
             }
         });
         

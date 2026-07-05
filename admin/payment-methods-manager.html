@@ -1,0 +1,2163 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>إدارة طرق الدفع - Tithkari</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: #0F0F1A;
+            color: #FFFFFF;
+            direction: rtl;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 2px solid #FFD700;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .header h1 {
+            color: #FFD700;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn-primary {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #FFD700, #FFED4A);
+            color: #0F0F1A;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
+        }
+        .btn-secondary {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.05);
+            color: #FFFFFF;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        .btn-danger {
+            padding: 6px 14px;
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s ease;
+        }
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+        .btn-success {
+            padding: 6px 14px;
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s ease;
+        }
+        .btn-success:hover {
+            background: rgba(16, 185, 129, 0.3);
+        }
+        .btn-purple {
+            padding: 6px 14px;
+            background: rgba(139, 92, 246, 0.2);
+            color: #8B5CF6;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s ease;
+        }
+        .btn-purple:hover {
+            background: rgba(139, 92, 246, 0.3);
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid rgba(255,215,0,0.1);
+            padding-bottom: 10px;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: #8A8A9B;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .tab-btn:hover {
+            color: #FFFFFF;
+        }
+        .tab-btn.active {
+            border-color: #FFD700;
+            color: #FFD700;
+            background: rgba(255,215,0,0.05);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Stats */
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .stat-item {
+            background: #1A1A2E;
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+        .stat-item .count {
+            font-weight: 700;
+            color: #FFD700;
+            font-size: 18px;
+        }
+        
+        /* Cards */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: #1A1A2E;
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            border-color: rgba(255, 215, 0, 0.15);
+            transform: translateY(-3px);
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .card-header .icon {
+            font-size: 32px;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: rgba(255, 215, 0, 0.05);
+        }
+        .card-header .status {
+            font-size: 12px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        .card-header .status.active {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        .card-header .status.inactive {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #FFFFFF;
+        }
+        .card-desc {
+            font-size: 13px;
+            color: #8A8A9B;
+            margin-bottom: 10px;
+        }
+        .card-fields {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .card-fields .field-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 12px;
+            color: #8A8A9B;
+        }
+        .card-fields .field-row .label {
+            color: #8A8A9B;
+        }
+        .card-fields .field-row .value {
+            color: #FFD700;
+            font-weight: 600;
+        }
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            flex-wrap: wrap;
+        }
+        
+        /* Search */
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .search-container input {
+            flex: 1;
+            padding: 10px 16px;
+            border-radius: 8px;
+            background: #1A1A2E;
+            color: #FFFFFF;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            font-family: 'Cairo', sans-serif;
+            min-width: 200px;
+        }
+        .search-container input:focus {
+            border-color: #FFD700;
+            outline: none;
+        }
+        .search-container input::placeholder {
+            color: #8A8A9B;
+        }
+        .search-container select {
+            padding: 10px 16px;
+            border-radius: 8px;
+            background: #1A1A2E;
+            color: #FFFFFF;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            font-family: 'Cairo', sans-serif;
+        }
+        .search-container select:focus {
+            border-color: #FFD700;
+            outline: none;
+        }
+        
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-content {
+            background: #1A1A2E;
+            border-radius: 16px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 30px;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            animation: modalFade 0.3s ease;
+        }
+        @keyframes modalFade {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-close {
+            float: left;
+            background: rgba(255,255,255,0.05);
+            border: none;
+            color: #FFFFFF;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+        .modal-close:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+        .modal-content h2 {
+            color: #FFD700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            color: #8A8A9B;
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        .form-group label .required {
+            color: #ef4444;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            background: #0F0F1A;
+            color: #FFFFFF;
+            border: 1px solid rgba(255, 215, 0, 0.08);
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #FFD700;
+            outline: none;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .form-group .help-text {
+            font-size: 11px;
+            color: #8A8A9B;
+            margin-top: 3px;
+        }
+        .form-group .help-text code {
+            color: #FFD700;
+            background: rgba(255,215,0,0.05);
+            padding: 1px 6px;
+            border-radius: 4px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #8A8A9B;
+        }
+        .empty-state i {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+        .empty-state h3 {
+            color: #FFFFFF;
+            margin-bottom: 10px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        .badge-active {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+        .badge-inactive {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+        
+        /* Checkout fields list */
+        .fields-list {
+            background: rgba(255,255,255,0.02);
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid rgba(255,215,0,0.05);
+        }
+        .field-item {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 8px 12px;
+            background: #0F0F1A;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(255,215,0,0.05);
+            transition: all 0.2s ease;
+        }
+        .field-item:hover {
+            border-color: rgba(255,215,0,0.15);
+        }
+        .field-item .field-info {
+            flex: 1;
+        }
+        .field-item .field-info .field-name {
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .field-item .field-info .field-meta {
+            font-size: 11px;
+            color: #8A8A9B;
+        }
+        .field-item .field-actions {
+            display: flex;
+            gap: 5px;
+        }
+        .field-item .field-actions button {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        .field-item .field-actions .edit-btn { color: #3b82f6; }
+        .field-item .field-actions .edit-btn:hover { background: rgba(59, 130, 246, 0.1); }
+        .field-item .field-actions .delete-btn { color: #ef4444; }
+        .field-item .field-actions .delete-btn:hover { background: rgba(239, 68, 68, 0.1); }
+        .field-item .field-actions .toggle-btn { color: #f59e0b; }
+        .field-item .field-actions .toggle-btn:hover { background: rgba(245, 158, 11, 0.1); }
+        .field-item .field-actions .toggle-btn.active { color: #10b981; }
+        
+        /* Toast */
+        #toastContainer {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 350px;
+            width: 100%;
+            direction: rtl;
+        }
+        .toast-item {
+            background: #1A1A2E;
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border-right: 4px solid #2196F3;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            font-size: 14px;
+            animation: slideInRight 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: Cairo, sans-serif;
+        }
+        .toast-item.success { border-right-color: #4CAF50; }
+        .toast-item.error { border-right-color: #f44336; }
+        .toast-item.warning { border-right-color: #FF9800; }
+        .toast-item.info { border-right-color: #2196F3; }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        
+        /* Scrollbar */
+        .modal-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .modal-content::-webkit-scrollbar-thumb {
+            background: rgba(255,215,0,0.2);
+            border-radius: 3px;
+        }
+        .modal-content::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,215,0,0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .form-row-3 {
+                grid-template-columns: 1fr;
+            }
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+            .header-actions {
+                justify-content: center;
+            }
+            .tabs {
+                justify-content: center;
+            }
+            .stats {
+                justify-content: center;
+            }
+            .search-container {
+                flex-direction: column;
+            }
+            .search-container input {
+                min-width: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- الهيدر -->
+    <div class="header">
+        <h1><i class="fas fa-credit-card"></i> إدارة الدفع والشحن</h1>
+        <div class="header-actions">
+            <button class="btn-primary" onclick="openAddPaymentMethod()">
+                <i class="fas fa-plus"></i> إضافة طريقة دفع
+            </button>
+            <button class="btn-secondary" onclick="exportAllData()">
+                <i class="fas fa-file-export"></i> تصدير
+            </button>
+            <button class="btn-secondary" onclick="document.getElementById('importFile').click()">
+                <i class="fas fa-file-import"></i> استيراد
+            </button>
+            <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importAllData(this.files[0])" />
+            <button class="btn-secondary" onclick="loadAllData()">
+                <i class="fas fa-sync"></i> تحديث
+            </button>
+        </div>
+    </div>
+
+    <!-- الإحصائيات -->
+    <div class="stats" id="statsContainer">
+        <div class="stat-item">
+            <span>💳</span>
+            <span>طرق الدفع:</span>
+            <span class="count" id="totalPayments">0</span>
+        </div>
+        <div class="stat-item">
+            <span>🚚</span>
+            <span>شركات الشحن:</span>
+            <span class="count" id="totalShipping">0</span>
+        </div>
+        <div class="stat-item">
+            <span>📝</span>
+            <span>حقول الطلب:</span>
+            <span class="count" id="totalFields">0</span>
+        </div>
+        <div class="stat-item">
+            <span>✅</span>
+            <span>نشطة:</span>
+            <span class="count" id="activePayments">0</span>
+        </div>
+    </div>
+
+    <!-- تبويبات -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="payment-methods" onclick="switchTab('payment-methods')">
+            <i class="fas fa-credit-card"></i> طرق الدفع
+        </button>
+        <button class="tab-btn" data-tab="shipping-methods" onclick="switchTab('shipping-methods')">
+            <i class="fas fa-truck"></i> شركات الشحن
+        </button>
+        <button class="tab-btn" data-tab="checkout-fields" onclick="switchTab('checkout-fields')">
+            <i class="fas fa-pencil-alt"></i> حقول الطلب
+        </button>
+    </div>
+
+    <!-- ===== تبويب طرق الدفع ===== -->
+    <div id="payment-methods-tab" class="tab-content active">
+        <!-- بحث لطرق الدفع -->
+        <div class="search-container">
+            <input type="text" id="paymentSearch" placeholder="🔍 بحث عن طريقة دفع..." oninput="filterPaymentMethods()" />
+            <select id="paymentCategoryFilter" onchange="filterPaymentMethods()">
+                <option value="">📂 جميع التصنيفات</option>
+                <option value="card">💳 بطاقة ائتمان</option>
+                <option value="wallet">👛 محفظة رقمية</option>
+                <option value="bank">🏦 تحويل بنكي</option>
+                <option value="installment">📊 تقسيط</option>
+                <option value="cash">💵 نقدي</option>
+                <option value="other">📦 أخرى</option>
+            </select>
+            <select id="paymentStatusFilter" onchange="filterPaymentMethods()">
+                <option value="">📌 جميع الحالات</option>
+                <option value="active">✅ نشط</option>
+                <option value="inactive">❌ غير نشط</option>
+            </select>
+        </div>
+        <div class="cards-grid" id="paymentMethodsGrid">
+            <!-- سيتم تعبئتها بواسطة JavaScript -->
+        </div>
+    </div>
+
+    <!-- ===== تبويب شركات الشحن ===== -->
+    <div id="shipping-methods-tab" class="tab-content">
+        <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+            <button class="btn-primary" onclick="openAddShippingMethod()" style="background:#10b981;">
+                <i class="fas fa-plus"></i> إضافة شركة شحن
+            </button>
+        </div>
+        <div class="cards-grid" id="shippingMethodsGrid">
+            <!-- سيتم تعبئتها بواسطة JavaScript -->
+        </div>
+    </div>
+
+    <!-- ===== تبويب حقول الطلب ===== -->
+    <div id="checkout-fields-tab" class="tab-content">
+        <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+            <button class="btn-primary" onclick="openAddCheckoutField()" style="background:#8B5CF6;">
+                <i class="fas fa-plus"></i> إضافة حقل جديد
+            </button>
+        </div>
+        <div id="checkoutFieldsContainer">
+            <!-- سيتم تعبئتها بواسطة JavaScript -->
+        </div>
+    </div>
+</div>
+
+<!-- ===== نافذة إضافة/تعديل طريقة دفع ===== -->
+<div class="modal-overlay" id="paymentMethodModal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeModal('paymentMethodModal')"><i class="fas fa-times"></i></button>
+        <h2 id="paymentMethodModalTitle"><i class="fas fa-plus"></i> إضافة طريقة دفع</h2>
+        <form id="paymentMethodForm" onsubmit="savePaymentMethod(event)">
+            <input type="hidden" id="paymentMethodId" />
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>🏷️ اسم طريقة الدفع <span class="required">*</span></label>
+                    <input type="text" id="pmName" required placeholder="مثال: Tabby" />
+                </div>
+                <div class="form-group">
+                    <label>🎨 الأيقونة</label>
+                    <select id="pmIcon">
+                        <option value="fa-credit-card">💳 بطاقة</option>
+                        <option value="fa-university">🏦 بنك</option>
+                        <option value="fa-wallet">👛 محفظة</option>
+                        <option value="fa-money-bill">💵 نقدي</option>
+                        <option value="fa-apple">🍎 Apple Pay</option>
+                        <option value="fa-google">🔵 Google Pay</option>
+                        <option value="fa-tag">🏷️ تابي</option>
+                        <option value="fa-star">⭐ تمارا</option>
+                        <option value="fa-truck">🚚 شحن</option>
+                        <option value="fa-bitcoin">₿ عملة رقمية</option>
+                        <option value="fa-paypal">🅿️ PayPal</option>
+                        <option value="fa-stripe">💳 Stripe</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>📝 الوصف</label>
+                <input type="text" id="pmDescription" placeholder="وصف طريقة الدفع" />
+            </div>
+            
+            <div class="form-group">
+                <label>📋 كود الحقن (HTML/JavaScript)</label>
+                <textarea id="pmCode" rows="5" placeholder="&lt;!-- ضع الكود هنا --&gt;"></textarea>
+                <div class="help-text">
+                    💡 يمكنك استخدام المتغيرات: <code>{{TOTAL}}</code>, <code>{{ORDER_ID}}</code>, <code>{{CUSTOMER_NAME}}</code>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>🎨 CSS إضافي (اختياري)</label>
+                <textarea id="pmCss" rows="3" placeholder="/* ضع CSS هنا */"></textarea>
+                <div class="help-text">سيتم حقن هذا CSS مع طريقة الدفع</div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>📌 موقع الحقن</label>
+                    <select id="pmPosition">
+                        <option value="checkout">صفحة الدفع</option>
+                        <option value="product">صفحة المنتج</option>
+                        <option value="cart">السلة</option>
+                        <option value="footer">التذييل</option>
+                        <option value="custom">مخصص</option>
+                    </select>
+                </div>
+                <div class="form-group" id="pmCustomPositionGroup" style="display:none;">
+                    <label>📍 الموقع المخصص</label>
+                    <input type="text" id="pmCustomPosition" placeholder="مثال: #payment-container" />
+                </div>
+            </div>
+            
+            <div class="form-row-3">
+                <div class="form-group">
+                    <label>💰 رسوم إضافية</label>
+                    <input type="number" id="pmFee" step="0.01" placeholder="0.00" />
+                    <div class="help-text">رسوم إضافية عند استخدام هذه الطريقة</div>
+                </div>
+                <div class="form-group">
+                    <label>🔢 ترتيب العرض</label>
+                    <input type="number" id="pmOrder" value="0" min="0" />
+                </div>
+                <div class="form-group">
+                    <label>⭐ الحالة</label>
+                    <select id="pmStatus">
+                        <option value="active">✅ نشط</option>
+                        <option value="inactive">❌ غير نشط</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>🏷️ التصنيف</label>
+                    <select id="pmCategory">
+                        <option value="card">بطاقة ائتمان</option>
+                        <option value="wallet">محفظة رقمية</option>
+                        <option value="bank">تحويل بنكي</option>
+                        <option value="installment">تقسيط</option>
+                        <option value="cash">نقدي</option>
+                        <option value="crypto">عملة رقمية</option>
+                        <option value="other">أخرى</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>🔑 مفتاح API (اختياري)</label>
+                    <input type="password" id="pmApiKey" placeholder="مفتاح API" autocomplete="new-password" />
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-primary" style="width:100%;justify-content:center;margin-top:10px;">
+                <i class="fas fa-save"></i> حفظ طريقة الدفع
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- ===== نافذة إضافة/تعديل شركة شحن ===== -->
+<div class="modal-overlay" id="shippingMethodModal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeModal('shippingMethodModal')"><i class="fas fa-times"></i></button>
+        <h2 id="shippingMethodModalTitle"><i class="fas fa-plus"></i> إضافة شركة شحن</h2>
+        <form id="shippingMethodForm" onsubmit="saveShippingMethod(event)">
+            <input type="hidden" id="shippingMethodId" />
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>🏷️ اسم الشركة <span class="required">*</span></label>
+                    <input type="text" id="smName" required placeholder="مثال: سمسا" />
+                </div>
+                <div class="form-group">
+                    <label>🎨 الأيقونة</label>
+                    <select id="smIcon">
+                        <option value="fa-truck">🚚 شاحنة</option>
+                        <option value="fa-plane">✈️ طائرة</option>
+                        <option value="fa-ship">🚢 سفينة</option>
+                        <option value="fa-box">📦 صندوق</option>
+                        <option value="fa-dolly">🛒 منصة</option>
+                        <option value="fa-bicycle">🚲 دراجة</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>🖼️ صورة الشركة (رابط)</label>
+                <input type="url" id="smImage" placeholder="https://example.com/logo.png" />
+                <div class="help-text">رابط صورة شعار الشركة</div>
+            </div>
+            
+            <div class="form-group">
+                <label>📝 الوصف</label>
+                <input type="text" id="smDescription" placeholder="وصف شركة الشحن" />
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>💰 سعر الشحن</label>
+                    <input type="number" id="smPrice" step="0.01" placeholder="0.00" />
+                </div>
+                <div class="form-group">
+                    <label>⏱️ مدة التوصيل (أيام)</label>
+                    <input type="text" id="smDeliveryDays" placeholder="3-5" />
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>📍 الدول المدعومة</label>
+                    <input type="text" id="smCountries" placeholder="السعودية, الإمارات, الكويت" />
+                    <div class="help-text">افصل بين الدول بفاصلة</div>
+                </div>
+                <div class="form-group">
+                    <label>📋 API URL (للربط)</label>
+                    <input type="url" id="smApiUrl" placeholder="https://api.shipping.com/track" />
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>🔑 API Key</label>
+                    <input type="password" id="smApiKey" placeholder="مفتاح API" autocomplete="new-password" />
+                </div>
+                <div class="form-group">
+                    <label>⭐ الحالة</label>
+                    <select id="smStatus">
+                        <option value="active">✅ نشط</option>
+                        <option value="inactive">❌ غير نشط</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-primary" style="width:100%;justify-content:center;margin-top:10px;background:#10b981;">
+                <i class="fas fa-save"></i> حفظ شركة الشحن
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- ===== نافذة إضافة/تعديل حقل الطلب ===== -->
+<div class="modal-overlay" id="checkoutFieldModal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeModal('checkoutFieldModal')"><i class="fas fa-times"></i></button>
+        <h2 id="checkoutFieldModalTitle"><i class="fas fa-plus"></i> إضافة حقل جديد</h2>
+        <form id="checkoutFieldForm" onsubmit="saveCheckoutField(event)">
+            <input type="hidden" id="checkoutFieldId" />
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>🏷️ اسم الحقل <span class="required">*</span></label>
+                    <input type="text" id="cfName" required placeholder="مثال: المدينة" />
+                </div>
+                <div class="form-group">
+                    <label>🔤 المعرف (Slug)</label>
+                    <input type="text" id="cfSlug" placeholder="مثال: city" />
+                    <div class="help-text">سيتم توليده تلقائياً</div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>📂 نوع الحقل <span class="required">*</span></label>
+                    <select id="cfType" required onchange="toggleFieldOptions()">
+                        <option value="text">📝 نص قصير</option>
+                        <option value="textarea">📄 نص طويل</option>
+                        <option value="select">📋 قائمة منسدلة</option>
+                        <option value="file">📎 رفع ملف</option>
+                        <option value="number">🔢 رقم</option>
+                        <option value="email">📧 بريد إلكتروني</option>
+                        <option value="phone">📱 رقم هاتف</option>
+                        <option value="date">📅 تاريخ</option>
+                        <option value="time">⏰ وقت</option>
+                        <option value="map">🗺️ خريطة (تحديد موقع)</option>
+                        <option value="checkbox">☑️ خانة اختيار</option>
+                        <option value="radio">⭕ اختيار واحد</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>📋 التصنيف</label>
+                    <select id="cfCategory">
+                        <option value="personal">👤 معلومات شخصية</option>
+                        <option value="address">📍 العنوان</option>
+                        <option value="shipping">🚚 الشحن</option>
+                        <option value="payment">💳 الدفع</option>
+                        <option value="order">📦 الطلب</option>
+                        <option value="custom">🎨 مخصص</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group" id="cfOptionsGroup" style="display:none;">
+                <label>📋 خيارات القائمة (مفصولة بفاصلة)</label>
+                <input type="text" id="cfOptions" placeholder="خيار1, خيار2, خيار3" />
+                <div class="help-text">للنوع: قائمة منسدلة أو اختيار واحد</div>
+            </div>
+            
+            <div class="form-group">
+                <label>📝 النص المساعد (Placeholder)</label>
+                <input type="text" id="cfPlaceholder" placeholder="مثال: أدخل مدينتك" />
+            </div>
+            
+            <div class="form-group">
+                <label>ℹ️ نص مساعد إضافي</label>
+                <input type="text" id="cfHelpText" placeholder="مثال: اختر المدينة التي تسكن فيها" />
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label style="display:flex;align-items:center;gap:8px;">
+                        <input type="checkbox" id="cfRequired" checked />
+                        حقل مطلوب
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label style="display:flex;align-items:center;gap:8px;">
+                        <input type="checkbox" id="cfActive" checked />
+                        مفعل
+                    </label>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>🔢 ترتيب العرض</label>
+                    <input type="number" id="cfOrder" value="0" min="0" />
+                </div>
+                <div class="form-group">
+                    <label>📏 العرض (col-span)</label>
+                    <select id="cfWidth">
+                        <option value="1">1/2 عرض</option>
+                        <option value="2" selected>2/2 عرض كامل</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-primary" style="width:100%;justify-content:center;margin-top:10px;background:#8B5CF6;">
+                <i class="fas fa-save"></i> حفظ الحقل
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- ===== نافذة معاينة الكود المحقون ===== -->
+<div class="modal-overlay" id="codePreviewModal">
+    <div class="modal-content" style="max-width:800px;">
+        <button class="modal-close" onclick="closeModal('codePreviewModal')"><i class="fas fa-times"></i></button>
+        <h2><i class="fas fa-code"></i> معاينة الكود المحقون</h2>
+        <div id="codePreviewContent" style="background:#0F0F1A;padding:15px;border-radius:8px;border:1px solid rgba(255,215,0,0.1);max-height:500px;overflow:auto;">
+            <!-- سيتم تعبئتها -->
+        </div>
+        <button class="btn-primary" onclick="copyPreviewCode()" style="margin-top:15px;width:100%;justify-content:center;">
+            <i class="fas fa-copy"></i> نسخ الكود
+        </button>
+    </div>
+</div>
+
+<!-- ===== Toast Container ===== -->
+<div id="toastContainer"></div>
+
+<script>
+// ============================================
+// 🔧 تهيئة Supabase
+// ============================================
+const supabaseUrl = 'https://savtqajghyloevzwrzvt.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhdnRxYWpnaHlsb2V2endyenZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3ODA1OTMsImV4cCI6MjA5ODM1NjU5M30.CBq7eKyr3RR11op_SevMBBcKQNKF7uftpaa-URemEww';
+
+let supabaseClient = null;
+let supabaseReady = false;
+
+function initSupabase() {
+    try {
+        if (typeof supabase !== 'undefined' && supabase) {
+            supabaseClient = supabase;
+            supabaseReady = true;
+            console.log('✅ Supabase client from CDN (global)');
+            return true;
+        }
+        
+        if (window.supabase && typeof window.supabase.createClient === 'function') {
+            supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+            supabaseReady = true;
+            console.log('✅ Supabase client from window.supabase.createClient');
+            return true;
+        }
+        
+        console.warn('⚠️ Supabase not found, attempting dynamic load...');
+        return false;
+    } catch (error) {
+        console.error('❌ Error initializing Supabase:', error);
+        return false;
+    }
+}
+
+initSupabase();
+
+function getSupabase() {
+    if (!supabaseReady || !supabaseClient) {
+        initSupabase();
+        if (!supabaseReady || !supabaseClient) {
+            showToast('⚠️ يرجى تحديث الصفحة أو التحقق من اتصال Supabase', 'warning');
+            return null;
+        }
+    }
+    return supabaseClient;
+}
+
+// ============================================
+// المتغيرات العامة
+// ============================================
+let paymentMethods = [];
+let shippingMethods = [];
+let checkoutFields = [];
+let filteredPayments = [];
+let currentTab = 'payment-methods';
+
+// ============================================
+// التبويبات
+// ============================================
+function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.toggle('active', content.id === tab + '-tab');
+    });
+    
+    if (tab === 'payment-methods') {
+        filteredPayments = [...paymentMethods];
+        renderPaymentMethods();
+    } else if (tab === 'shipping-methods') {
+        renderShippingMethods();
+    } else if (tab === 'checkout-fields') {
+        renderCheckoutFields();
+    }
+}
+window.switchTab = switchTab;
+
+// ============================================
+// إظهار الإشعارات
+// ============================================
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    
+    const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+    const toast = document.createElement('div');
+    toast.className = `toast-item ${type}`;
+    toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span><span>${message}</span>`;
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 3500);
+}
+window.showToast = showToast;
+
+// ============================================
+// إغلاق النوافذ
+// ============================================
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('active');
+}
+window.closeModal = closeModal;
+
+// ============================================
+// تحميل جميع البيانات
+// ============================================
+async function loadAllData() {
+    await loadPaymentMethods();
+    await loadShippingMethods();
+    await loadCheckoutFields();
+    updateStats();
+    showToast('✅ تم تحديث جميع البيانات', 'success');
+}
+window.loadAllData = loadAllData;
+
+// ============================================
+// تحديث الإحصائيات
+// ============================================
+function updateStats() {
+    document.getElementById('totalPayments').textContent = paymentMethods.length;
+    document.getElementById('totalShipping').textContent = shippingMethods.length;
+    document.getElementById('totalFields').textContent = checkoutFields.length;
+    document.getElementById('activePayments').textContent = paymentMethods.filter(p => p.status === 'active').length;
+}
+
+// ============================================
+// ===== 1. إدارة طرق الدفع =====
+// ============================================
+
+async function loadPaymentMethods() {
+    try {
+        const client = getSupabase();
+        if (!client) {
+            renderPaymentMethods();
+            return;
+        }
+        
+        const { data, error } = await client
+            .from('payment_methods')
+            .select('*')
+            .order('display_order', { ascending: true });
+        
+        if (error) {
+            console.error('❌ خطأ في تحميل طرق الدفع:', error);
+            paymentMethods = [];
+            filteredPayments = [];
+            renderPaymentMethods();
+            return;
+        }
+        
+        paymentMethods = data || [];
+        filteredPayments = [...paymentMethods];
+        renderPaymentMethods();
+        updateStats();
+        
+    } catch (error) {
+        console.error('❌ خطأ في تحميل طرق الدفع:', error);
+        paymentMethods = [];
+        filteredPayments = [];
+        renderPaymentMethods();
+        showToast('❌ حدث خطأ في تحميل طرق الدفع', 'error');
+    }
+}
+window.loadPaymentMethods = loadPaymentMethods;
+
+function filterPaymentMethods() {
+    const query = document.getElementById('paymentSearch').value.toLowerCase().trim();
+    const category = document.getElementById('paymentCategoryFilter').value;
+    const status = document.getElementById('paymentStatusFilter').value;
+    
+    filteredPayments = paymentMethods.filter(method => {
+        const matchesSearch = !query || 
+            method.name.toLowerCase().includes(query) ||
+            (method.description && method.description.toLowerCase().includes(query));
+        
+        const matchesCategory = !category || method.category === category;
+        const matchesStatus = !status || method.status === status;
+        
+        return matchesSearch && matchesCategory && matchesStatus;
+    });
+    
+    renderPaymentMethods();
+}
+window.filterPaymentMethods = filterPaymentMethods;
+
+function renderPaymentMethods() {
+    const grid = document.getElementById('paymentMethodsGrid');
+    if (!grid) return;
+    
+    const data = currentTab === 'payment-methods' ? filteredPayments : paymentMethods;
+    
+    if (data.length === 0) {
+        grid.innerHTML = `
+            <div class="empty-state" style="grid-column:1/-1;">
+                <i class="fas fa-credit-card"></i>
+                <h3>${filteredPayments.length === 0 && paymentMethods.length > 0 ? 'لا توجد نتائج مطابقة للبحث' : 'لا توجد طرق دفع'}</h3>
+                <p>${filteredPayments.length === 0 && paymentMethods.length > 0 ? 'جرب تغيير معايير البحث' : 'أضف طريقة الدفع الأولى بالضغط على "إضافة طريقة دفع"'}</p>
+            </div>
+        `;
+        return;
+    }
+    
+    grid.innerHTML = data.map(method => {
+        const isActive = method.status === 'active';
+        return `
+        <div class="card">
+            <div class="card-header">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div class="icon"><i class="fas ${method.icon || 'fa-credit-card'}"></i></div>
+                    <div>
+                        <div class="card-title">${method.name}</div>
+                        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:2px;">
+                            <span class="badge ${isActive ? 'badge-active' : 'badge-inactive'}">${isActive ? '✅ نشط' : '❌ غير نشط'}</span>
+                            <span style="font-size:11px;color:#8A8A9B;">${method.category || 'أخرى'}</span>
+                            ${method.fee ? `<span style="font-size:11px;color:#FFD700;">💰 ${method.fee} ر.س</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <button class="btn-purple" onclick="previewPaymentCode('${method.id}')" style="padding:4px 10px;font-size:11px;">
+                        <i class="fas fa-code"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-desc">${method.description || 'لا يوجد وصف'}</div>
+            <div class="card-fields">
+                <div class="field-row">
+                    <span class="label">📌 موقع الحقن</span>
+                    <span class="value">${method.position || 'checkout'}</span>
+                </div>
+                <div class="field-row">
+                    <span class="label">🔢 الترتيب</span>
+                    <span class="value">${method.display_order || 0}</span>
+                </div>
+            </div>
+            <div class="card-actions">
+                <button class="btn-success" onclick="togglePaymentStatus('${method.id}')" style="padding:4px 12px;font-size:11px;">
+                    ${isActive ? 'إيقاف' : 'تفعيل'}
+                </button>
+                <button class="btn-secondary" onclick="editPaymentMethod('${method.id}')" style="padding:4px 12px;font-size:11px;">
+                    <i class="fas fa-edit"></i> تعديل
+                </button>
+                <button class="btn-danger" onclick="deletePaymentMethod('${method.id}')" style="padding:4px 12px;font-size:11px;">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `}).join('');
+}
+
+function openAddPaymentMethod() {
+    document.getElementById('paymentMethodId').value = '';
+    document.getElementById('paymentMethodModalTitle').innerHTML = '<i class="fas fa-plus"></i> إضافة طريقة دفع';
+    document.getElementById('paymentMethodForm').reset();
+    document.getElementById('pmStatus').value = 'active';
+    document.getElementById('pmPosition').value = 'checkout';
+    document.getElementById('pmCategory').value = 'card';
+    document.getElementById('pmFee').value = '';
+    document.getElementById('pmCustomPositionGroup').style.display = 'none';
+    document.getElementById('paymentMethodModal').classList.add('active');
+}
+window.openAddPaymentMethod = openAddPaymentMethod;
+
+async function editPaymentMethod(id) {
+    const method = paymentMethods.find(p => p.id === id);
+    if (!method) {
+        showToast('⚠️ طريقة الدفع غير موجودة', 'warning');
+        return;
+    }
+    
+    document.getElementById('paymentMethodId').value = method.id;
+    document.getElementById('paymentMethodModalTitle').innerHTML = '<i class="fas fa-edit"></i> تعديل طريقة الدفع';
+    document.getElementById('pmName').value = method.name || '';
+    document.getElementById('pmIcon').value = method.icon || 'fa-credit-card';
+    document.getElementById('pmDescription').value = method.description || '';
+    document.getElementById('pmCode').value = method.code || '';
+    document.getElementById('pmCss').value = method.css || '';
+    document.getElementById('pmPosition').value = method.position || 'checkout';
+    document.getElementById('pmOrder').value = method.display_order || 0;
+    document.getElementById('pmStatus').value = method.status || 'inactive';
+    document.getElementById('pmCategory').value = method.category || 'card';
+    document.getElementById('pmFee').value = method.fee || '';
+    document.getElementById('pmApiKey').value = method.api_key || '';
+    
+    if (method.position === 'custom') {
+        document.getElementById('pmCustomPositionGroup').style.display = 'block';
+        document.getElementById('pmCustomPosition').value = method.custom_position || '';
+    } else {
+        document.getElementById('pmCustomPositionGroup').style.display = 'none';
+    }
+    
+    document.getElementById('paymentMethodModal').classList.add('active');
+}
+window.editPaymentMethod = editPaymentMethod;
+
+async function savePaymentMethod(event) {
+    event.preventDefault();
+    
+    const id = document.getElementById('paymentMethodId').value;
+    const name = document.getElementById('pmName').value.trim();
+    const icon = document.getElementById('pmIcon').value;
+    const description = document.getElementById('pmDescription').value.trim();
+    const code = document.getElementById('pmCode').value.trim();
+    const css = document.getElementById('pmCss').value.trim();
+    const position = document.getElementById('pmPosition').value;
+    const display_order = parseInt(document.getElementById('pmOrder').value) || 0;
+    const status = document.getElementById('pmStatus').value;
+    const category = document.getElementById('pmCategory').value;
+    const fee = parseFloat(document.getElementById('pmFee').value) || null;
+    const api_key = document.getElementById('pmApiKey').value.trim();
+    const custom_position = document.getElementById('pmCustomPosition').value.trim();
+    
+    if (!name) {
+        showToast('⚠️ الرجاء إدخال اسم طريقة الدفع', 'warning');
+        return;
+    }
+    
+    const data = {
+        name,
+        icon,
+        description: description || null,
+        code: code || null,
+        css: css || null,
+        position,
+        display_order,
+        status,
+        category,
+        fee,
+        api_key: api_key || null,
+        custom_position: position === 'custom' ? custom_position : null,
+        updated_at: new Date().toISOString()
+    };
+    
+    try {
+        const client = getSupabase();
+        if (!client) {
+            showToast('⚠️ Supabase غير متصل، يرجى تحديث الصفحة', 'error');
+            return;
+        }
+        
+        let result;
+        if (id) {
+            result = await client
+                .from('payment_methods')
+                .update(data)
+                .eq('id', id);
+        } else {
+            data.created_at = new Date().toISOString();
+            result = await client
+                .from('payment_methods')
+                .insert(data);
+        }
+        
+        if (result.error) throw result.error;
+        
+        showToast(id ? '✅ تم تحديث طريقة الدفع' : '✅ تم إضافة طريقة الدفع', 'success');
+        closeModal('paymentMethodModal');
+        loadPaymentMethods();
+        
+    } catch (error) {
+        console.error('❌ خطأ:', error);
+        showToast('❌ حدث خطأ: ' + (error.message || 'غير معروف'), 'error');
+    }
+}
+window.savePaymentMethod = savePaymentMethod;
+
+async function togglePaymentStatus(id) {
+    const method = paymentMethods.find(p => p.id === id);
+    if (!method) return;
+    
+    const newStatus = method.status === 'active' ? 'inactive' : 'active';
+    
+    try {
+        const client = getSupabase();
+        if (!client) {
+            showToast('⚠️ Supabase غير متصل', 'error');
+            return;
+        }
+        
+        const { error } = await client
+            .from('payment_methods')
+            .update({ 
+                status: newStatus,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', id);
+        
+        if (error) throw error;
+        
+        showToast(`✅ تم ${newStatus === 'active' ? 'تفعيل' : 'إيقاف'} طريقة الدفع`, 'success');
+        loadPaymentMethods();
+        
+    } catch (error) {
+        console.error('❌ خطأ:', error);
+        showToast('❌ حدث خطأ', 'error');
+    }
+}
+window.togglePaymentStatus = togglePaymentStatus;
+
+async function deletePaymentMethod(id) {
+    if (!confirm('⚠️ هل أنت متأكد من حذف طريقة الدفع؟')) return;
+    
+    try {
+        const client = getSupabase();
+        if (!client) {
+            showToast('⚠️ Supabase غير متصل', 'error');
+            return;
+        }
+        
+        const { error } = await client
+            .from('payment_methods')
+            .delete()
+            .eq('id', id);
+        
+        if (error) throw error;
+        
+        showToast('✅ تم حذف طريقة الدفع', 'success');
+        loadPaymentMethods();
+        
+    } catch (error) {
+        console.error('❌ خطأ:', error);
+        showToast('❌ حدث خطأ', 'error');
+    }
+}
+window.deletePaymentMethod = deletePaymentMethod;
+
+function previewPaymentCode(id) {
+    const method = paymentMethods.find(p => p.id === id);
+    if (!method) {
+        showToast('⚠️ طريقة الدفع غير موجودة', 'warning');
+        return;
+    }
+    
+    const content = document.getElementById('codePreviewContent');
+    content.innerHTML = `
+        <div style="margin-bottom:10px;">
+            <strong style="color:#FFD700;">📌 ${method.name}</strong>
+            <span style="color:#8A8A9B;font-size:12px;margin-right:10px;">${method.position || 'checkout'}</span>
+            ${method.css ? '<span style="color:#8B5CF6;font-size:11px;margin-right:10px;">🎨 مع CSS</span>' : ''}
+        </div>
+        <pre style="background:#0a0a12;padding:15px;border-radius:6px;overflow:auto;font-size:12px;color:#e0e0e0;font-family:'Courier New',monospace;white-space:pre-wrap;">${method.code || '// لا يوجد كود'}</pre>
+        ${method.css ? `<div style="margin-top:10px;"><strong style="color:#8B5CF6;">🎨 CSS:</strong><pre style="background:#0a0a12;padding:10px;border-radius:6px;overflow:auto;font-size:11px;color:#e0e0e0;font-family:'Courier New',monospace;white-space:pre-wrap;margin-top:5px;">${method.css}</pre></div>` : ''}
+    `;
+    
+    document.getElementById('codePreviewModal').classList.add('active');
+}
+window.previewPaymentCode = previewPaymentCode;
+
+// ============================================
+// ===== 2. إدارة شركات الشحن =====
+// ============================================
+
+async function loadShippingMethods() {
+    try {
+        const client = getSupabase();
+        if (!client) {
+            renderShippingMethods();
+            return;
+        }
+        
+        const { data, error } = await client
+            .from('shipping_methods')
+            .select('*')
+            .order('display_order', { ascending: true });
+        
+        if (error) {
+            console.error('❌ خطأ في تحميل شركات الشحن:', error);
+            shippingMethods = [];
+            renderShippingMethods();
+            return;
+        }
+        
+        shippingMethods = data || [];
+        renderShippingMethods();
+        updateStats();
+        
+    } catch (error) {
+        console.error('❌ خطأ في تحميل شركات الشحن:', error);
+        shippingMethods = [];
+        renderShippingMethods();
+        showToast('❌ حدث خطأ في تحميل شركات الشحن', 'error');
+    }
+}
+window.loadShippingMethods = loadShippingMethods;
+
+function renderShippingMethods() {
+    const grid = document.getElementById('shippingMethodsGrid');
+    if (!grid) return;
+    
+    if (shippingMethods.length === 0) {
+        grid.innerHTML = `
+            <div class="empty-state" style="grid-column:1/-1;">
+                <i class="fas fa-truck"></i>
+                <h3>لا توجد شركات شحن</h3>
+                <p>أضف شركة الشحن الأولى بالضغط على "إضافة شركة شحن"</p>
+            </div>
+        `;
+        return;
+    }
+    
+    grid.innerHTML = shippingMethods.map(method => {
+        const isActive = method.status === 'active';
+        return `
+        <div class="card">
+            <div class="card-header">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div class="icon"><i class="fas ${method.icon || 'fa-truck'}"></i></div>
+                    <div>
+                        <div class="card-title">${method.name}</div>
+                        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:2px;">
+                            <span class="badge ${isActive ? 'badge-active' : 'badge-inactive'}">${isActive ? '✅ نشط' : '❌ غير نشط'}</span>
+                        </div>
+                    </div>
+                </div>
+                ${method.image ? `<img src="${method.image}" alt="${method.name}" style="width:40px;height:40px;object-fit:contain;border-radius:8px;background:rgba(255,255,255,0.05);padding:4px;" />` : ''}
+            </div>
+            <div class="card-desc">${method.description || 'لا يوجد وصف'}</div>
+            <div class="card-fields">
+                <div class="field-row">
+                    <span class="label">💰 سعر الشحن</span>
+                    <span class="value">${method.price ? method.price + ' ر.س' : 'مجاني'}</span>
+                </div>
+                <div class="field-row">
+                    <span class="label">⏱️ مدة التوصيل</span>
+                    <span class="value">${method.delivery_days || 'غير محدد'} أيام</span>
+                </div>
+                <div class="field-row">
+                    <span class="label">📍 الدول</span>
+                    <span class="value">${method.countries || 'جميع الدول'}</span>
+                </div>
+            </div>
+            <div class="card-actions">
+                <button class="btn-success" onclick="toggleShippingStatus('${method.id}')" style="padding:4px 12px;font-size:11px;">
+                    ${isActive ? 'إيقاف' : 'تفعيل'}
+                </button>
+                <button class="btn-secondary" onclick="editShippingMethod('${method.id}')" style="padding:4px 12px;font-size:11px;">
+                    <i class="fas fa-edit"></i> تعديل
+                </button>
+                <button class="btn-danger" onclick="deleteShippingMethod('${method.id}')" style="padding:4px 12px;font-size:11px;">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `}).join('');
+}
+
+function openAddShippingMethod() {
+    document.getElementById('shippingMethodId').value = '';
+    document.getElementById('shippingMethodModalTitle').innerHTML = '<i class="fas fa-plus"></i> إضافة شركة شحن';
+    document.getElementById('shippingMethodForm').reset();
+    document.getElementById('smStatus').value = 'active';
+    document.getElementById('smPrice').value = '';
+    document.getElementById('smDeliveryDays').value = '';
+    document.getElementById('shippingMethodModal').classList.add('active');
+}
+window.openAddShippingMethod = openAddShippingMethod;
+
+async function editShippingMethod(id) {
+    const method = shippingMethods.find(s => s.id === id);
+    if (!method) {
+        showToast('⚠️ شركة الشحن غير موجودة', 'warning');
+        return;
+    }
+    
+    document.getElementById('shippingMethodId').value = method.id;
+    document.getElementById('shippingMethodModalTitle').innerHTML = '<i class="fas fa-edit"></i> تعديل شركة شحن';
+    document.getElementById('smName').value = method.name || '';
+    document.getElementById('smIcon').value = method.icon || 'fa-truck';
+    document.getElementById('smDescription').value = method.description || '';
+    document.getElementById('smPrice').value = method.price || '';
+    document.getElementById('smDeliveryDays').value = method.delivery_days || '';
+    document.getElementById('smCountries').value = method.countries || '';
+    document.getElementById('smApiUrl').value = method.api_url || '';
+    document.getElementById('smApiKey').value = method.api_key || '';
+    document.getElementById('smStatus').value = method.status || 'inactive';
+    document.getElementById('smImage').value = method.image || '';
+    
+    document.getElementById('shippingMethodModal').classList.add('active');
+}
+window.editShippingMethod = editShippingMethod;
+
+async function saveShippingMethod(event) {
+    event.preventDefault();
+    
+    const id = document.getElementById('shippingMethodId').value;
+    const name = document.getElementById('smName').value.trim();
+    const icon = document.getElementById('smIcon').value;
+    const description = document.getElementById('smDescription').value.trim();
+    const price = parseFloat(document.getElementById('smPrice').value) || null;
+    const delivery_days = document.getElementById('smDeliveryDays').value.trim();
+    const countries = document.getElementById('smCountries').value.trim();
+    const api_url = document.getElementById('smApiUrl').value.trim();
+    const api_key = document.getElementById('smApiKey').value.trim();
+    const status = document.getElementById('smStatus').value;
+    const image = document.getElementById('smImage').value.trim();
+    
+    if (!name) {
+        showToast('⚠️ الرجاء إدخال اسم شركة الشحن', 'warning');
+        return;
+    }
+    
+    const data = {
+        name,
+        icon,
+        description: description || null,
+        price,
+        delivery_days: delivery_days || null,
+        countries: countries || null,
+        api_url: api_url || null,
+        api_key: api_key || null,
+        status,
+        image: image || null,
+        updated_at: new Date().toISOString()
+    };
+    
+    try {
+        const client = getSupabase();
+        if (!client) {
+            showToast('⚠️ Supabase غير متصل', 'error');
+            return;
+        }
+        
+        let result;
+        if (id) {
+            result = await client
+                .from('shipping_methods')
+                .update(data)
+                .eq('id', id);
+        } else {
+            data.created_at = new Date().toISOString();
+            data.display_order = 0;
+            result = await client
+                .from('shipping_methods')
+                .insert(data);
+        }
+        
+        if (result.error) throw result.error;
+        
+        showToast(id ? '✅ تم تحديث شركة الشحن' : '✅ تم إضافة شركة الشحن', 'success');
+        closeModal('shippingMethodModal');
+        loadShippingMethods();
+        
+    } catch (error) {
+        console.error('❌ خطأ:', error);
+        showToast('❌ حدث خطأ: ' + (error.message || 'غير معروف'), 'error');
+    }
+}
+window.saveShippingMethod = saveShippingMethod;
+
+async function toggleShippingStatus(id) {
+    const method = shippingMethods.find(s => s.id === id);
+    if (!method) return;
+    
+    const newStatus = method.status === 'active' ? 'inactive' : 'active';
+    
+    try {
+        const client = getSupabase();
+        if (!client) {
+            showToast('⚠️ Supabase غير متصل', 'error');
+            return;
+        }
+        
+        const { error } = await client
+            .from('shipping_methods')
+            .update({ 
+                status: newStatus,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', id);
+        
+        if (error) throw error;
+        
+        showToast(`✅ تم ${newStatus === 'active' ? 'تفعيل' : 'إيقاف'} شركة الشحن`, 'success');
+        loadShippingMethods();
+        
+    } catch (error) {
+        console.error('❌ خطأ:', error);
+        showToast('❌ حدث خطأ', 'error');
+    }
+}
+window.toggleShippingStatus = toggleShippingStatus;
+
+async function deleteShippingMethod(id) {
+    if (!confirm('⚠️ هل أنت متأكد من حذف شركة الشحن؟')) return;
+    
+    try {
+        const client = getSupabase();
+        if (!client) {
+            showToast('⚠️ Supabase غير متصل', 'error');
+            return;
+        }
+        
+        const { error } = await client
+            .from('shipping_methods')
+            .delete()
+            .eq('id', id);
+        
+        if (error) throw error;
+        
+        showToast('✅ تم حذف شركة الشحن', 'success');
+        loadShippingMethods();
+        
+    } catch (error) {
+        console.error('❌ خطأ:', error);
+        showToast('❌ حدث خطأ', 'error');
+    }
+}
+window.deleteShippingMethod = deleteShippingMethod;
+
+// ============================================
+// ===== 3. إدارة حقول الطلب =====
+// ============================================
+
+async function loadCheckoutFields() {
+    try {
+        const client = getSupabase();
+        if (!client) {
+            renderCheckoutFields();
+            return;
+        }
+        
+        const { data, error } = await client
+            .from('checkout_fields')
+            .select('*')
+            .order('display_order', { ascending: true });
+        
+        if (error) {
+            console.error('❌ خطأ في تحميل حقول الطلب:', error);
+            checkoutFields = [];
+            renderCheckoutFields();
+            return;
+        }
+        
+        checkoutFields = data || [];
+        renderCheckoutFields();
+        updateStats();
+        
+    } catch (error) {
+        console.error('❌ خطأ في تحميل حقول الطلب:', error);
+        checkoutFields = [];
+        renderCheckoutFields();
+        showToast('❌ حدث خطأ في تحميل حقول الطلب', 'error');
+    }
+}
+window.loadCheckoutFields = loadCheckoutFields;
+
+function renderCheckoutFields() {
+    const container = document.getElementById('checkoutFieldsContainer');
+    if (!container) return;
+    
+    if (checkoutFields.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-pencil-alt"></i>
+                <h3>لا توجد حقول</h3>
+                <p>أضف الحقل الأول بالضغط على "إضافة حقل جديد"</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const typeLabels = {
+        text: '📝 نص قصير',
+        textarea: '📄 نص طويل',
+        select: '📋 قائمة منسدلة',
+        file: '📎 رفع ملف',
+        number: '🔢 رقم',
+        email: '📧 بريد إلكتروني',
+        phone: '📱 رقم هاتف',
+        date: '📅 تاريخ',
+        time: '⏰ وقت',
+        map: '🗺️ خريطة',
+        checkbox: '☑️ خانة اختيار',
+        radio: '⭕ اختيار واحد'
+    };
+    
+    container.innerHTML = `
+        <div class="fields-list">
+            ${checkoutFields.map(field => `
+                <div class="field-item">
+                    <div class="field-info">
+                        <div class="field-name">${field.field_name} ${field.is_required ? '<span style="color:#ef4444;">*</span>' : ''}</div>
+                        <div class="field-meta">${typeLabels[field.field_type] || field.field_type} ${field.category ? '| ' + field.category : ''} ${field.is_active ? '✅' : '❌'}</div>
+                    </div>
+                    <div class="field-actions">
+                        <button class="edit-btn" onclick="editCheckoutField('${field.id}')" title="تعديل">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="toggle-btn ${field.is_active ? 'active' : ''}" onclick="toggleCheckoutField('${field.id}')" title="${field.is_active ? 'إيقاف' : 'تفعيل'}">
+                            <i class="fas ${field.is_active ? 'fa-pause' : 'fa-play'}"></i>
+                        </button>
+                        <button class="delete-btn" onclick="deleteCheckoutField('${field.id}')" title="حذف">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function openAddCheckoutField() {
+    document.getElementById('checkoutFieldId').value = '';
+    document.getElementById('checkoutFieldModalTitle').innerHTML = '<i class="fas fa-plus"></i> إضافة حقل جديد';
+    document.getElementById('checkoutFieldForm').reset();
+    document.getElementById('cfRequired').checked = true;
+    document.getElementById('cfActive').checked = true;
+    document.getElementById('cfType').value = 'text';
+    document.getElementById('cfWidth').value = '2';
+    document.getElementById('cfOptionsGroup').style.display = 'none';
+    document.getElementById('checkoutFieldModal').classList.add('active');
+}
+window.openAddCheckoutField = openAddCheckoutField;
+
+async function editCheckoutField(id) {
+    const field = checkoutFields.find(f => f.id === id);
+    if (!field) {
+        showToast('⚠️ الحقل غير موجود', 'warning');
+        return;
+    }
+    
+    document.getElementById('checkoutFieldId').value = field.id;
+    document.getElementById('checkoutFieldModalTitle').innerHTML = '<i class="fas fa-edit"></i> تعديل الحقل';
+    document.getElementById('cfName').value = field.field_name || '';
+    document.getElementById('cfSlug').value = field.slug || '';
+    document.getElementById('cfType').value = field.field_type || 'text';
+    document.getElementById('cfOptions').value = field.options || '';
+    document.getElementById('cfPlaceholder').value = field.placeholder || '';
+    document.getElementById('cfHelpText').value = field.help_text || '';
+    document.getElementById('cfRequired').checked = field.is_required || false;
+    document.getElementById('cfActive').checked = field.is_active !== false;
+    document.getElementById('cfOrder').value = field.display_order || 0;
+    document.getElementById('cfWidth').value = field.width || '2';
+    document.getElementById('cfCategory').value = field.category || 'custom';
+    
+    if (field.field_type === 'select' || field.field_type === 'radio') {
+        document.getElementById('cfOptionsGroup').style.display = 'block';
+    } else {
+        document.getElementById('cfOptionsGroup').style.display = 'none';
+    }
+    
+    document.getElementById('checkoutFieldModal').classList.add('active');
+}
+window.editCheckoutField = editCheckoutField;
+
+function toggleFieldOptions() {
+    const type = document.getElementById('cfType').value;
+    const optionsGroup = document.getElementById('cfOptionsGroup');
+    if (type === 'select' || type === 'radio') {
+        optionsGroup.style.display = 'block';
+    } else {
+        optionsGroup.style.display = 'none';
+    }
+}
+window.toggleFieldOptions = toggleFieldOptions;
+
+async function saveCheckoutField(event) {
+    event.preventDefault();
+    
+    const id = document.getElementById('checkoutFieldId').value;
+    const field_name = document.getElementById('cfName').value.trim();
+    const slug = document.getElementById('cfSlug').value.trim() || generateSlug(field_name);
+    const field_type = document.getElementById('cfType').value;
+    const options = document.getElementById('cfOptions').value.trim();
+    const placeholder = document.getElementById('cfPlaceholder').value.trim();
+    const help_text = document.getElementById('cfHelpText').value.trim();
+    const is_required = document.getElementById('cfRequired').checked;
+    const is_active = document.getElementById('cfActive').checked;
+    const display_order = parseInt(document.getElementById('cfOrder').value) || 0;
+    const width = parseInt(document.getElementById('cfWidth').value) || 2;
+    const category = document.getElementById('cfCategory').value;
+    
+    if (!field_name) {
+        showToast('⚠️ الرجاء إدخال اسم الحقل', 'warning');
+        return;
+    }
+    
+    const data = {
+        field_name,
+        slug: slug.toLowerCase().replace(/\s+/g, '_'),
+        field_type,
+        options: (field_type === 'select' || field_type === 'radio') ? options : null,
+        placeholder: placeholder || null,
+        help_text: help_text || null,
+        is_required,
+        is_active,
+        display_order,
+        width,
+        category,
+        updated_at: new Date().toISOString()
+    };
+    
+    try {
+        const client = getSupabase();
+        if (!client) {
+            showToast('⚠️ Supabase غير متصل', 'error');
+            return;
+        }
+        
+        let result;
+        if (id) {
+            result = await client
+                .from('checkout_fields')
+                .update(data)
+                .eq('id', id);
+        } else {
+            data.created_at = new Date().toISOString();
+            result = await client
+                .from('checkout_fields')
+                .insert(data);
+        }
+        
+        if (result.error) throw result.error;
+        
+        showToast(id ? '✅ تم تحديث الحقل' : '✅ تم إضافة الحقل', 'success');
+        closeModal('checkoutFieldModal');
+        loadCheckoutFields();
+        
+    } catch (error) {
+        console.error('❌ خطأ:', error);
+        showToast('❌ حدث خطأ: ' + (error.message || 'غير معروف'), 'error');
+    }
+}
+window.saveCheckoutField = saveCheckoutField;
+
+async function deleteCheckoutField(id) {
+    if (!confirm('⚠️ هل أنت متأكد من حذف هذا الحقل؟')) return;
+    
+    try {
+        const client = getSupabase();
+        if (!client) {
+            showToast('⚠️ Supabase غير متصل', 'error');
+            return;
+        }
+        
+        const { error } = await client
+            .from('checkout_fields')
+            .delete()
+            .eq('id', id);
+        
+        if (error) throw error;
+        
+        showToast('✅ تم حذف الحقل', 'success');
+        loadCheckoutFields();
+        
+    } catch (error) {
+        console.error('❌ خطأ:', error);
+        showToast('❌ حدث خطأ', 'error');
+    }
+}
+window.deleteCheckoutField = deleteCheckoutField;
+
+async function toggleCheckoutField(id) {
+    const field = checkoutFields.find(f => f.id === id);
+    if (!field) return;
+    
+    const newStatus = !field.is_active;
+    
+    try {
+        const client = getSupabase();
+        if (!client) {
+            showToast('⚠️ Supabase غير متصل', 'error');
+            return;
+        }
+        
+        const { error } = await client
+            .from('checkout_fields')
+            .update({ 
+                is_active: newStatus,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', id);
+        
+        if (error) throw error;
+        
+        showToast(`✅ تم ${newStatus ? 'تفعيل' : 'إيقاف'} الحقل`, 'success');
+        loadCheckoutFields();
+        
+    } catch (error) {
+        console.error('❌ خطأ:', error);
+        showToast('❌ حدث خطأ', 'error');
+    }
+}
+window.toggleCheckoutField = toggleCheckoutField;
+
+// ============================================
+// ===== 4. التصدير والاستيراد =====
+// ============================================
+
+function exportAllData() {
+    try {
+        const data = {
+            payment_methods: paymentMethods,
+            shipping_methods: shippingMethods,
+            checkout_fields: checkoutFields,
+            exported_at: new Date().toISOString()
+        };
+        
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `payment_config_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        const total = paymentMethods.length + shippingMethods.length + checkoutFields.length;
+        showToast(`✅ تم تصدير ${total} عنصر بنجاح`, 'success');
+    } catch (error) {
+        console.error('❌ خطأ في التصدير:', error);
+        showToast('❌ حدث خطأ في التصدير', 'error');
+    }
+}
+window.exportAllData = exportAllData;
+
+async function importAllData(file) {
+    if (!file) return;
+    
+    try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        
+        let count = 0;
+        const client = getSupabase();
+        if (!client) {
+            showToast('⚠️ Supabase غير متصل', 'error');
+            return;
+        }
+        
+        if (data.payment_methods && Array.isArray(data.payment_methods)) {
+            for (const item of data.payment_methods) {
+                const { error } = await client
+                    .from('payment_methods')
+                    .insert({
+                        ...item,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    });
+                if (!error) count++;
+            }
+        }
+        
+        if (data.shipping_methods && Array.isArray(data.shipping_methods)) {
+            for (const item of data.shipping_methods) {
+                const { error } = await client
+                    .from('shipping_methods')
+                    .insert({
+                        ...item,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    });
+                if (!error) count++;
+            }
+        }
+        
+        if (data.checkout_fields && Array.isArray(data.checkout_fields)) {
+            for (const item of data.checkout_fields) {
+                const { error } = await client
+                    .from('checkout_fields')
+                    .insert({
+                        ...item,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    });
+                if (!error) count++;
+            }
+        }
+        
+        showToast(`✅ تم استيراد ${count} عنصر بنجاح`, 'success');
+        loadAllData();
+    } catch (error) {
+        console.error('❌ خطأ في الاستيراد:', error);
+        showToast('❌ خطأ في الاستيراد: ' + error.message, 'error');
+    }
+}
+window.importAllData = importAllData;
+
+// ============================================
+// ===== دوال مساعدة =====
+// ============================================
+
+function generateSlug(text) {
+    return text
+        .toLowerCase()
+        .replace(/[^a-zA-Z0-9\u0600-\u06FF\s]/g, '')
+        .replace(/\s+/g, '_')
+        .substring(0, 50);
+}
+
+function copyPreviewCode() {
+    const content = document.getElementById('codePreviewContent');
+    const code = content.querySelector('pre')?.textContent || '';
+    
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(() => {
+            showToast('✅ تم نسخ الكود', 'success');
+        }).catch(() => {
+            fallbackCopy(code);
+        });
+    } else {
+        fallbackCopy(code);
+    }
+}
+window.copyPreviewCode = copyPreviewCode;
+
+function fallbackCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+        document.execCommand('copy');
+        showToast('✅ تم نسخ الكود', 'success');
+    } catch (e) {
+        showToast('❌ فشل نسخ الكود', 'error');
+    }
+    textarea.remove();
+}
+
+// ============================================
+// ===== تهيئة الصفحة =====
+// ============================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Payment Methods Manager loaded');
+    
+    if (!supabaseReady) {
+        initSupabase();
+    }
+    
+    // مراقبة تغيير موقع الحقن المخصص
+    document.getElementById('pmPosition').addEventListener('change', function() {
+        const customGroup = document.getElementById('pmCustomPositionGroup');
+        customGroup.style.display = this.value === 'custom' ? 'block' : 'none';
+    });
+    
+    loadAllData();
+});
+</script>
+
+</body>
+</html>

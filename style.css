@@ -721,86 +721,154 @@ nav a.active {
     overflow: hidden;
 }
 
-.product-image {
+/* ============================================
+   🖼️ [جديد] معرض الصور المتعددة
+   ============================================ */
+.product-image-gallery {
+    position: relative;
     width: 100%;
     height: 250px;
-    object-fit: cover;
+    overflow: hidden;
     background: var(--dark);
 }
 
-.product-badge {
+.product-image-gallery .gallery-track {
+    display: flex;
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    height: 100%;
+    touch-action: pan-y;
+}
+
+.product-image-gallery .gallery-slide {
+    min-width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.product-image-gallery .gallery-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    user-select: none;
+    -webkit-user-drag: none;
+    background: var(--dark);
+}
+
+.product-image-gallery .gallery-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+}
+
+.product-card:hover .product-image-gallery .gallery-btn {
+    opacity: 1;
+}
+
+.product-image-gallery .gallery-btn:hover {
+    background: rgba(255, 215, 0, 0.4);
+}
+
+.product-image-gallery .gallery-btn.prev {
+    left: 8px;
+}
+
+.product-image-gallery .gallery-btn.next {
+    right: 8px;
+}
+
+.product-image-gallery .gallery-dots {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    z-index: 5;
+}
+
+.product-image-gallery .gallery-dots .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.product-image-gallery .gallery-dots .dot.active {
+    background: var(--gold);
+    transform: scale(1.2);
+    border-color: var(--gold);
+}
+
+/* ============================================
+   🏷️ [جديد] العنوان الترويجي
+   ============================================ */
+.product-promo-badge {
     position: absolute;
     top: 10px;
     right: 10px;
-    padding: 4px 12px;
-    border-radius: 50px;
+    padding: 4px 14px;
+    border-radius: 20px;
     font-size: 11px;
     font-weight: 700;
+    z-index: 4;
+    background: linear-gradient(135deg, #FFD700, #FF6B00);
+    color: #0F0F1A;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+    animation: promoPulse 2s ease-in-out infinite;
 }
 
-.product-badge.limited {
-    background: #f59e0b;
-    color: #1a1a2e;
-}
-
-.product-badge.sale {
-    background: #ef4444;
+.product-promo-badge.limited {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
     color: white;
 }
 
-.product-badge.custom {
+.product-promo-badge.custom {
     background: linear-gradient(135deg, #8B5CF6, #6D28D9);
     color: white;
 }
 
-.product-actions {
-    position: absolute;
-    bottom: -50px;
-    left: 0;
-    right: 0;
-    display: flex;
-    gap: 5px;
-    justify-content: center;
-    padding: 10px;
-    background: rgba(0,0,0,0.7);
-    transition: var(--transition);
-}
-
-.product-card:hover .product-actions {
-    bottom: 0;
-}
-
-.action-btn {
-    padding: 6px 12px;
-    border: none;
-    border-radius: 6px;
-    font-family: 'Cairo', sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition);
-    background: rgba(255,255,255,0.1);
-    color: var(--white);
-}
-
-.action-btn:hover {
-    transform: scale(1.05);
-}
-
-.action-btn.quick-view {
-    background: rgba(59, 130, 246, 0.3);
-    color: #3b82f6;
-}
-
-.action-btn.quick-view:hover {
-    background: #3b82f6;
+.product-promo-badge.best-seller {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
     color: white;
+}
+
+.product-promo-badge.new {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.product-promo-badge.sale {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+}
+
+@keyframes promoPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
 }
 
 /* ============================================
    🛠️ [مُحسَّن] زر تخصيص وتصميم الدرع
    ============================================ */
-
 .action-btn.customize-btn {
     background: linear-gradient(135deg, #8B5CF6, #6D28D9) !important;
     color: white !important;
@@ -814,7 +882,7 @@ nav a.active {
 
 .customize-btn-bottom {
     width: 100%;
-    margin-top: 12px;
+    margin-top: 8px;
     padding: 10px 16px;
     background: linear-gradient(135deg, #8B5CF6, #6D28D9) !important;
     color: white !important;
@@ -837,6 +905,34 @@ nav a.active {
     transform: scale(1.02);
 }
 
+/* ============================================
+   💳 [جديد] زر إتمام الطلب مباشرة
+   ============================================ */
+.checkout-btn-bottom {
+    width: 100%;
+    margin-top: 8px;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: 'Cairo', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.checkout-btn-bottom:hover {
+    background: linear-gradient(135deg, #059669, #047857) !important;
+    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4) !important;
+    transform: scale(1.02);
+}
+
 .product-actions .customize-btn {
     padding: 8px 12px;
     font-size: 12px;
@@ -846,6 +942,16 @@ nav a.active {
 .product-badge.custom {
     background: linear-gradient(135deg, #8B5CF6, #6D28D9);
     color: white;
+}
+
+.product-badge.sale {
+    background: #ef4444;
+    color: white;
+}
+
+.product-badge.limited {
+    background: #f59e0b;
+    color: #1a1a2e;
 }
 
 .product-info {
@@ -2087,6 +2193,22 @@ footer {
     .payment-settings-section .form-row {
         grid-template-columns: 1fr;
     }
+    
+    .product-image-gallery {
+        height: 200px;
+    }
+    
+    .product-image-gallery .gallery-btn {
+        width: 25px;
+        height: 25px;
+        font-size: 12px;
+    }
+    
+    .customize-btn-bottom,
+    .checkout-btn-bottom {
+        font-size: 12px;
+        padding: 8px 12px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -2118,5 +2240,27 @@ footer {
     
     .refresh-footer-btn i {
         font-size: 12px;
+    }
+    
+    .product-image-gallery {
+        height: 180px;
+    }
+    
+    .product-image-gallery .gallery-btn {
+        width: 22px;
+        height: 22px;
+        font-size: 10px;
+        opacity: 0.6;
+    }
+    
+    .product-image-gallery .gallery-dots .dot {
+        width: 6px;
+        height: 6px;
+    }
+    
+    .customize-btn-bottom,
+    .checkout-btn-bottom {
+        font-size: 11px;
+        padding: 8px 10px;
     }
 }

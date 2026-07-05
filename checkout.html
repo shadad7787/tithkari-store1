@@ -207,6 +207,7 @@
             gap: 15px;
         }
         
+        /* ===== الحقول الإضافية للطلب ===== */
         .additional-fields-section {
             background: rgba(255, 215, 0, 0.03);
             border-radius: 12px;
@@ -1101,6 +1102,8 @@
     let uploadedFiles = [];
     let selectedPaymentMethod = 'cod';
     let paymentSettings = {};
+    let shippingMethods = [];
+    let checkoutFields = [];
     
     // ============================================
     // دوال مساعدة
@@ -1165,7 +1168,7 @@
     }
     
     // ============================================
-    // 🔧 [مُصلح] تحميل إعدادات الدفع من Supabase
+    // 🔧 [جديد] تحميل إعدادات الدفع من Supabase
     // ============================================
     async function loadPaymentSettings() {
         try {
@@ -1318,6 +1321,181 @@
         }
     }
     window.selectPaymentMethod = selectPaymentMethod;
+    
+    // ============================================
+    // 🔧 [جديد] تحميل شركات الشحن
+    // ============================================
+    async function loadShippingMethods() {
+        try {
+            console.log('🚚 جاري تحميل شركات الشحن...');
+            
+            const { data, error } = await supabaseClient
+                .from('shipping_methods')
+                .select('*')
+                .eq('status', 'active')
+                .order('display_order', { ascending: true });
+            
+            if (error) {
+                console.error('❌ خطأ في تحميل شركات الشحن:', error);
+                return;
+            }
+            
+            shippingMethods = data || [];
+            renderShippingMethods();
+            console.log('✅ تم تحميل', shippingMethods.length, 'شركة شحن');
+            
+        } catch (error) {
+            console.error('❌ خطأ في تحميل شركات الشحن:', error);
+        }
+    }
+    
+    // ============================================
+    // عرض شركات الشحن
+    // ============================================
+    function renderShippingMethods() {
+        const container = document.getElementById('shippingMethodsContainer');
+        if (!container) return;
+        
+        if (shippingMethods.length === 0) {
+            container.innerHTML = '<p style="color:#8A8A9B;">لا توجد شركات شحن متاحة</p>';
+            return;
+        }
+        
+        container.innerHTML = shippingMethods.map((method, index) => `
+            <div class="shipping-method-item ${index === 0 ? 'selected' : ''}" onclick="selectShippingMethod('${method.id}')" data-method="${method.id}">
+                <input type="radio" name="shipping_method" value="${method.id}" ${index === 0 ? 'checked' : ''} />
+                <span class="shipping-icon"><i class="fas ${method.icon || 'fa-truck'}"></i></span>
+                <span class="shipping-name">${method.name}</span>
+                <span class="shipping-price">${method.price ? method.price + ' ر.س' : 'مجاني'}</span>
+                <span class="shipping-days">${method.delivery_days || ''}</span>
+            </div>
+        `).join('');
+    }
+    
+    // ============================================
+    // اختيار شركة شحن
+    // ============================================
+    let selectedShippingMethod = null;
+    
+    function selectShippingMethod(methodId) {
+        selectedShippingMethod = methodId;
+        
+        document.querySelectorAll('.shipping-method-item').forEach(item => {
+            item.classList.remove('selected');
+            if (item.dataset.method === methodId) {
+                item.classList.add('selected');
+                item.querySelector('input[type="radio"]').checked = true;
+            }
+        });
+    }
+    window.selectShippingMethod = selectShippingMethod;
+    
+    // ============================================
+    // 🔧 [جديد] تحميل حقول الطلب
+    // ============================================
+    async function loadCheckoutFields() {
+        try {
+            console.log('📋 جاري تحميل حقول الطلب...');
+            
+            const { data, error } = await supabaseClient
+                .from('checkout_fields')
+                .select('*')
+                .eq('is_active', true)
+                .order('display_order', { ascending: true });
+            
+            if (error) {
+                console.error('❌ خطأ في تحميل حقول الطلب:', error);
+                return;
+            }
+            
+            checkoutFields = data || [];
+            renderCheckoutFields();
+            console.log('✅ تم تحميل', checkoutFields.length, 'حقل طلب');
+            
+        } catch (error) {
+            console.error('❌ خطأ في تحميل حقول الطلب:', error);
+        }
+    }
+    
+    // ============================================
+    // عرض حقول الطلب
+    // ============================================
+    function renderCheckoutFields() {
+        const container = document.getElementById('dynamicFieldsContainer');
+        if (!container) return;
+        
+        if (checkoutFields.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+        
+        container.innerHTML = checkoutFields.map(field => {
+            let inputHtml = '';
+            const fieldId = `field_${field.slug}`;
+            
+            switch (field.field_type) {
+                case 'text':
+                    inputHtml = `<input type="text" id="${fieldId}" class="checkout-field-input" placeholder="${field.placeholder || ''}" ${field.is_required ? 'required' : ''} />`;
+                    break;
+                case 'textarea':
+                    inputHtml = `<textarea id="${fieldId}" class="checkout-field-input" placeholder="${field.placeholder || ''}" rows="3" ${field.is_required ? 'required' : ''}></textarea>`;
+                    break;
+                case 'select':
+                    const options = field.options ? field.options.split(',').map(o => o.trim()) : [];
+                    inputHtml = `
+                        <select id="${fieldId}" class="checkout-field-input" ${field.is_required ? 'required' : ''}>
+                            <option value="">-- اختر --</option>
+                            ${options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+                        </select>
+                    `;
+                    break;
+                case 'file':
+                    inputHtml = `<input type="file" id="${fieldId}" class="checkout-field-input" accept="image/*" ${field.is_required ? 'required' : ''} />`;
+                    break;
+                case 'map':
+                    inputHtml = `
+                        <div id="${fieldId}-map" style="height:200px;background:#0F0F1A;border-radius:8px;border:1px solid rgba(255,215,0,0.1);"></div>
+                        <input type="hidden" id="${fieldId}" />
+                        <button type="button" onclick="getLocation('${fieldId}')" class="btn-secondary" style="margin-top:5px;">
+                            <i class="fas fa-map-marker-alt"></i> تحديد الموقع
+                        </button>
+                    `;
+                    break;
+                default:
+                    inputHtml = `<input type="text" id="${fieldId}" class="checkout-field-input" placeholder="${field.placeholder || ''}" ${field.is_required ? 'required' : ''} />`;
+            }
+            
+            return `
+                <div class="form-group" style="grid-column: span ${field.width || 2};">
+                    <label for="${fieldId}">${field.field_name} ${field.is_required ? '<span class="required" style="color:#ef4444;">*</span>' : ''}</label>
+                    ${inputHtml}
+                    ${field.help_text ? `<small style="color:#8A8A9B;font-size:12px;">${field.help_text}</small>` : ''}
+                </div>
+            `;
+        }).join('');
+    }
+    
+    // ============================================
+    // دالة تحديد الموقع
+    // ============================================
+    function getLocation(fieldId) {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    document.getElementById(fieldId).value = `${lat},${lng}`;
+                    showToast('✅ تم تحديد الموقع بنجاح', 'success');
+                },
+                function(error) {
+                    showToast('⚠️ لم نتمكن من تحديد الموقع', 'warning');
+                }
+            );
+        } else {
+            showToast('⚠️ متصفحك لا يدعم تحديد الموقع', 'warning');
+        }
+    }
+    window.getLocation = getLocation;
     
     // ============================================
     // رفع الصور إلى Supabase Storage
@@ -1616,6 +1794,30 @@
     }
     
     // ============================================
+    // جمع بيانات الحقول المخصصة
+    // ============================================
+    function collectDynamicFields() {
+        const fields = {};
+        document.querySelectorAll('.checkout-field-input').forEach(input => {
+            const fieldId = input.id;
+            const label = document.querySelector(`label[for="${fieldId}"]`)?.textContent?.trim() || fieldId;
+            let value = input.value;
+            
+            if (input.type === 'file' && input.files.length > 0) {
+                value = input.files[0].name;
+            }
+            
+            if (value) {
+                fields[fieldId] = {
+                    name: label,
+                    value: value
+                };
+            }
+        });
+        return fields;
+    }
+    
+    // ============================================
     // إرسال الطلب مع جميع البيانات
     // ============================================
     async function submitOrderFromCheckout() {
@@ -1630,6 +1832,9 @@
         const dedicationText = document.getElementById('dedicationText')?.value.trim() || '';
         const personName = document.getElementById('personName')?.value.trim() || '';
         const additionalNotes = document.getElementById('additionalNotes')?.value.trim() || '';
+        
+        // جمع الحقول الديناميكية
+        const dynamicFields = collectDynamicFields();
         
         if (!name) {
             showToast('⚠️ الرجاء إدخال الاسم', 'warning');
@@ -1706,10 +1911,12 @@
                     status: 'pending',
                     payment_status: 'pending',
                     payment_method: selectedPaymentMethod,
+                    shipping_method: selectedShippingMethod,
                     occasion_type: occasionType,
                     occasion_text: occasionText,
                     dedication_text: dedicationText,
                     person_name: personName,
+                    dynamic_fields: dynamicFields,
                     uploaded_images: uploadedImageUrls,
                     uploaded_files_names: uploadedFiles.map(f => f.name),
                     created_at: new Date().toISOString()
@@ -1758,7 +1965,16 @@
         console.log('📌 للتصحيح، اكتب: debugCheckoutData()');
         window.debugCheckoutData = debugCheckoutData;
         
+        // تحميل إعدادات الدفع
         await loadPaymentSettings();
+        
+        // تحميل شركات الشحن
+        await loadShippingMethods();
+        
+        // تحميل حقول الطلب
+        await loadCheckoutFields();
+        
+        // تحميل بيانات السلة
         loadCheckoutData();
     });
 </script>

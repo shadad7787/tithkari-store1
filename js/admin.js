@@ -42,7 +42,7 @@ window.logout = function() {
 // ============================================
 // التبويبات - حل بسيط ومباشر
 // ============================================
-const tabs = ['dashboard', 'products', 'orders', 'add-product', 'custom-fields', 'analytics', 'banners', 'menus', 'customers', 'settings', 'design-templates', 'code-editor', 'store-settings', 'advanced-settings', 'footer', 'categories', 'coupons', 'reviews', 'payment-settings', 'email-settings'];
+const tabs = ['dashboard', 'products', 'orders', 'add-product', 'custom-fields', 'analytics', 'banners', 'menus', 'customers', 'settings', 'design-templates', 'code-editor', 'store-settings', 'advanced-settings', 'footer', 'categories', 'coupons', 'reviews', 'payment-settings', 'email-settings', 'payment-shipping', 'tools'];
 const titles = {
     'dashboard': '📊 لوحة المعلومات',
     'products': '📦 المنتجات',
@@ -63,7 +63,9 @@ const titles = {
     'coupons': '🎫 الكوبونات',
     'reviews': '⭐ التقييمات',
     'payment-settings': '💳 إعدادات الدفع',
-    'email-settings': '📧 إعدادات البريد'
+    'email-settings': '📧 إعدادات البريد',
+    'payment-shipping': '💳 إدارة الدفع والشحن',
+    'tools': '🔌 إدارة الأدوات'
 };
 
 // دالة التبديل بين التبويبات - معرفة عالمياً
@@ -114,7 +116,9 @@ window.switchTab = function(tabName) {
         'coupons': loadCoupons,
         'reviews': loadReviews,
         'payment-settings': loadPaymentSettings,
-        'email-settings': loadEmailSettings
+        'email-settings': loadEmailSettings,
+        'payment-shipping': () => console.log('📌 Payment Shipping tab opened'),
+        'tools': () => console.log('📌 Tools tab opened')
     };
     
     if (loaders[tabName]) {
@@ -4495,5 +4499,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 1500);
     
     console.log('✅ Admin Panel Ready');
-    console.log('📋 Available tabs:', ['dashboard', 'products', 'orders', 'add-product', 'custom-fields', 'analytics', 'banners', 'menus', 'customers', 'settings', 'design-templates', 'code-editor', 'store-settings', 'advanced-settings', 'footer', 'categories', 'coupons', 'reviews', 'payment-settings', 'email-settings'].join(', '));
+    console.log('📋 Available tabs:', ['dashboard', 'products', 'orders', 'add-product', 'custom-fields', 'analytics', 'banners', 'menus', 'customers', 'settings', 'design-templates', 'code-editor', 'store-settings', 'advanced-settings', 'footer', 'categories', 'coupons', 'reviews', 'payment-settings', 'email-settings', 'payment-shipping', 'tools'].join(', '));
 });

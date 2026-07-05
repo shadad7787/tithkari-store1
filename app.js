@@ -839,7 +839,7 @@ async function loadProducts() {
 }
 
 // ============================================
-// ===== عرض المنتجات =====
+// ===== عرض المنتجات مع الصور المتعددة والعنوان الترويجي =====
 // ============================================
 function renderProducts(productsToShow) {
     const grid = document.getElementById('productsGrid');
@@ -864,17 +864,68 @@ function renderProducts(productsToShow) {
         const priceDisplay = displayPrice(product.price, productCurrency);
         const oldPriceDisplay = product.old_price ? displayPrice(product.old_price, productCurrency) : '';
         
+        // معالجة الصور المتعددة
+        let imagesHtml = '';
+        let hasMultipleImages = false;
+        let productImages = [];
+        
+        if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+            productImages = product.images;
+            hasMultipleImages = productImages.length > 1;
+        } else if (product.image_url) {
+            productImages = [product.image_url];
+        } else {
+            productImages = [PLACEHOLDER_IMAGE];
+        }
+        
+        // بناء معرض الصور
+        if (hasMultipleImages) {
+            imagesHtml = `
+                <div class="product-image-gallery" data-product-id="${product.id}">
+                    <div class="gallery-track" id="gallery-${product.id}">
+                        ${productImages.map(img => `
+                            <div class="gallery-slide">
+                                <img src="${img}" alt="${product.name}" loading="lazy" onerror="this.src='${PLACEHOLDER_IMAGE}'" />
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button class="gallery-btn prev" onclick="event.stopPropagation(); moveGallery('${product.id}', -1)">‹</button>
+                    <button class="gallery-btn next" onclick="event.stopPropagation(); moveGallery('${product.id}', 1)">›</button>
+                    <div class="gallery-dots">
+                        ${productImages.map((_, i) => `
+                            <span class="dot ${i === 0 ? 'active' : ''}" onclick="event.stopPropagation(); goToGallerySlide('${product.id}', ${i})"></span>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        } else {
+            imagesHtml = `
+                <div class="product-image-gallery" data-product-id="${product.id}">
+                    <div class="gallery-track">
+                        <div class="gallery-slide">
+                            <img src="${productImages[0]}" alt="${product.name}" loading="lazy" onerror="this.src='${PLACEHOLDER_IMAGE}'" />
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // معالجة العنوان الترويجي
+        let promoBadge = '';
+        if (product.promo_text) {
+            promoBadge = `<span class="product-promo-badge">${product.promo_text}</span>`;
+        } else if (product.stock < 5 && product.stock > 0) {
+            promoBadge = `<span class="product-promo-badge limited">🔥 محدود</span>`;
+        } else if (product.isCustom) {
+            promoBadge = `<span class="product-promo-badge custom">🎨 مخصص</span>`;
+        }
+        
         return `
         <div class="product-card" onclick="openProductModal('${product.id}')">
             <div class="product-image-wrapper">
-                <img src="${product.image_url || PLACEHOLDER_IMAGE}" 
-                     alt="${product.name}" 
-                     class="product-image"
-                     loading="lazy"
-                     onerror="this.src='${PLACEHOLDER_IMAGE}'" />
-                ${product.stock < 5 && product.stock > 0 ? '<span class="product-badge limited">🔥 محدود</span>' : ''}
+                ${imagesHtml}
+                ${promoBadge}
                 ${product.stock === 0 ? '<span class="product-badge sale">نفذ</span>' : ''}
-                ${product.isCustom ? '<span class="product-badge custom">🎨 مخصص</span>' : ''}
                 <div class="product-actions">
                     <button class="action-btn" onclick="event.stopPropagation(); addToCartFromCard('${product.id}')">
                         <i class="fas fa-cart-plus"></i> أضف
@@ -901,12 +952,135 @@ function renderProducts(productsToShow) {
                 <button class="customize-btn-bottom" onclick="event.stopPropagation(); openDesignStudio('${product.image_url || PLACEHOLDER_IMAGE}', '${product.name}', '${product.id}')">
                     <i class="fas fa-paint-brush"></i> 🎨 تخصيص وتصميم الدرع
                 </button>
+                <button class="checkout-btn-bottom" onclick="event.stopPropagation(); redirectToCheckout('${product.id}')">
+                    <i class="fas fa-credit-card"></i> 💳 إتمام الطلب مباشرة
+                </button>
             </div>
         </div>
     `}).join('');
     
+    // تهيئة معارض الصور
+    setTimeout(() => initGalleries(), 100);
+    
     console.log('✅ تم عرض', productsToShow.length, 'منتج');
 }
+
+// ============================================
+// ===== دوال معرض الصور المتعددة =====
+// ============================================
+function initGalleries() {
+    document.querySelectorAll('.product-image-gallery').forEach(gallery => {
+        const productId = gallery.dataset.productId;
+        const track = gallery.querySelector('.gallery-track');
+        if (!track) return;
+        
+        // إضافة مستمع لسحب الصور باللمس
+        let startX = 0;
+        let currentTranslate = 0;
+        let isDragging = false;
+        
+        track.addEventListener('touchstart', function(e) {
+            startX = e.touches[0].clientX;
+            isDragging = true;
+        }, { passive: true });
+        
+        track.addEventListener('touchmove', function(e) {
+            if (!isDragging) return;
+            const diff = startX - e.touches[0].clientX;
+            const slides = track.querySelectorAll('.gallery-slide');
+            const slideWidth = track.offsetWidth;
+            const maxTranslate = (slides.length - 1) * slideWidth;
+            currentTranslate = Math.max(0, Math.min(maxTranslate, currentTranslate + diff));
+            track.style.transform = `translateX(-${currentTranslate}px)`;
+            startX = e.touches[0].clientX;
+        }, { passive: true });
+        
+        track.addEventListener('touchend', function() {
+            isDragging = false;
+            const slides = track.querySelectorAll('.gallery-slide');
+            const slideWidth = track.offsetWidth;
+            const currentIndex = Math.round(currentTranslate / slideWidth);
+            goToGallerySlide(productId, Math.max(0, Math.min(currentIndex, slides.length - 1)));
+        }, { passive: true });
+    });
+}
+
+// دالة للتنقل بين صور المنتج
+let galleryStates = {};
+
+function moveGallery(productId, direction) {
+    if (!galleryStates[productId]) {
+        galleryStates[productId] = { currentIndex: 0 };
+    }
+    const state = galleryStates[productId];
+    const gallery = document.querySelector(`.product-image-gallery[data-product-id="${productId}"]`);
+    if (!gallery) return;
+    
+    const slides = gallery.querySelectorAll('.gallery-slide');
+    if (slides.length <= 1) return;
+    
+    state.currentIndex = (state.currentIndex + direction + slides.length) % slides.length;
+    goToGallerySlide(productId, state.currentIndex);
+}
+
+function goToGallerySlide(productId, index) {
+    const gallery = document.querySelector(`.product-image-gallery[data-product-id="${productId}"]`);
+    if (!gallery) return;
+    
+    const track = gallery.querySelector('.gallery-track');
+    const slides = gallery.querySelectorAll('.gallery-slide');
+    const dots = gallery.querySelectorAll('.gallery-dots .dot');
+    
+    if (!track || slides.length === 0) return;
+    
+    const slideWidth = track.offsetWidth || 100;
+    track.style.transform = `translateX(-${index * slideWidth}px)`;
+    
+    // تحديث النقاط
+    dots.forEach((dot, i) => {
+        dot.classList.toggle('active', i === index);
+    });
+    
+    if (!galleryStates[productId]) {
+        galleryStates[productId] = { currentIndex: 0 };
+    }
+    galleryStates[productId].currentIndex = index;
+}
+
+// ============================================
+// ===== دالة التوجيه المباشر لصفحة الدفع =====
+// ============================================
+function redirectToCheckout(productId) {
+    const product = products.find(p => p.id === productId);
+    if (!product) {
+        showToast('⚠️ المنتج غير موجود', 'error');
+        return;
+    }
+    
+    if (product.stock <= 0) {
+        showToast('❌ هذا المنتج نفذ من المخزون', 'error');
+        return;
+    }
+    
+    // إضافة المنتج للسلة
+    const existing = cart.find(item => item.id === product.id && !item.isCustom);
+    if (existing) {
+        existing.quantity += 1;
+    } else {
+        cart.push({
+            ...product,
+            quantity: 1,
+            customFields: []
+        });
+    }
+    
+    localStorage.setItem('tithkari_cart', JSON.stringify(cart));
+    updateCartUI();
+    
+    // الانتقال مباشرة لصفحة الدفع
+    openCheckoutPage();
+}
+window.redirectToCheckout = redirectToCheckout;
 
 // ============================================
 // ===== دالة الإضافة من بطاقة المنتج =====
@@ -1361,6 +1535,10 @@ async function openProductModal(productId) {
                 <button class="btn-primary" onclick="openDesignStudio('${product.image_url || PLACEHOLDER_IMAGE}', '${product.name}', '${product.id}')" 
                         style="width:100%;justify-content:center;margin-top:8px;background:linear-gradient(135deg, #8B5CF6, #6D28D9);color:white;border:none;border-radius:50px;padding:14px 32px;font-size:18px;font-weight:700;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;gap:10px;">
                     <i class="fas fa-paint-brush"></i> 🎨 تخصيص وتصميم الدرع
+                </button>
+                <button class="btn-primary" onclick="redirectToCheckout('${product.id}')" 
+                        style="width:100%;justify-content:center;margin-top:8px;background:linear-gradient(135deg, #10b981, #059669);color:white;border:none;border-radius:50px;padding:14px 32px;font-size:18px;font-weight:700;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;gap:10px;">
+                    <i class="fas fa-credit-card"></i> 💳 إتمام الطلب مباشرة
                 </button>
             </div>
         </div>
@@ -2114,4 +2292,8 @@ window.debugCustomFields = function() {
 
 window.debugPaymentMethod = function() {
     console.log('💳 Payment method:', selectedPaymentMethod);
+};
+
+window.debugGalleries = function() {
+    console.log('🖼️ Gallery states:', galleryStates);
 };

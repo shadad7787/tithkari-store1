@@ -109,6 +109,19 @@
         .btn-success:hover {
             background: rgba(16, 185, 129, 0.3);
         }
+        .btn-purple {
+            padding: 8px 16px;
+            background: rgba(139, 92, 246, 0.2);
+            color: #8B5CF6;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s ease;
+        }
+        .btn-purple:hover {
+            background: rgba(139, 92, 246, 0.3);
+        }
         
         /* شبكة الأدوات */
         .tools-grid {
@@ -160,6 +173,11 @@
             background: rgba(239, 68, 68, 0.15);
             color: #ef4444;
             border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        .tool-card .tool-status.draft {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.2);
         }
         .tool-card .tool-name {
             font-size: 18px;
@@ -317,6 +335,11 @@
             grid-template-columns: 1fr 1fr;
             gap: 15px;
         }
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
         
         /* Toast */
         #toastContainer {
@@ -359,11 +382,62 @@
             to { transform: translateX(100%); opacity: 0; }
         }
         
+        /* بحث */
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .search-container input {
+            flex: 1;
+            padding: 10px 16px;
+            border-radius: 8px;
+            background: #1A1A2E;
+            color: #FFFFFF;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            font-family: 'Cairo', sans-serif;
+            min-width: 200px;
+        }
+        .search-container input:focus {
+            border-color: #FFD700;
+            outline: none;
+        }
+        .search-container input::placeholder {
+            color: #8A8A9B;
+        }
+        
+        /* إحصائيات */
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .stat-item {
+            background: #1A1A2E;
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+        .stat-item .count {
+            font-weight: 700;
+            color: #FFD700;
+            font-size: 18px;
+        }
+        
         @media (max-width: 768px) {
             .tools-grid {
                 grid-template-columns: 1fr;
             }
             .modal-content .form-row {
+                grid-template-columns: 1fr;
+            }
+            .form-row-3 {
                 grid-template-columns: 1fr;
             }
             .header {
@@ -372,6 +446,12 @@
             }
             .header-actions {
                 justify-content: center;
+            }
+            .stats {
+                justify-content: center;
+            }
+            .search-container input {
+                min-width: 150px;
             }
         }
     </style>
@@ -389,10 +469,51 @@
             <button class="btn-secondary" onclick="injectAllTools()">
                 <i class="fas fa-sync"></i> حقن جميع الأدوات
             </button>
+            <button class="btn-secondary" onclick="exportTools()">
+                <i class="fas fa-file-export"></i> تصدير
+            </button>
+            <button class="btn-secondary" onclick="document.getElementById('importFile').click()">
+                <i class="fas fa-file-import"></i> استيراد
+            </button>
+            <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importTools(this.files[0])" />
             <button class="btn-secondary" onclick="loadTools()">
                 <i class="fas fa-redo"></i> تحديث
             </button>
         </div>
+    </div>
+
+    <!-- الإحصائيات -->
+    <div class="stats" id="statsContainer">
+        <div class="stat-item">
+            <span>📦</span>
+            <span>إجمالي الأدوات:</span>
+            <span class="count" id="totalTools">0</span>
+        </div>
+        <div class="stat-item">
+            <span>✅</span>
+            <span>نشطة:</span>
+            <span class="count" id="activeTools">0</span>
+        </div>
+        <div class="stat-item">
+            <span>❌</span>
+            <span>غير نشطة:</span>
+            <span class="count" id="inactiveTools">0</span>
+        </div>
+    </div>
+
+    <!-- بحث -->
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="🔍 بحث عن أداة..." oninput="filterTools(this.value)" />
+        <select id="categoryFilter" onchange="filterTools()" style="padding:10px 16px;border-radius:8px;background:#1A1A2E;color:#FFFFFF;border:1px solid rgba(255,255,255,0.05);font-family:'Cairo',sans-serif;">
+            <option value="">📂 جميع التصنيفات</option>
+            <option value="analytics">📊 تحليلات</option>
+            <option value="marketing">📣 تسويق</option>
+            <option value="social">🌐 تواصل اجتماعي</option>
+            <option value="payment">💳 دفع</option>
+            <option value="seo">🔍 تحسين محركات البحث</option>
+            <option value="support">💬 دعم العملاء</option>
+            <option value="other">📦 أخرى</option>
+        </select>
     </div>
 
     <!-- شبكة الأدوات -->
@@ -445,6 +566,9 @@
                         <option value="fa-code">💻 Code</option>
                         <option value="fa-chart-line">📊 Chart</option>
                         <option value="fa-cog">⚙️ Settings</option>
+                        <option value="fa-fire">🔥 Fire</option>
+                        <option value="fa-star">⭐ Star</option>
+                        <option value="fa-heart">❤️ Heart</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -460,32 +584,16 @@
                     </select>
                 </div>
             </div>
-            
-            <div class="form-group">
-                <label>📋 الكود المطلوب للحقن (HTML/JavaScript)</label>
-                <textarea id="toolCode" rows="4" placeholder="&lt;!-- ضع الكود هنا --&gt;&#10;&lt;script&gt;&#10;  // كود JavaScript&#10;&lt;/script&gt;"></textarea>
-                <div class="help-text">
-                    💡 يمكنك استخدام المتغيرات: <code>{{TOOL_ID}}</code>, <code>{{TOOL_NAME}}</code>, <code>{{SITE_URL}}</code>
+
+            <div class="form-row-3">
+                <div class="form-group">
+                    <label>📌 الإصدار</label>
+                    <input type="text" id="toolVersion" placeholder="1.0.0" value="1.0.0" />
                 </div>
-            </div>
-            
-            <div class="form-group">
-                <label>📌 موقع الحقن</label>
-                <select id="toolPosition">
-                    <option value="head">في رأس الصفحة (Head)</option>
-                    <option value="body_start">بداية الجسم (Body Start)</option>
-                    <option value="body_end">نهاية الجسم (Body End)</option>
-                    <option value="footer">في التذييل (Footer)</option>
-                    <option value="custom">مخصص (يحدده المستخدم)</option>
-                </select>
-            </div>
-            
-            <div class="form-group" id="customPositionGroup" style="display:none;">
-                <label>📍 الموقع المخصص (محدد CSS أو XPath)</label>
-                <input type="text" id="toolCustomPosition" placeholder="مثال: #analytics-container" />
-            </div>
-            
-            <div class="form-row">
+                <div class="form-group">
+                    <label>🔢 ترتيب العرض</label>
+                    <input type="number" id="toolOrder" value="0" min="0" />
+                </div>
                 <div class="form-group">
                     <label>🔘 حالة الأداة</label>
                     <select id="toolStatus">
@@ -494,9 +602,36 @@
                         <option value="draft">📝 مسودة</option>
                     </select>
                 </div>
+            </div>
+            
+            <div class="form-group">
+                <label>📋 الكود المطلوب للحقن (HTML/JavaScript)</label>
+                <textarea id="toolCode" rows="5" placeholder="&lt;!-- ضع الكود هنا --&gt;&#10;&lt;script&gt;&#10;  // كود JavaScript&#10;&lt;/script&gt;"></textarea>
+                <div class="help-text">
+                    💡 يمكنك استخدام المتغيرات: <code>{{TOOL_ID}}</code>, <code>{{TOOL_NAME}}</code>, <code>{{SITE_URL}}</code>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>🎨 CSS إضافي (اختياري)</label>
+                <textarea id="toolCss" rows="3" placeholder="/* ضع CSS هنا */"></textarea>
+                <div class="help-text">سيتم حقن هذا CSS مع الأداة</div>
+            </div>
+            
+            <div class="form-row">
                 <div class="form-group">
-                    <label>🔢 ترتيب العرض</label>
-                    <input type="number" id="toolOrder" value="0" min="0" />
+                    <label>📌 موقع الحقن</label>
+                    <select id="toolPosition">
+                        <option value="head">في رأس الصفحة (Head)</option>
+                        <option value="body_start">بداية الجسم (Body Start)</option>
+                        <option value="body_end">نهاية الجسم (Body End)</option>
+                        <option value="footer">في التذييل (Footer)</option>
+                        <option value="custom">مخصص (يحدده المستخدم)</option>
+                    </select>
+                </div>
+                <div class="form-group" id="customPositionGroup" style="display:none;">
+                    <label>📍 الموقع المخصص (محدد CSS أو XPath)</label>
+                    <input type="text" id="toolCustomPosition" placeholder="مثال: #analytics-container" />
                 </div>
             </div>
             

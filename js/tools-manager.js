@@ -11,6 +11,7 @@ const supabase = createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
 // المتغيرات
 // ============================================
 let tools = [];
+let filteredTools = [];
 let editingToolId = null;
 
 // ============================================
@@ -22,6 +23,7 @@ const DEFAULT_TOOLS = [
         description: 'تحليلات جوجل لمراقبة الزوار والسلوك',
         icon: 'fa-google',
         category: 'analytics',
+        version: '1.0.0',
         code: `<!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
 <script>
@@ -30,6 +32,7 @@ const DEFAULT_TOOLS = [
   gtag('js', new Date());
   gtag('config', 'GA_MEASUREMENT_ID');
 </script>`,
+        css: '',
         position: 'head',
         status: 'inactive',
         inject_automatically: true,
@@ -40,7 +43,9 @@ const DEFAULT_TOOLS = [
         description: 'أداة تحسين محركات البحث من جوجل',
         icon: 'fa-google',
         category: 'seo',
+        version: '1.0.0',
         code: `<meta name="google-site-verification" content="VERIFICATION_CODE" />`,
+        css: '',
         position: 'head',
         status: 'inactive',
         inject_automatically: true,
@@ -51,6 +56,7 @@ const DEFAULT_TOOLS = [
         description: 'تحليل سلوك الزوار وتسجيل الجلسات',
         icon: 'fa-chart-line',
         category: 'analytics',
+        version: '1.0.0',
         code: `<!-- Microsoft Clarity -->
 <script>
   (function(c,l,a,r,i,t,y){
@@ -59,6 +65,7 @@ const DEFAULT_TOOLS = [
     y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
   })(window, document, "clarity", "script", "CLARITY_PROJECT_ID");
 </script>`,
+        css: '',
         position: 'body_end',
         status: 'inactive',
         inject_automatically: true,
@@ -69,6 +76,7 @@ const DEFAULT_TOOLS = [
         description: 'تتبع التحويلات وإعادة الاستهداف من فيسبوك',
         icon: 'fa-facebook',
         category: 'marketing',
+        version: '1.0.0',
         code: `<!-- Facebook Pixel Code -->
 <script>
   !function(f,b,e,v,n,t,s)
@@ -85,6 +93,7 @@ const DEFAULT_TOOLS = [
 <noscript><img height="1" width="1" style="display:none"
   src="https://www.facebook.com/tr?id=PIXEL_ID&ev=PageView&noscript=1"
 /></noscript>`,
+        css: '',
         position: 'body_end',
         status: 'inactive',
         inject_automatically: true,
@@ -95,6 +104,7 @@ const DEFAULT_TOOLS = [
         description: 'تحليل سلوك الزوار والخريطة الحرارية',
         icon: 'fa-fire',
         category: 'analytics',
+        version: '1.0.0',
         code: `<!-- Hotjar Tracking Code -->
 <script>
   (function(h,o,t,j,a,r){
@@ -106,6 +116,7 @@ const DEFAULT_TOOLS = [
     a.appendChild(r);
   })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');
 </script>`,
+        css: '',
         position: 'head',
         status: 'inactive',
         inject_automatically: true,
@@ -116,6 +127,7 @@ const DEFAULT_TOOLS = [
         description: 'تتبع التحويلات من إعلانات تيك توك',
         icon: 'fa-tiktok',
         category: 'marketing',
+        version: '1.0.0',
         code: `<!-- TikTok Pixel Code -->
 <script>
   !function (w, d, t) {
@@ -125,6 +137,7 @@ const DEFAULT_TOOLS = [
     ttq.page();
   }(window, document, 'ttq');
 </script>`,
+        css: '',
         position: 'body_end',
         status: 'inactive',
         inject_automatically: true,
@@ -135,10 +148,12 @@ const DEFAULT_TOOLS = [
         description: 'بوابة الدفع الإلكتروني Stripe',
         icon: 'fa-stripe',
         category: 'payment',
+        version: '1.0.0',
         code: `<script src="https://js.stripe.com/v3/"></script>
 <script>
   const stripe = Stripe('PUBLISHABLE_KEY');
 </script>`,
+        css: '',
         position: 'head',
         status: 'inactive',
         inject_automatically: true,
@@ -149,6 +164,7 @@ const DEFAULT_TOOLS = [
         description: 'زر واتساب للتواصل السريع مع العملاء',
         icon: 'fa-whatsapp',
         category: 'support',
+        version: '1.0.0',
         code: `<!-- WhatsApp Widget -->
 <div id="whatsapp-widget" style="position:fixed;bottom:20px;left:20px;z-index:999;">
   <a href="https://wa.me/PHONE_NUMBER?text=مرحباً" target="_blank" 
@@ -157,6 +173,8 @@ const DEFAULT_TOOLS = [
     <span>تواصل معنا</span>
   </a>
 </div>`,
+        css: `#whatsapp-widget { transition: all 0.3s ease; }
+#whatsapp-widget a:hover { transform: scale(1.05); }`,
         position: 'body_end',
         status: 'inactive',
         inject_automatically: true,
@@ -187,6 +205,7 @@ async function loadTools() {
         
         if (data && data.length > 0) {
             tools = data;
+            filteredTools = [...tools];
             console.log('✅ تم تحميل', tools.length, 'أداة');
         } else {
             // إضافة الأدوات الافتراضية
@@ -195,6 +214,7 @@ async function loadTools() {
         }
         
         renderTools();
+        updateStats();
         
     } catch (error) {
         console.error('❌ خطأ في تحميل الأدوات:', error);
@@ -210,7 +230,6 @@ async function createToolsTable() {
     try {
         const { error } = await supabase.rpc('create_tools_table');
         if (error) {
-            // إذا لم تكن RPC موجودة، استخدم SQL مباشر
             console.log('⚠️ استخدام SQL مباشر لإنشاء الجدول');
         }
     } catch (error) {
@@ -243,27 +262,37 @@ async function insertDefaultTools() {
 }
 
 // ============================================
+// تحديث الإحصائيات
+// ============================================
+function updateStats() {
+    document.getElementById('totalTools').textContent = tools.length;
+    document.getElementById('activeTools').textContent = tools.filter(t => t.status === 'active').length;
+    document.getElementById('inactiveTools').textContent = tools.filter(t => t.status !== 'active').length;
+}
+
+// ============================================
 // عرض الأدوات
 // ============================================
-function renderTools() {
+function renderTools(toolsToRender = filteredTools) {
     const grid = document.getElementById('toolsGrid');
     if (!grid) return;
     
-    if (tools.length === 0) {
+    if (toolsToRender.length === 0) {
         grid.innerHTML = `
             <div style="grid-column:1/-1;text-align:center;padding:60px 0;color:#8A8A9B;">
                 <i class="fas fa-plug" style="font-size:48px;display:block;margin-bottom:20px;opacity:0.3;"></i>
-                <h3>لا توجد أدوات</h3>
-                <p>أضف أداتك الأولى بالضغط على "إضافة أداة جديدة"</p>
+                <h3>${filteredTools.length === 0 && tools.length > 0 ? 'لا توجد نتائج مطابقة للبحث' : 'لا توجد أدوات'}</h3>
+                <p>${filteredTools.length === 0 && tools.length > 0 ? 'جرب تغيير كلمات البحث' : 'أضف أداتك الأولى بالضغط على "إضافة أداة جديدة"'}</p>
             </div>
         `;
         return;
     }
     
-    grid.innerHTML = tools.map(tool => {
+    grid.innerHTML = toolsToRender.map(tool => {
         const isActive = tool.status === 'active';
-        const statusClass = isActive ? 'active' : 'inactive';
-        const statusText = isActive ? '✅ نشط' : tool.status === 'draft' ? '📝 مسودة' : '❌ غير نشط';
+        const isDraft = tool.status === 'draft';
+        const statusClass = isActive ? 'active' : (isDraft ? 'draft' : 'inactive');
+        const statusText = isActive ? '✅ نشط' : (isDraft ? '📝 مسودة' : '❌ غير نشط');
         const icon = tool.icon || 'fa-plug';
         
         let fieldsHtml = '';
@@ -275,7 +304,7 @@ function renderTools() {
                         <textarea readonly style="font-size:11px;min-height:40px;">${tool.code.substring(0, 150)}${tool.code.length > 150 ? '...' : ''}</textarea>
                     </div>
                     <div class="field-group">
-                        <label>📍 موقع الحقن: ${tool.position || 'غير محدد'}</label>
+                        <label>📍 موقع الحقن: ${tool.position || 'غير محدد'} ${tool.version ? '| 📌 v' + tool.version : ''}</label>
                     </div>
                 </div>
             `;
@@ -291,6 +320,7 @@ function renderTools() {
                         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                             <span style="font-size:11px;color:#8A8A9B;">${tool.category || '📦 أخرى'}</span>
                             <span class="tool-status ${statusClass}">${statusText}</span>
+                            ${tool.inject_automatically ? '<span style="font-size:10px;color:#8A8A9B;background:rgba(255,215,0,0.05);padding:2px 8px;border-radius:4px;">🔄 تلقائي</span>' : ''}
                         </div>
                     </div>
                 </div>
@@ -309,7 +339,7 @@ function renderTools() {
                 <button class="btn-success" onclick="injectTool('${tool.id}')" style="padding:4px 12px;font-size:11px;">
                     <i class="fas fa-code"></i> حقن
                 </button>
-                <button class="btn-secondary" onclick="previewToolCode('${tool.id}')" style="padding:4px 12px;font-size:11px;">
+                <button class="btn-purple" onclick="previewToolCode('${tool.id}')" style="padding:4px 12px;font-size:11px;">
                     <i class="fas fa-eye"></i> معاينة
                 </button>
                 <button class="btn-danger" onclick="deleteTool('${tool.id}')" style="padding:4px 12px;font-size:11px;">
@@ -321,6 +351,28 @@ function renderTools() {
 }
 
 // ============================================
+// فلترة الأدوات
+// ============================================
+function filterTools() {
+    const query = document.getElementById('searchInput').value.toLowerCase().trim();
+    const category = document.getElementById('categoryFilter').value;
+    
+    filteredTools = tools.filter(tool => {
+        const matchesSearch = !query || 
+            tool.name.toLowerCase().includes(query) ||
+            (tool.description && tool.description.toLowerCase().includes(query)) ||
+            (tool.category && tool.category.toLowerCase().includes(query));
+        
+        const matchesCategory = !category || tool.category === category;
+        
+        return matchesSearch && matchesCategory;
+    });
+    
+    renderTools();
+}
+window.filterTools = filterTools;
+
+// ============================================
 // فتح نافذة إضافة أداة
 // ============================================
 function openAddToolModal() {
@@ -330,6 +382,7 @@ function openAddToolModal() {
     document.getElementById('toolId').value = '';
     document.getElementById('toolStatus').value = 'inactive';
     document.getElementById('toolInjectAutomatically').checked = true;
+    document.getElementById('toolVersion').value = '1.0.0';
     document.getElementById('customPositionGroup').style.display = 'none';
     document.getElementById('toolModal').classList.add('active');
 }
@@ -354,9 +407,11 @@ async function editTool(toolId) {
         document.getElementById('toolIcon').value = tool.icon || 'fa-plug';
         document.getElementById('toolCategory').value = tool.category || 'other';
         document.getElementById('toolCode').value = tool.code || '';
+        document.getElementById('toolCss').value = tool.css || '';
         document.getElementById('toolPosition').value = tool.position || 'body_end';
         document.getElementById('toolStatus').value = tool.status || 'inactive';
         document.getElementById('toolOrder').value = tool.display_order || 0;
+        document.getElementById('toolVersion').value = tool.version || '1.0.0';
         document.getElementById('toolInjectAutomatically').checked = tool.inject_automatically !== false;
         
         if (tool.position === 'custom') {
@@ -395,9 +450,11 @@ async function saveTool(event) {
     const icon = document.getElementById('toolIcon').value;
     const category = document.getElementById('toolCategory').value;
     const code = document.getElementById('toolCode').value.trim();
+    const css = document.getElementById('toolCss').value.trim();
     const position = document.getElementById('toolPosition').value;
     const status = document.getElementById('toolStatus').value;
     const display_order = parseInt(document.getElementById('toolOrder').value) || 0;
+    const version = document.getElementById('toolVersion').value.trim() || '1.0.0';
     const inject_automatically = document.getElementById('toolInjectAutomatically').checked;
     const custom_position = document.getElementById('toolCustomPosition').value.trim();
     
@@ -417,9 +474,11 @@ async function saveTool(event) {
         icon,
         category,
         code,
+        css: css || null,
         position,
         status,
         display_order,
+        version,
         inject_automatically,
         custom_position: position === 'custom' ? custom_position : null,
         updated_at: new Date().toISOString()
@@ -516,18 +575,32 @@ function previewToolCode(toolId) {
         return;
     }
     
+    const processedCode = processCode(tool);
+    
     const content = document.getElementById('injectedCodeContent');
     content.innerHTML = `
         <div style="margin-bottom:10px;">
             <strong style="color:#FFD700;">📌 ${tool.name}</strong>
             <span style="color:#8A8A9B;font-size:12px;margin-right:10px;">${tool.position || 'body_end'}</span>
+            ${tool.css ? '<span style="color:#8B5CF6;font-size:11px;margin-right:10px;">🎨 مع CSS</span>' : ''}
         </div>
-        <pre style="background:#0a0a12;padding:15px;border-radius:6px;overflow:auto;font-size:12px;color:#e0e0e0;font-family:'Courier New',monospace;white-space:pre-wrap;">${tool.code}</pre>
+        <pre style="background:#0a0a12;padding:15px;border-radius:6px;overflow:auto;font-size:12px;color:#e0e0e0;font-family:'Courier New',monospace;white-space:pre-wrap;">${processedCode}</pre>
+        ${tool.css ? `<div style="margin-top:10px;"><strong style="color:#8B5CF6;">🎨 CSS:</strong><pre style="background:#0a0a12;padding:10px;border-radius:6px;overflow:auto;font-size:11px;color:#e0e0e0;font-family:'Courier New',monospace;white-space:pre-wrap;margin-top:5px;">${tool.css}</pre></div>` : ''}
     `;
     
     document.getElementById('injectedCodeModal').classList.add('active');
 }
 window.previewToolCode = previewToolCode;
+
+// ============================================
+// معالجة الكود (استبدال المتغيرات)
+// ============================================
+function processCode(tool) {
+    return tool.code
+        .replace(/{{TOOL_ID}}/g, tool.id)
+        .replace(/{{TOOL_NAME}}/g, tool.name)
+        .replace(/{{SITE_URL}}/g, window.location.origin);
+}
 
 // ============================================
 // نسخ الكود
@@ -539,17 +612,24 @@ function copyInjectedCode() {
     navigator.clipboard.writeText(code).then(() => {
         showToast('✅ تم نسخ الكود', 'success');
     }).catch(() => {
-        // طريقة بديلة
-        const textarea = document.createElement('textarea');
-        textarea.value = code;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        textarea.remove();
-        showToast('✅ تم نسخ الكود', 'success');
+        fallbackCopy(code);
     });
 }
 window.copyInjectedCode = copyInjectedCode;
+
+function fallbackCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+        document.execCommand('copy');
+        showToast('✅ تم نسخ الكود', 'success');
+    } catch (e) {
+        showToast('❌ فشل نسخ الكود', 'error');
+    }
+    textarea.remove();
+}
 
 // ============================================
 // إغلاق نافذة الكود
@@ -558,6 +638,21 @@ function closeInjectedCodeModal() {
     document.getElementById('injectedCodeModal').classList.remove('active');
 }
 window.closeInjectedCodeModal = closeInjectedCodeModal;
+
+// ============================================
+// حقن CSS
+// ============================================
+function injectToolCSS(css, toolId) {
+    if (!css) return;
+    const styleId = `tool-css-${toolId}`;
+    let style = document.getElementById(styleId);
+    if (!style) {
+        style = document.createElement('style');
+        style.id = styleId;
+        document.head.appendChild(style);
+    }
+    style.textContent = css;
+}
 
 // ============================================
 // حقن أداة واحدة
@@ -654,14 +749,13 @@ window.injectAllTools = injectAllTools;
 // ============================================
 function applyToolInjection(tool) {
     try {
-        const code = tool.code || '';
+        const code = processCode(tool);
         const position = tool.position || 'body_end';
         
-        // استبدال المتغيرات
-        let processedCode = code
-            .replace(/{{TOOL_ID}}/g, tool.id)
-            .replace(/{{TOOL_NAME}}/g, tool.name)
-            .replace(/{{SITE_URL}}/g, window.location.origin);
+        // حقن CSS
+        if (tool.css) {
+            injectToolCSS(tool.css, tool.id);
+        }
         
         let element;
         switch (position) {
@@ -669,10 +763,8 @@ function applyToolInjection(tool) {
                 element = document.head;
                 break;
             case 'body_start':
-                element = document.body;
-                // إدراج في بداية body
                 const script = document.createElement('div');
-                script.innerHTML = processedCode;
+                script.innerHTML = code;
                 document.body.prepend(...script.children);
                 return;
             case 'footer':
@@ -691,7 +783,7 @@ function applyToolInjection(tool) {
         
         // إدراج الكود
         const container = document.createElement('div');
-        container.innerHTML = processedCode;
+        container.innerHTML = code;
         container.style.display = 'contents';
         element.appendChild(...container.children);
         
@@ -728,6 +820,64 @@ async function loadInjectedTools() {
         console.error('❌ خطأ في تحميل الأدوات المحقونة:', error);
     }
 }
+
+// ============================================
+// تصدير الأدوات
+// ============================================
+function exportTools() {
+    try {
+        const data = JSON.stringify(tools, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `tools_backup_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast(`✅ تم تصدير ${tools.length} أداة بنجاح`, 'success');
+    } catch (error) {
+        console.error('❌ خطأ في التصدير:', error);
+        showToast('❌ حدث خطأ في التصدير', 'error');
+    }
+}
+window.exportTools = exportTools;
+
+// ============================================
+// استيراد الأدوات
+// ============================================
+async function importTools(file) {
+    if (!file) return;
+    
+    try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        
+        if (!Array.isArray(data)) {
+            throw new Error('البيانات غير صالحة');
+        }
+        
+        let count = 0;
+        for (const tool of data) {
+            const { error } = await supabase
+                .from('tools')
+                .insert({
+                    ...tool,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                });
+            
+            if (error) throw error;
+            count++;
+        }
+        
+        showToast(`✅ تم استيراد ${count} أداة بنجاح`, 'success');
+        loadTools();
+    } catch (error) {
+        console.error('❌ خطأ في الاستيراد:', error);
+        showToast('❌ خطأ في الاستيراد: ' + error.message, 'error');
+    }
+}
+window.importTools = importTools;
 
 // ============================================
 // إظهار الإشعارات (Toast)

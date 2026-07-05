@@ -1752,4 +1752,430 @@ window.deleteLayer = deleteLayer;
 window.updateLayersList = updateLayersList;
 window.loadProductsForLinking = loadProductsForLinking;
 
+// ============================================
+// إضافات جديدة لـ Design Studio
+// ============================================
+
+// ===== متغيرات الصور المتعددة =====
+var uploadedDesignImages = [];
+
+// ============================================
+// 🆕 رفع الصور المتعددة
+// ============================================
+function handleDesignImagesUpload(event) {
+    const files = event.target.files;
+    const maxFiles = 5;
+    const container = document.getElementById('designImagesPreview');
+    
+    if (uploadedDesignImages.length + files.length > maxFiles) {
+        showToast('⚠️ يمكنك رفع ' + maxFiles + ' صور كحد أقصى', 'warning');
+        event.target.value = '';
+        return;
+    }
+    
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (!file.type.startsWith('image/')) {
+            showToast('⚠️ الرجاء رفع ملفات صور فقط', 'warning');
+            continue;
+        }
+        
+        uploadedDesignImages.push(file);
+        
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            const div = document.createElement('div');
+            div.className = 'image-item';
+            const idx = uploadedDesignImages.length - 1;
+            div.innerHTML = `
+                <img src="${ev.target.result}" alt="صورة الدرع" />
+                <button class="remove-btn" onclick="removeDesignImage(${idx})">×</button>
+            `;
+            container.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    event.target.value = '';
+}
+window.handleDesignImagesUpload = handleDesignImagesUpload;
+
+function removeDesignImage(index) {
+    if (index >= 0 && index < uploadedDesignImages.length) {
+        uploadedDesignImages.splice(index, 1);
+        renderDesignImages();
+    }
+}
+window.removeDesignImage = removeDesignImage;
+
+function renderDesignImages() {
+    const container = document.getElementById('designImagesPreview');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    uploadedDesignImages.forEach(function(file, index) {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            const div = document.createElement('div');
+            div.className = 'image-item';
+            div.innerHTML = `
+                <img src="${ev.target.result}" alt="صورة الدرع" />
+                <button class="remove-btn" onclick="removeDesignImage(${index})">×</button>
+            `;
+            container.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+window.renderDesignImages = renderDesignImages;
+
+// ============================================
+// 🆕 رفع الصور إلى Supabase Storage
+// ============================================
+async function uploadDesignImagesToStorage(files) {
+    const urls = [];
+    const bucketName = 'design-images';
+    
+    try {
+        // التأكد من وجود البكت
+        const { data: buckets } = await supabase.storage.listBuckets();
+        const bucketExists = buckets.some(function(b) { return b.name === bucketName; });
+        
+        if (!bucketExists) {
+            await supabase.storage.createBucket(bucketName, {
+                public: true,
+                allowedMimeTypes: ['image/png', 'image/jpeg', 'image/svg+xml'],
+                fileSizeLimit: 5242880
+            });
+        }
+    } catch (e) {
+        console.log('⚠️ Bucket may already exist or error:', e);
+    }
+    
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        try {
+            const fileName = 'design_' + Date.now() + '_' + Math.random().toString(36).substring(7) + '_' + file.name;
+            const filePath = fileName;
+            
+            const { data, error } = await supabase.storage
+                .from(bucketName)
+                .upload(filePath, file, {
+                    cacheControl: '3600',
+                    upsert: false
+                });
+            
+            if (error) throw error;
+            
+            const { data: urlData } = supabase.storage
+                .from(bucketName)
+                .getPublicUrl(filePath);
+            
+            urls.push(urlData.publicUrl);
+            
+        } catch (error) {
+            console.error('❌ خطأ في رفع الملف:', error);
+            showToast('⚠️ حدث خطأ في رفع الملف: ' + file.name, 'warning');
+        }
+    }
+    
+    return urls;
+}
+window.uploadDesignImagesToStorage = uploadDesignImagesToStorage;
+
+// ============================================
+// 🆕 حفظ التصميم مع الصور والعنوان الترويجي
+// ============================================
+async function saveDesign() {
+    const loading = document.getElementById('loadingOverlay');
+    if (loading) loading.classList.add('active');
+    
+    try {
+        // جمع البيانات
+        const name = document.getElementById('designName')?.value || 'درع مخصص';
+        const description = document.getElementById('designDescription')?.value || '';
+        const price = parseFloat(document.getElementById('designPrice')?.value) || 199;
+        const promoText = document.getElementById('promoText')?.value || '';
+        const promoType = document.getElementById('promoType')?.value || 'custom';
+        
+        // رفع الصور
+        let imageUrls = [];
+        if (uploadedDesignImages.length > 0) {
+            imageUrls = await uploadDesignImagesToStorage(uploadedDesignImages);
+        }
+        
+        // جمع طبقات التصميم
+        const layersData = collectLayersData();
+        
+        // حفظ في Supabase
+        const { data, error } = await supabase
+            .from('templates')
+            .insert({
+                name: name,
+                description: description,
+                price: price,
+                image_url: imageUrls[0] || null,
+                images: imageUrls,
+                promo_text: promoText,
+                promo_type: promoType,
+                layers: layersData,
+                status: 'active',
+                created_at: new Date().toISOString()
+            });
+        
+        if (error) throw error;
+        
+        showToast('✅ تم حفظ التصميم بنجاح!', 'success');
+        
+        // إعادة تعيين النموذج
+        uploadedDesignImages = [];
+        renderDesignImages();
+        document.getElementById('designImages').value = '';
+        
+    } catch (error) {
+        console.error('❌ خطأ في حفظ التصميم:', error);
+        showToast('❌ حدث خطأ في حفظ التصميم: ' + error.message, 'error');
+    } finally {
+        if (loading) loading.classList.remove('active');
+    }
+}
+window.saveDesign = saveDesign;
+
+// ============================================
+// 🆕 جمع بيانات الطبقات
+// ============================================
+function collectLayersData() {
+    var layersData = [];
+    
+    layers.forEach(function(layer) {
+        var data = {
+            type: layer.type,
+            top: layer.top,
+            left: layer.left,
+            width: layer.width,
+            height: layer.height
+        };
+        
+        if (layer.type === 'text') {
+            var content = layer.element.querySelector('.text-content');
+            data.text = layer.text || (content ? content.textContent : '');
+            if (content) {
+                data.style = {
+                    fontSize: content.style.fontSize || '18px',
+                    fontFamily: content.style.fontFamily || 'Cairo',
+                    color: content.style.color || '#d4af37',
+                    backgroundColor: content.style.backgroundColor || 'rgba(0,0,0,0.7)'
+                };
+            }
+        } else if (layer.type === 'image') {
+            var img = layer.element.querySelector('img');
+            data.src = img ? img.src : (layer.src || '');
+        }
+        
+        layersData.push(data);
+    });
+    
+    return layersData;
+}
+window.collectLayersData = collectLayersData;
+
+// ============================================
+// 🆕 إتمام الطلب مباشرة من المصمم
+// ============================================
+async function checkoutDirectly() {
+    const loading = document.getElementById('loadingOverlay');
+    if (loading) loading.classList.add('active');
+    
+    try {
+        // جمع بيانات التصميم
+        const name = document.getElementById('designName')?.value || 'درع مخصص';
+        const price = parseFloat(document.getElementById('designPrice')?.value) || 199;
+        const promoText = document.getElementById('promoText')?.value || '';
+        const promoType = document.getElementById('promoType')?.value || 'custom';
+        
+        // رفع الصور
+        let imageUrls = [];
+        if (uploadedDesignImages.length > 0) {
+            imageUrls = await uploadDesignImagesToStorage(uploadedDesignImages);
+        }
+        
+        // إنشاء منتج مخصص
+        const designProduct = {
+            id: 'design_' + Date.now(),
+            name: name,
+            price: price,
+            description: 'درع مصمم حسب الطلب',
+            image_url: imageUrls[0] || 'https://i.ibb.co/vxn3p7C7/Gemini-Generated-Image-g2xtelg2xtelg2xt.png',
+            images: imageUrls,
+            promo_text: promoText,
+            promo_type: promoType,
+            stock: 99,
+            isCustom: true,
+            currency: 'SAR'
+        };
+        
+        // إضافة للسلة
+        var cart = JSON.parse(localStorage.getItem('tithkari_cart') || '[]');
+        cart.push({ ...designProduct, quantity: 1 });
+        localStorage.setItem('tithkari_cart', JSON.stringify(cart));
+        
+        showToast('✅ تم إضافة التصميم للسلة! جاري التوجيه...', 'success');
+        
+        // الانتقال لصفحة الدفع بعد تأخير بسيط
+        setTimeout(function() {
+            window.location.href = 'checkout.html';
+        }, 1000);
+        
+    } catch (error) {
+        console.error('❌ خطأ:', error);
+        showToast('❌ حدث خطأ: ' + error.message, 'error');
+    } finally {
+        if (loading) loading.classList.remove('active');
+    }
+}
+window.checkoutDirectly = checkoutDirectly;
+
+// ============================================
+// 🆕 تحميل تصميم موجود للتعديل
+// ============================================
+async function loadDesignForEdit(designId) {
+    try {
+        const { data, error } = await supabase
+            .from('templates')
+            .select('*')
+            .eq('id', designId)
+            .single();
+        
+        if (error) throw error;
+        
+        if (data) {
+            if (document.getElementById('designName')) {
+                document.getElementById('designName').value = data.name || '';
+            }
+            if (document.getElementById('designDescription')) {
+                document.getElementById('designDescription').value = data.description || '';
+            }
+            if (document.getElementById('designPrice')) {
+                document.getElementById('designPrice').value = data.price || 199;
+            }
+            if (document.getElementById('promoText')) {
+                document.getElementById('promoText').value = data.promo_text || '';
+            }
+            if (document.getElementById('promoType')) {
+                document.getElementById('promoType').value = data.promo_type || 'custom';
+            }
+            
+            // عرض الصور المحفوظة
+            if (data.images && data.images.length > 0) {
+                const container = document.getElementById('designImagesPreview');
+                if (container) {
+                    container.innerHTML = '';
+                    data.images.forEach(function(url, index) {
+                        const div = document.createElement('div');
+                        div.className = 'image-item';
+                        div.innerHTML = `
+                            <img src="${url}" alt="صورة الدرع" />
+                            <button class="remove-btn" onclick="removeDesignImage(${index})">×</button>
+                        `;
+                        container.appendChild(div);
+                    });
+                }
+            }
+            
+            // تحميل الطبقات
+            if (data.layers) {
+                loadLayersData(data.layers);
+            }
+            
+            showToast('✅ تم تحميل التصميم: ' + data.name, 'success');
+        }
+        
+    } catch (error) {
+        console.error('❌ خطأ في تحميل التصميم:', error);
+        showToast('❌ حدث خطأ في تحميل التصميم', 'error');
+    }
+}
+window.loadDesignForEdit = loadDesignForEdit;
+
+// ============================================
+// 🆕 تحميل طبقات من بيانات
+// ============================================
+function loadLayersData(layersData) {
+    // حذف الطبقات الحالية
+    layers.forEach(function(l) { l.element.remove(); });
+    layers = [];
+    layerCounter = 0;
+    
+    // إعادة إنشاء الطبقات
+    layersData.forEach(function(layerData) {
+        if (layerData.type === 'text') {
+            var layer = addTextLayer(
+                layerData.text || 'نص',
+                layerData.top || '20%',
+                layerData.left || '10%',
+                layerData.width || '80%',
+                layerData.height || '40px'
+            );
+            
+            if (layerData.style) {
+                var content = layer.element.querySelector('.text-content');
+                if (content) {
+                    content.style.fontSize = layerData.style.fontSize || '18px';
+                    content.style.fontFamily = layerData.style.fontFamily || 'Cairo';
+                    content.style.color = layerData.style.color || '#d4af37';
+                    content.style.backgroundColor = layerData.style.backgroundColor || 'rgba(0,0,0,0.7)';
+                }
+            }
+        } else if (layerData.type === 'image') {
+            addImageLayer(
+                layerData.src || '',
+                layerData.top || '30%',
+                layerData.left || '30%',
+                layerData.width || '120px',
+                layerData.height || '120px'
+            );
+        }
+    });
+    
+    updateLayerCount();
+    saveState();
+}
+window.loadLayersData = loadLayersData;
+
+// ============================================
+// 🆕 تحسين دالة رفع الصور الفردية
+// ============================================
+var originalHandleImageUpload = window.handleImageUpload || function() {};
+
+window.handleImageUpload = function(event) {
+    var file = event.target.files[0];
+    if (!file) return;
+
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var img = new Image();
+        img.onload = function() {
+            addImageLayer(e.target.result);
+            showToast('✅ تم رفع الصورة');
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+};
+
+// ============================================
+// جعل الدوال الجديدة عامة
+// ============================================
+window.saveDesign = saveDesign;
+window.checkoutDirectly = checkoutDirectly;
+window.loadDesignForEdit = loadDesignForEdit;
+window.collectLayersData = collectLayersData;
+window.handleDesignImagesUpload = handleDesignImagesUpload;
+window.removeDesignImage = removeDesignImage;
+window.renderDesignImages = renderDesignImages;
+window.uploadDesignImagesToStorage = uploadDesignImagesToStorage;
+window.loadLayersData = loadLayersData;
+
+console.log('✅ Design Studio - تم تحميل الإضافات الجديدة');
 console.log('✅ Design Studio loaded successfully');
