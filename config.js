@@ -104,7 +104,7 @@ export const CONFIG = {
     
     // ===== إعدادات واتساب =====
     whatsapp: {
-        number: '966500000000', // رقم واتساب الافتراضي
+        number: '966500000000',
         message: 'مرحباً، أريد الاستفسار عن طلبي'
     }
 };
@@ -130,8 +130,8 @@ export function convertCurrency(amount, fromCurrency, toCurrency) {
 // تنسيق العملة
 export function formatCurrency(amount, currencyCode = 'SAR') {
     const currency = CONFIG.currencies.list[currencyCode];
-    if (!currency) return `${amount.toFixed(2)}`;
-    return `${amount.toFixed(2)} ${currency.symbol}`;
+    if (!currency) return amount.toFixed(2);
+    return amount.toFixed(2) + ' ' + currency.symbol;
 }
 
 // ============================================
@@ -168,8 +168,13 @@ export function setConfig(path, value) {
 // دالة إنشاء عميل Supabase
 // ============================================
 export async function createSupabaseClient() {
-    const { createClient } = await import('@supabase/supabase-js');
-    return createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
+    try {
+        const { createClient } = await import('@supabase/supabase-js');
+        return createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
+    } catch (error) {
+        console.error('❌ خطأ في إنشاء عميل Supabase:', error);
+        return null;
+    }
 }
 
 // ============================================

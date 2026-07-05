@@ -1594,6 +1594,26 @@
     ============================================ -->
     <script>
         // ============================================
+        // إصلاح مشكلة process.env في بيئة المتصفح
+        // ============================================
+        if (typeof process === 'undefined') {
+            window.process = {
+                env: {
+                    STRIPE_PUBLISHABLE_KEY: '',
+                    STRIPE_SECRET_KEY: '',
+                    PAYPAL_CLIENT_ID: '',
+                    PAYPAL_SECRET_KEY: '',
+                    SENDGRID_API_KEY: '',
+                    GOOGLE_ANALYTICS_ID: '',
+                    FACEBOOK_PIXEL_ID: '',
+                    CLARITY_PROJECT_ID: '',
+                    HOTJAR_SITE_ID: ''
+                }
+            };
+            console.log('✅ process.env initialized for browser environment');
+        }
+
+        // ============================================
         // تعريف switchTab في النطاق العام
         // ============================================
         window.switchTab = function(tabName) {

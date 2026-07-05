@@ -741,6 +741,92 @@
             to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
+        /* ===== العبارات الجاهزة المخصصة ===== */
+        .quote-btn-group {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            margin-bottom: 6px;
+        }
+
+        .quote-btn-group .btn-sm {
+            font-size: 9px;
+            padding: 2px 6px;
+        }
+
+        .custom-quote-input-group {
+            display: flex;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .custom-quote-input-group input {
+            flex: 1;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: #0a0a12;
+            border: 1px solid var(--studio-border);
+            color: #fff;
+            font-size: 11px;
+            font-family: inherit;
+        }
+
+        .custom-quote-input-group input:focus {
+            border-color: var(--studio-gold);
+            outline: none;
+        }
+
+        .custom-quotes-list {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+
+        .custom-quotes-list .quote-item {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .custom-quotes-list .quote-item .btn-sm {
+            font-size: 8px;
+            padding: 2px 6px;
+        }
+
+        .custom-quotes-list .quote-item .btn-sm.danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+            padding: 2px 4px;
+            font-size: 8px;
+        }
+
+        /* ===== أدوات الإدارة ===== */
+        .admin-controls {
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            display: none;
+        }
+
+        .admin-controls.show {
+            display: block;
+        }
+
+        .admin-controls h3 {
+            color: #8B5CF6 !important;
+        }
+
+        /* ===== زر تسجيل الدخول السريع ===== */
+        .quick-admin-btn {
+            font-size: 9px !important;
+            padding: 2px 6px !important;
+        }
+
+        /* ===== أزرار الإدارة ===== */
+        .admin-action-btn {
+            display: none;
+        }
+
         /* ===== ريسپونسيف للجوال ===== */
         @media (max-width: 768px) {
             .studio-header { padding: 4px 8px; height: 44px; }
@@ -770,6 +856,10 @@
             .btn-gold, .btn-dark, .btn-purple { font-size: 10px; padding: 4px 8px; }
             
             .images-preview-grid { grid-template-columns: repeat(auto-fill, minmax(55px, 1fr)); }
+            
+            .quote-btn-group .btn-sm { font-size: 8px; padding: 2px 5px; }
+            .custom-quote-input-group { flex-wrap: wrap; }
+            .custom-quote-input-group input { min-width: 100px; }
         }
 
         @media (max-width: 480px) {
@@ -866,52 +956,19 @@
 
             <!-- ===== تبويبات الأدوات ===== -->
             <div class="tabs-nav" id="tabsNav">
-                <button class="active" data-tab="templates">🛡️ قوالب</button>
+                <button class="active" data-tab="text">✍️ نص</button>
                 <button data-tab="layers">➕ طبقات</button>
-                <button data-tab="text">✍️ نص</button>
                 <button data-tab="transform">🎯 تحويل</button>
-                <button data-tab="design">🎨 تصميم</button>
+                <button data-tab="design-admin" id="adminDesignTab" style="display:none;">🎨 إدارة التصميم</button>
                 <button data-tab="actions">⚡ إجراءات</button>
             </div>
 
             <!-- ===== محتوى التبويبات ===== -->
             <div class="tab-content">
 
-                <!-- تبويب القوالب -->
-                <div class="tab-panel active" id="tab-templates">
-                    <div class="section-card">
-                        <h3>🛡️ قالب الدرع</h3>
-                        <div class="templates-grid" id="templatesGrid"></div>
-                    </div>
-                    <div class="section-card">
-                        <h3>🔗 ربط القالب بمنتج</h3>
-                        <select id="productLinkSelect" style="width:100%;padding:5px 8px;border-radius:4px;background:#0a0a12;color:#fff;border:1px solid var(--studio-border);font-family:inherit;font-size:11px;">
-                            <option value="">-- غير مرتبط بمنتج --</option>
-                        </select>
-                        <small style="color:#9ca3af;font-size:9px;">عند حفظ القالب، سيتم ربطه بالمنتج المحدد</small>
-                    </div>
-                </div>
-
-                <!-- تبويب الطبقات -->
-                <div class="tab-panel" id="tab-layers">
-                    <div class="section-card">
-                        <h3>➕ إضافة عناصر</h3>
-                        <div class="grid-2">
-                            <button class="btn-dark btn-sm" onclick="addTextLayer()"><i class="fas fa-font"></i> نص</button>
-                            <button class="btn-dark btn-sm" onclick="triggerImageUpload()"><i class="fas fa-image"></i> صورة</button>
-                        </div>
-                        <input type="file" id="imageUploader" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
-                    </div>
-                    <div class="section-card">
-                        <h3>📋 الطبقات الحالية</h3>
-                        <div class="layers-list" id="layersList">
-                            <p style="color:var(--studio-muted);font-size:10px;">لا توجد طبقات</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- تبويب النص -->
-                <div class="tab-panel" id="tab-text">
+                <!-- ===== ✅ تبويب النص (مدمج مع الطبقات والعبارات) ===== -->
+                <div class="tab-panel active" id="tab-text">
+                    <!-- تنسيق النص -->
                     <div class="section-card" id="textControls">
                         <h3>✍️ تنسيق النص</h3>
                         <label>النص</label>
@@ -944,6 +1001,62 @@
                             </label>
                         </div>
                     </div>
+
+                    <!-- ===== ✅ الطبقات مدمجة في تبويب النص ===== -->
+                    <div class="section-card">
+                        <h3>📋 الطبقات الحالية</h3>
+                        <div class="layers-list" id="layersList">
+                            <p style="color:var(--studio-muted);font-size:10px;">لا توجد طبقات</p>
+                        </div>
+                        <div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap;">
+                            <button class="btn-dark btn-sm" onclick="addTextLayer()"><i class="fas fa-font"></i> نص</button>
+                            <button class="btn-dark btn-sm" onclick="triggerImageUpload()"><i class="fas fa-image"></i> صورة</button>
+                            <button class="btn-purple btn-sm" onclick="addEmptyImageLayer()" style="background:linear-gradient(135deg,#8B5CF6,#6D28D9);color:#fff;">
+                                <i class="fas fa-image"></i> 📦 فارغة
+                            </button>
+                        </div>
+                        <input type="file" id="imageUploader" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
+                    </div>
+
+                    <!-- ===== ✅ العبارات الجاهزة مدمجة في تبويب النص ===== -->
+                    <div class="section-card">
+                        <h3>📜 عبارات جاهزة</h3>
+                        <div class="quote-btn-group">
+                            <button class="btn-sm btn-dark" onclick="applyQuote('بكل فخر واعتزاز، نقدم هذا الدرع تعبيراً عن شكرنا وتقديرنا لجهودكم المتميزة.')">شكر وتقدير</button>
+                            <button class="btn-sm btn-dark" onclick="applyQuote('من وفاء وولاء، نهديكم هذا الدرع رمزاً للعرفان والامتنان على عطائكم المستمر.')">وفاء وعرفان</button>
+                            <button class="btn-sm btn-dark" onclick="applyQuote('تميزتم فأبدعتم، وهذا الدرع شهادة على إخلاصكم وتفانيكم في العمل.')">تميز وإبداع</button>
+                            <button class="btn-sm btn-dark" onclick="applyQuote('تقديراً لعطائكم وإخلاصكم، نمنحكم هذا الدرع كرمز للفخر والاعتزاز.')">تكريم وتقدير</button>
+                            <button class="btn-sm btn-dark" onclick="applyQuote('مسيرة عطاء حافلة بالإنجازات، وهذا الدرع تكريم لمسيرتكم المباركة.')">مسيرة عطاء</button>
+                        </div>
+                        <div class="custom-quote-input-group">
+                            <input type="text" id="customQuoteInput" placeholder="اكتب عبارة جديدة..." />
+                            <button class="btn-sm btn-gold" onclick="addCustomQuote()">➕ إضافة</button>
+                        </div>
+                        <div class="custom-quotes-list" id="customQuotesList">
+                            <!-- العبارات المضافة تظهر هنا -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- تبويب الطبقات (للإدارة فقط) -->
+                <div class="tab-panel" id="tab-layers">
+                    <div class="section-card">
+                        <h3>➕ إضافة عناصر</h3>
+                        <div class="grid-3">
+                            <button class="btn-dark btn-sm" onclick="addTextLayer()"><i class="fas fa-font"></i> نص</button>
+                            <button class="btn-dark btn-sm" onclick="triggerImageUpload()"><i class="fas fa-image"></i> صورة</button>
+                            <button class="btn-purple btn-sm" onclick="addEmptyImageLayer()" style="background:linear-gradient(135deg,#8B5CF6,#6D28D9);color:#fff;">
+                                <i class="fas fa-image"></i> 📦 فارغة
+                            </button>
+                        </div>
+                        <input type="file" id="imageUploader" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
+                    </div>
+                    <div class="section-card">
+                        <h3>📋 الطبقات الحالية</h3>
+                        <div class="layers-list" id="layersList">
+                            <p style="color:var(--studio-muted);font-size:10px;">لا توجد طبقات</p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- تبويب التحويل -->
@@ -955,16 +1068,49 @@
                         <div class="range-row"><span>Z</span><input type="range" id="rotateZ" min="-180" max="180" value="0" oninput="updateTransform()"></div>
                         <button class="btn-dark btn-sm btn-block" onclick="resetTransform()">تصفير</button>
                     </div>
-                    <div class="section-card">
-                        <h3>📜 عبارات جاهزة</h3>
-                        <select id="presetQuotes" onchange="applyPresetQuote(this.value)" style="width:100%;padding:5px 8px;border-radius:4px;background:#0a0a12;color:#fff;border:1px solid var(--studio-border);font-family:inherit;font-size:11px;">
-                            <option value="">-- اختر عبارة --</option>
-                        </select>
-                    </div>
                 </div>
 
-                <!-- ===== 🆕 تبويب التصميم (صور وعنوان) ===== -->
-                <div class="tab-panel" id="tab-design">
+                <!-- ===== ✅ تبويب إدارة التصميم (للإدارة فقط) ===== -->
+                <div class="tab-panel" id="tab-design-admin">
+                    <!-- قوالب -->
+                    <div class="section-card">
+                        <h3>🛡️ قالب الدرع</h3>
+                        <div class="templates-grid" id="templatesGrid"></div>
+                    </div>
+                    
+                    <!-- أدوات الإدارة -->
+                    <div class="section-card admin-controls show">
+                        <h3>🔐 إدارة القوالب</h3>
+                        <div class="grid-2">
+                            <button class="btn-purple btn-sm" onclick="saveCurrentTemplate()">
+                                <i class="fas fa-save"></i> حفظ كقالب جديد
+                            </button>
+                            <button class="btn-purple btn-sm" onclick="updateCurrentTemplate()">
+                                <i class="fas fa-edit"></i> تحديث القالب
+                            </button>
+                        </div>
+                        <div class="grid-2" style="margin-top:4px;">
+                            <button class="btn-danger btn-sm" onclick="deleteCurrentTemplate()">
+                                <i class="fas fa-trash"></i> حذف القالب
+                            </button>
+                            <button class="btn-gold btn-sm" onclick="syncTemplateToProduct()">
+                                <i class="fas fa-link"></i> ربط بالمنتج
+                            </button>
+                        </div>
+                        <small style="color:#9ca3af;font-size:9px;display:block;margin-top:4px;">
+                            ⚡ هذه الأدوات متاحة فقط للمسؤولين
+                        </small>
+                    </div>
+                    
+                    <div class="section-card">
+                        <h3>🔗 ربط القالب بمنتج</h3>
+                        <select id="productLinkSelect" style="width:100%;padding:5px 8px;border-radius:4px;background:#0a0a12;color:#fff;border:1px solid var(--studio-border);font-family:inherit;font-size:11px;">
+                            <option value="">-- غير مرتبط بمنتج --</option>
+                        </select>
+                        <small style="color:#9ca3af;font-size:9px;">عند حفظ القالب، سيتم ربطه بالمنتج المحدد</small>
+                    </div>
+
+                    <!-- معلومات التصميم -->
                     <div class="section-card">
                         <h3>🏷️ معلومات التصميم</h3>
                         <label>اسم التصميم</label>
@@ -1004,16 +1150,32 @@
                     </div>
                 </div>
 
-                <!-- تبويب الإجراءات -->
+                <!-- ===== ✅ تبويب الإجراءات (مع أزرار محكومة بالصلاحيات) ===== -->
                 <div class="tab-panel" id="tab-actions">
                     <div class="section-card">
                         <h3>⚡ إجراءات</h3>
-                        <button class="btn-gold btn-block" style="margin-top:4px; background: #8B5CF6;" onclick="saveCurrentTemplate()">
+                        
+                        <!-- ✅ زر حفظ القالب - يظهر فقط للمسؤول -->
+                        <button id="saveTemplateBtn" class="btn-gold btn-block admin-action-btn" style="margin-top:4px; background: #8B5CF6; display:none;" onclick="saveCurrentTemplate()">
                             <i class="fas fa-save"></i> حفظ وتصدير القالب
                         </button>
+                        
+                        <!-- ✅ زر حفظ التصميم - يظهر للجميع -->
                         <button class="btn-gold btn-block" style="margin-top:4px;" onclick="saveDesign()">
                             <i class="fas fa-cloud-upload-alt"></i> حفظ التصميم (مع الصور)
                         </button>
+                        
+                        <!-- ✅ أزرار الإدارة - تظهر فقط للمسؤول -->
+                        <div class="admin-action-btn" style="display:none;">
+                            <button class="btn-purple btn-block" style="margin-top:4px;" onclick="updateCurrentTemplate()">
+                                <i class="fas fa-edit"></i> تحديث القالب
+                            </button>
+                            <button class="btn-danger btn-sm btn-block" style="margin-top:4px;" onclick="deleteCurrentTemplate()">
+                                <i class="fas fa-trash"></i> حذف القالب
+                            </button>
+                        </div>
+                        
+                        <!-- ✅ أزرار عامة للجميع -->
                         <button class="btn-danger btn-sm btn-block" style="margin-top:4px;" onclick="deleteActiveLayer()">
                             <i class="fas fa-trash"></i> حذف الطبقة المحددة
                         </button>
@@ -1022,6 +1184,9 @@
                         </button>
                         <button class="btn-green btn-block" style="margin-top:4px;" onclick="checkoutDirectly()">
                             <i class="fas fa-credit-card"></i> إتمام الطلب مباشرة
+                        </button>
+                        <button class="btn-green btn-block" style="margin-top:4px; background: #10b981;" onclick="completeOrderWithCustomization()">
+                            <i class="fas fa-check-circle"></i> إتمام الطلب مع حفظ التخصيص
                         </button>
                     </div>
                 </div>
@@ -1035,10 +1200,102 @@
     <script type="module" src="design-studio.js"></script>
     
     <script>
+        // ============================================
+        // زر تسجيل الدخول السريع (للتطوير)
+        // ============================================
+        function quickAdminLogin() {
+            // إنشاء جلسة مؤقتة
+            var fakeUser = {
+                email: 'admin@tithkari.com',
+                role: 'admin'
+            };
+            localStorage.setItem('session', JSON.stringify({ access_token: 'fake_token_' + Date.now() }));
+            localStorage.setItem('user', JSON.stringify(fakeUser));
+            localStorage.setItem('is_admin', 'true');
+            
+            showToast('✅ تم تسجيل الدخول كمسؤول مؤقتاً', 'success');
+            
+            // إعادة تحميل الصفحة لتطبيق التغييرات
+            setTimeout(function() {
+                window.location.reload();
+            }, 500);
+        }
+        
+        function quickAdminLogout() {
+            localStorage.removeItem('session');
+            localStorage.removeItem('user');
+            localStorage.removeItem('is_admin');
+            
+            showToast('✅ تم تسجيل الخروج', 'success');
+            
+            setTimeout(function() {
+                window.location.reload();
+            }, 500);
+        }
+
         // ===== تبديل التبويبات =====
         document.addEventListener('DOMContentLoaded', function() {
             const tabsNav = document.getElementById('tabsNav');
             const tabPanels = document.querySelectorAll('.tab-panel');
+            
+            // التحقق من صلاحيات الإدارة
+            const session = localStorage.getItem('session');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const isAdmin = session && (user?.email === 'admin@tithkari.com' || user?.role === 'admin' || localStorage.getItem('is_admin') === 'true');
+            
+            // إظهار/إخفاء تبويب الإدارة
+            const adminTab = document.getElementById('adminDesignTab');
+            if (adminTab) {
+                adminTab.style.display = isAdmin ? 'inline-block' : 'none';
+            }
+            
+            // إظهار/إخفاء أدوات الإدارة في تبويب النص
+            const adminControls = document.querySelectorAll('.admin-controls');
+            adminControls.forEach(function(el) {
+                if (isAdmin) {
+                    el.classList.add('show');
+                } else {
+                    el.classList.remove('show');
+                }
+            });
+            
+            // إظهار/إخفاء أزرار الإدارة في تبويب الإجراءات
+            const adminActionBtns = document.querySelectorAll('.admin-action-btn');
+            adminActionBtns.forEach(function(el) {
+                if (isAdmin) {
+                    el.style.display = 'block';
+                } else {
+                    el.style.display = 'none';
+                }
+            });
+            
+            // إظهار/إخفاء زر حفظ القالب
+            const saveTemplateBtn = document.getElementById('saveTemplateBtn');
+            if (saveTemplateBtn) {
+                saveTemplateBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+            }
+            
+            // إضافة أزرار تسجيل الدخول السريع في الهيدر
+            const actions = document.querySelector('.studio-header .actions');
+            if (actions) {
+                // التحقق مما إذا كانت الأزرار موجودة بالفعل
+                var existingBtn = actions.querySelector('.quick-admin-btn');
+                if (!existingBtn) {
+                    var adminBtn = document.createElement('button');
+                    adminBtn.className = 'btn-purple btn-sm quick-admin-btn';
+                    adminBtn.innerHTML = '<i class="fas fa-user-shield"></i>';
+                    adminBtn.title = 'تسجيل الدخول كمسؤول (تطوير)';
+                    adminBtn.onclick = quickAdminLogin;
+                    actions.appendChild(adminBtn);
+                    
+                    var logoutBtn = document.createElement('button');
+                    logoutBtn.className = 'btn-danger btn-sm quick-admin-btn';
+                    logoutBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i>';
+                    logoutBtn.title = 'تسجيل الخروج (تطوير)';
+                    logoutBtn.onclick = quickAdminLogout;
+                    actions.appendChild(logoutBtn);
+                }
+            }
             
             tabsNav.addEventListener('click', function(e) {
                 const btn = e.target.closest('button');
