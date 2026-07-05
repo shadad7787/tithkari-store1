@@ -744,7 +744,7 @@
                                     </div>
                                     <div class="form-group">
                                         <label>🔐 المفتاح السري (Secret Key)</label>
-                                        <input type="password" id="stripeSecretKey" placeholder="sk_test_..." />
+                                        <input type="password" id="stripeSecretKey" placeholder="sk_test_..." autocomplete="current-password" />
                                     </div>
                                 </div>
                                 <div class="form-group">
@@ -764,7 +764,7 @@
                                     </div>
                                     <div class="form-group">
                                         <label>🔐 Secret Key</label>
-                                        <input type="password" id="paypalSecretKey" placeholder="XXXXXXXXXX" />
+                                        <input type="password" id="paypalSecretKey" placeholder="XXXXXXXXXX" autocomplete="current-password" />
                                     </div>
                                 </div>
                                 <div class="form-group">
@@ -832,7 +832,7 @@
                                 <h3><i class="fas fa-envelope"></i> إعدادات SendGrid</h3>
                                 <div class="form-group">
                                     <label>🔑 API Key</label>
-                                    <input type="password" id="sendgridApiKey" placeholder="SG.XXXXXXXXXXXXXXXXXXXXXXXX" />
+                                    <input type="password" id="sendgridApiKey" placeholder="SG.XXXXXXXXXXXXXXXXXXXXXXXX" autocomplete="current-password" />
                                 </div>
                                 <div class="form-row">
                                     <div class="form-group">
@@ -1589,9 +1589,161 @@
 
     <script type="module" src="../js/admin.js"></script>
     
-    <!-- تعريف الدوال في النطاق العام -->
+    <!-- ============================================
+    تعريف الدوال الأساسية في النطاق العام
+    ============================================ -->
     <script>
-        console.log('✅ Admin HTML loaded - all functions will be defined by admin.js');
+        // ============================================
+        // تعريف switchTab في النطاق العام
+        // ============================================
+        window.switchTab = function(tabName) {
+            console.log('🔄 Switching to:', tabName);
+            
+            // إخفاء جميع التبويبات
+            document.querySelectorAll('.admin-tab').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // إظهار التبويب المطلوب
+            const target = document.getElementById(tabName + '-tab');
+            if (target) {
+                target.classList.add('active');
+                console.log('✅ Tab shown:', tabName);
+            } else {
+                console.warn('⚠️ Tab not found:', tabName);
+            }
+            
+            // تحديث القائمة النشطة
+            document.querySelectorAll('.admin-nav a').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.querySelectorAll('.admin-nav a[onclick*="' + tabName + '"]').forEach(el => {
+                el.classList.add('active');
+            });
+            
+            // تحديث العنوان
+            const titles = {
+                'dashboard': '📊 لوحة المعلومات',
+                'products': '📦 المنتجات',
+                'orders': '🚚 الطلبات',
+                'add-product': '➕ إضافة منتج',
+                'custom-fields': '📋 الحقول المخصصة',
+                'analytics': '📈 التحليلات',
+                'banners': '📢 البنرات',
+                'menus': '📋 القوائم',
+                'customers': '👥 العملاء',
+                'settings': '⚙️ الإعدادات',
+                'design-templates': '🎨 قوالب التصميم',
+                'code-editor': '💻 محرر الأكواد',
+                'store-settings': '🏪 إعدادات المتجر',
+                'advanced-settings': '🎨 إعدادات متقدمة',
+                'footer': '🦶 التذييل',
+                'categories': '🏷️ التصنيفات',
+                'coupons': '🎫 الكوبونات',
+                'reviews': '⭐ التقييمات',
+                'payment-settings': '💳 إعدادات الدفع',
+                'email-settings': '📧 إعدادات البريد',
+                'payment-shipping': '💳 إدارة الدفع والشحن',
+                'tools': '🔌 إدارة الأدوات'
+            };
+            
+            const titleEl = document.getElementById('pageTitle');
+            if (titleEl) {
+                titleEl.textContent = titles[tabName] || 'لوحة التحكم';
+            }
+            
+            // تحميل البيانات حسب التبويب
+            setTimeout(() => {
+                if (typeof loadProducts === 'function' && tabName === 'products') {
+                    loadProducts();
+                }
+                if (typeof loadOrders === 'function' && tabName === 'orders') {
+                    loadOrders();
+                }
+                if (typeof loadBanners === 'function' && tabName === 'banners') {
+                    loadBanners();
+                }
+                if (typeof loadMenus === 'function' && tabName === 'menus') {
+                    loadMenus();
+                }
+                if (typeof loadCustomers === 'function' && tabName === 'customers') {
+                    loadCustomers();
+                }
+                if (typeof loadDashboard === 'function' && tabName === 'dashboard') {
+                    loadDashboard();
+                }
+                if (typeof loadAnalytics === 'function' && tabName === 'analytics') {
+                    loadAnalytics();
+                }
+                if (typeof loadCoupons === 'function' && tabName === 'coupons') {
+                    loadCoupons();
+                }
+                if (typeof loadReviews === 'function' && tabName === 'reviews') {
+                    loadReviews();
+                }
+                if (typeof loadFooterItems === 'function' && tabName === 'footer') {
+                    loadFooterItems();
+                }
+                if (typeof loadCategoriesForAdmin === 'function' && tabName === 'categories') {
+                    loadCategoriesForAdmin();
+                }
+                if (typeof loadPaymentSettings === 'function' && tabName === 'payment-settings') {
+                    loadPaymentSettings();
+                }
+                if (typeof loadEmailSettings === 'function' && tabName === 'email-settings') {
+                    loadEmailSettings();
+                }
+            }, 100);
+        };
+        
+        // ============================================
+        // دالة تسجيل الخروج
+        // ============================================
+        window.logout = function() {
+            if (confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) {
+                localStorage.removeItem('session');
+                localStorage.removeItem('user');
+                localStorage.removeItem('remember_me');
+                window.location.href = '../login.html';
+            }
+        };
+        
+        // ============================================
+        // تهيئة الصفحة
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Admin page loaded');
+            
+            // التحقق من الجلسة
+            const session = localStorage.getItem('session');
+            if (!session) {
+                console.log('⚠️ No session found, redirecting to login');
+                window.location.href = '../login.html';
+                return;
+            }
+            
+            // عرض اسم المستخدم
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (user && user.email) {
+                    const nameEl = document.getElementById('adminName');
+                    if (nameEl) {
+                        nameEl.textContent = user.email.split('@')[0] || 'مدير المتجر';
+                    }
+                }
+            } catch (e) {
+                console.log('⚠️ Could not load user data');
+            }
+            
+            // تحميل لوحة المعلومات
+            setTimeout(() => {
+                if (typeof loadDashboard === 'function') {
+                    loadDashboard();
+                }
+            }, 200);
+        });
+        
+        console.log('✅ Admin HTML - switchTab and logout defined');
     </script>
     
     <!-- إضافة بعض التعديلات لتحسين الأداء والمظهر -->

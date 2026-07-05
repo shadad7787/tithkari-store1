@@ -21,13 +21,13 @@ export const CONFIG = {
     payment: {
         stripe: {
             enabled: true,
-            publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || 'pk_test_XXXXXXXXXXXXXXXXXXXXXXXX',
-            secretKey: process.env.STRIPE_SECRET_KEY || 'sk_test_XXXXXXXXXXXXXXXXXXXXXXXX'
+            publishableKey: '', // ضع المفتاح هنا
+            secretKey: '' // ضع المفتاح هنا
         },
         paypal: {
             enabled: true,
-            clientId: process.env.PAYPAL_CLIENT_ID || '',
-            secretKey: process.env.PAYPAL_SECRET_KEY || ''
+            clientId: '', // ضع المفتاح هنا
+            secretKey: '' // ضع المفتاح هنا
         },
         cod: {
             enabled: true
@@ -44,7 +44,7 @@ export const CONFIG = {
     email: {
         sendgrid: {
             enabled: true,
-            apiKey: process.env.SENDGRID_API_KEY || '',
+            apiKey: '', // ضع المفتاح هنا
             fromEmail: 'info@tithkari.com',
             fromName: 'Tithkari - متجر الدروع الفاخرة'
         },
@@ -53,10 +53,10 @@ export const CONFIG = {
     
     // ===== إعدادات الأدوات =====
     tools: {
-        googleAnalytics: process.env.GOOGLE_ANALYTICS_ID || 'G-XXXXXXXXXX',
-        facebookPixel: process.env.FACEBOOK_PIXEL_ID || 'XXXXXXXXXXXXXXXXX',
-        clarity: process.env.CLARITY_PROJECT_ID || 'XXXXXXXX',
-        hotjar: process.env.HOTJAR_SITE_ID || 'XXXXXX'
+        googleAnalytics: '', // ضع المعرف هنا
+        facebookPixel: '', // ضع المعرف هنا
+        clarity: '', // ضع المعرف هنا
+        hotjar: '' // ضع المعرف هنا
     },
     
     // ===== العملات المدعومة =====
@@ -100,6 +100,12 @@ export const CONFIG = {
         timeout: 30000,
         retryAttempts: 3,
         retryDelay: 1000
+    },
+    
+    // ===== إعدادات واتساب =====
+    whatsapp: {
+        number: '966500000000', // رقم واتساب الافتراضي
+        message: 'مرحباً، أريد الاستفسار عن طلبي'
     }
 };
 
