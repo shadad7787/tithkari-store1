@@ -3038,11 +3038,11 @@
     ============================================ -->
     <script>
         // ============================================
-        // استيراد المفاتيح من keys.js
+        // استيراد المفاتيح من keys.example.js
         // ============================================
-        import KEYS from '../keys.js';
+        import KEYS from '../keys.example.js';
 
-        console.log('🔐 Keys loaded from keys.js');
+        console.log('🔐 Keys loaded from keys.example.js');
 
         // ============================================
         // إصلاح مشكلة process.env في بيئة المتصفح
@@ -3061,7 +3061,7 @@
                     HOTJAR_SITE_ID: KEYS.hotjarId || ''
                 }
             };
-            console.log('✅ process.env initialized from keys.js');
+            console.log('✅ process.env initialized from keys.example.js');
         }
 
         // ============================================
@@ -3184,7 +3184,7 @@
         // ============================================
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Admin page loaded');
-            console.log('🔐 Keys loaded from keys.js');
+            console.log('🔐 Keys loaded from keys.example.js');
             
             // التحقق من الجلسة
             const session = localStorage.getItem('session');

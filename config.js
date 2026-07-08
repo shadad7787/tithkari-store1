@@ -1,4 +1,4 @@
-﻿import KEYS from './keys.js';
+import KEYS from './keys.example.js';
 
 var CONFIG = {
     supabase: { url: KEYS.supabaseUrl, anonKey: KEYS.supabaseAnonKey },
@@ -15,5 +15,6 @@ export default CONFIG;
 
 if (typeof window !== 'undefined') {
     window.TITHKARI_CONFIG = CONFIG;
-    console.log('✅ Config loaded');
+    console.log('? Config loaded');
 }
+

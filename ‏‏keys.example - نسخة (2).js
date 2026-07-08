@@ -1,40 +1,40 @@
-ï»¿// ================================================================
-// ğŸ“„ keys.example.js - Ù†Ù…ÙˆØ°Ø¬ Ù„Ù„Ù…ÙØ§ØªÙŠØ­ (ÙŠØ±ÙØ¹ Ø¹Ù„Ù‰ GitHub)
 // ================================================================
-// âš ï¸ Ø§Ù†Ø³Ø® Ù‡Ø°Ø§ Ø§Ù„Ù…Ù„Ù Ø¥Ù„Ù‰ keys.js ÙˆØ£Ø¶Ù Ù…ÙØ§ØªÙŠØ­Ùƒ Ø§Ù„Ø­Ù‚ÙŠÙ‚ÙŠØ©
+// ?? keys.example.js - äãæĞÌ ááãİÇÊíÍ (íÑİÚ Úáì GitHub)
+// ================================================================
+// ?? ÇäÓÎ åĞÇ Çáãáİ Åáì keys.example.js æÃÖİ ãİÇÊíÍß ÇáÍŞíŞíÉ
 // ================================================================
 
-// ====== ğŸ”‘ Ø¨Ø¯Ø§ÙŠØ© Ø§Ù„Ù…ÙØ§ØªÙŠØ­ ======
+// ====== ?? ÈÏÇíÉ ÇáãİÇÊíÍ ======
 
 const KEYS = {
     // ----------------------------
-    // ğŸ”— Supabase - Ù‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª
+    // ?? Supabase - ŞÇÚÏÉ ÇáÈíÇäÇÊ
     // ----------------------------
     supabaseUrl: "https://savtqajghyloevzwrzvt.supabase.co",
     supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhdnRxYWpnaHlsb2V2endyenZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3ODA1OTMsImV4cCI6MjA5ODM1NjU5M30.CBq7eKyr3RR11op_SevMBBcKQNKF7uftpaa-URemEww",
     supabaseServiceKey: "your_service_role_key_here",
 
     // ----------------------------
-    // ğŸ’³ Stripe - Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ø¯ÙØ¹
+    // ?? Stripe - ÈæÇÈÉ ÇáÏİÚ
     // ----------------------------
     stripePublishableKey: "pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
     stripeSecretKey: "sk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 
     // ----------------------------
-    // ğŸ’° PayPal - Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ø¯ÙØ¹
+    // ?? PayPal - ÈæÇÈÉ ÇáÏİÚ
     // ----------------------------
     paypalClientId: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
     paypalSecret: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 
     // ----------------------------
-    // ğŸ“§ Email - Ø¥Ø´Ø¹Ø§Ø±Ø§Øª Ø§Ù„Ø¨Ø±ÙŠØ¯
+    // ?? Email - ÅÔÚÇÑÇÊ ÇáÈÑíÏ
     // ----------------------------
     sendgridApiKey: "SG.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
     emailFrom: "admin@tithkari.com",
     emailTo: "admin@tithkari.com",
 
     // ----------------------------
-    // ğŸ“Š Analytics - Ø£Ø¯ÙˆØ§Øª Ø§Ù„ØªØ­Ù„ÙŠÙ„
+    // ?? Analytics - ÃÏæÇÊ ÇáÊÍáíá
     // ----------------------------
     googleAnalyticsId: "G-XXXXXXXXXX",
     googleSearchConsole: "your-verification-code",
@@ -44,20 +44,20 @@ const KEYS = {
     tiktokPixelId: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 
     // ----------------------------
-    // ğŸ” JWT - Ø§Ù„ØªÙˆØ«ÙŠÙ‚
+    // ?? JWT - ÇáÊæËíŞ
     // ----------------------------
     jwtSecret: "your-jwt-secret-change-this",
     jwtExpiry: "7d",
 
     // ----------------------------
-    // ğŸŒ URLs - Ø±ÙˆØ§Ø¨Ø· Ø§Ù„Ù…ÙˆÙ‚Ø¹
+    // ?? URLs - ÑæÇÈØ ÇáãæŞÚ
     // ----------------------------
     siteUrl: "https://shadad7787.github.io/tithkari-store1",
     apiUrl: "https://savtqajghyloevzwrzvt.supabase.co",
     adminEmail: "admin@tithkari.com",
 
     // ----------------------------
-    // ğŸ› ï¸ Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø¥Ø¶Ø§ÙÙŠØ©
+    // ??? ÅÚÏÇÏÇÊ ÅÖÇİíÉ
     // ----------------------------
     debugMode: true,
     useMockData: false,
@@ -66,16 +66,16 @@ const KEYS = {
     defaultCurrency: "SAR",
 
     // ----------------------------
-    // ğŸ“¦ Ù…ÙØ§ØªÙŠØ­ APIs Ø¥Ø¶Ø§ÙÙŠØ©
+    // ?? ãİÇÊíÍ APIs ÅÖÇİíÉ
     // ----------------------------
-    // ğŸ‘‡ Ø£Ø¶Ù Ù…ÙØªØ§Ø­Ùƒ Ø§Ù„Ø¬Ø¯ÙŠØ¯ Ù‡Ù†Ø§
+    // ?? ÃÖİ ãİÊÇÍß ÇáÌÏíÏ åäÇ
     // newApiKey: "sk-...",
     // newApiSecret: "AC...",
 };
 
-// ====== ğŸ Ù†Ù‡Ø§ÙŠØ© Ø§Ù„Ù…ÙØ§ØªÙŠØ­ ======
+// ====== ?? äåÇíÉ ÇáãİÇÊíÍ ======
 
 export default KEYS;
 
-// âœ… ØªÙ†Ø¨ÙŠÙ‡ Ù„Ù„Ù…Ø·ÙˆØ±
-console.warn('âš ï¸ Using example keys! Copy this file to keys.js and add your real keys.');
+// ? ÊäÈíå ááãØæÑ
+console.warn('?? Using example keys! Copy this file to keys.example.js and add your real keys.');

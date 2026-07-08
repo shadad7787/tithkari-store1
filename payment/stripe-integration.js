@@ -3,7 +3,7 @@
 // ==========================================
 
 import { PAYMENT_CONFIG, convertCurrency, formatPrice } from './payment-config.js';
-import KEYS from '../keys.js';
+import KEYS from '../keys.example.js';
 
 class StripePayment {
     constructor() {
@@ -53,7 +53,7 @@ class StripePayment {
     // ==========================================
     async createPaymentSession(orderData) {
         try {
-            // استخدام Secret Key من keys.js
+            // استخدام Secret Key من keys.example.js
             const secretKey = this.config.secretKey || KEYS.stripeSecretKey;
             
             if (!secretKey || secretKey === 'sk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx') {

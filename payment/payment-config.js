@@ -1,8 +1,8 @@
 // ==========================================
-// إعدادات بوابات الدفع - مستوردة من keys.js
+// إعدادات بوابات الدفع - مستوردة من keys.example.js
 // ==========================================
 
-import KEYS from '../keys.js';
+import KEYS from '../keys.example.js';
 
 export const PAYMENT_CONFIG = {
     // Stripe
@@ -42,7 +42,7 @@ export const PAYMENT_CONFIG = {
     }
 };
 
-console.log('🔐 Payment config loaded from keys.js');
+console.log('🔐 Payment config loaded from keys.example.js');
 
 // ==========================================
 // دالة تحويل العملة

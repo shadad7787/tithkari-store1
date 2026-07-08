@@ -1,4 +1,4 @@
-﻿import KEYS from './keys.js';
+import KEYS from './keys.example.js';
 
 export function hasKey(keyName) {
     return KEYS[keyName] && KEYS[keyName] !== 'your_' + keyName + '_here';
@@ -19,3 +19,4 @@ export function validateAllKeys(requiredKeys) {
 }
 
 export default { hasKey: hasKey, getKey: getKey, validateAllKeys: validateAllKeys };
+

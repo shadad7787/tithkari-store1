@@ -1092,14 +1092,14 @@
 
     <script type="module">
         // ============================================
-        // استيراد المفاتيح من keys.js
+        // استيراد المفاتيح من keys.example.js
         // ============================================
-        import KEYS from '../keys.js';
+        import KEYS from '../keys.example.js';
 
-        console.log('🔐 Keys loaded from keys.js');
+        console.log('🔐 Keys loaded from keys.example.js');
 
         // ============================================
-        // اتصال Supabase - مستورد من keys.js
+        // اتصال Supabase - مستورد من keys.example.js
         // ============================================
         const supabaseUrl = KEYS.supabaseUrl;
         const supabaseAnonKey = KEYS.supabaseAnonKey;
@@ -1118,7 +1118,7 @@
                 if (typeof window.supabase !== 'undefined' && window.supabase) {
                     supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
                     supabaseReady = true;
-                    console.log('✅ Supabase initialized with keys from keys.js');
+                    console.log('✅ Supabase initialized with keys from keys.example.js');
                     return true;
                 }
                 
@@ -1646,7 +1646,7 @@
         // ============================================
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('🚀 Custom Fields Admin loaded');
-            console.log('🔐 Keys loaded from keys.js');
+            console.log('🔐 Keys loaded from keys.example.js');
             
             await loadProducts();
             

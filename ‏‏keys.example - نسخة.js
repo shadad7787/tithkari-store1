@@ -1,40 +1,40 @@
-ï»¿// ================================================================
-// ğŸ“„ keys.example.js - Ù†Ù…ÙˆØ°Ø¬ Ù„Ù„Ù…ÙØ§ØªÙŠØ­ (ÙŠØ±ÙØ¹ Ø¹Ù„Ù‰ GitHub)
 // ================================================================
-// âš ï¸ Ø§Ù†Ø³Ø® Ù‡Ø°Ø§ Ø§Ù„Ù…Ù„Ù Ø¥Ù„Ù‰ keys.js ÙˆØ£Ø¶Ù Ù…ÙØ§ØªÙŠØ­Ùƒ Ø§Ù„Ø­Ù‚ÙŠÙ‚ÙŠØ©
+// ?? keys.example.js - äãæĞÌ ááãİÇÊíÍ (íÑİÚ Úáì GitHub)
+// ================================================================
+// ?? ÇäÓÎ åĞÇ Çáãáİ Åáì keys.example.js æÃÖİ ãİÇÊíÍß ÇáÍŞíŞíÉ
 // ================================================================
 
-// ====== ğŸ”‘ Ø¨Ø¯Ø§ÙŠØ© Ø§Ù„Ù…ÙØ§ØªÙŠØ­ ======
+// ====== ?? ÈÏÇíÉ ÇáãİÇÊíÍ ======
 
 const KEYS = {
     // ----------------------------
-    // ğŸ”— Supabase - Ù‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª
+    // ?? Supabase - ŞÇÚÏÉ ÇáÈíÇäÇÊ
     // ----------------------------
     supabaseUrl: "your_supabase_url_here",
     supabaseAnonKey: "your_supabase_anon_key_here",
     supabaseServiceKey: "your_service_role_key_here",
 
     // ----------------------------
-    // ğŸ’³ Stripe - Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ø¯ÙØ¹
+    // ?? Stripe - ÈæÇÈÉ ÇáÏİÚ
     // ----------------------------
     stripePublishableKey: "pk_test_...",
     stripeSecretKey: "sk_test_...",
 
     // ----------------------------
-    // ğŸ’° PayPal - Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ø¯ÙØ¹
+    // ?? PayPal - ÈæÇÈÉ ÇáÏİÚ
     // ----------------------------
     paypalClientId: "your_paypal_client_id",
     paypalSecret: "your_paypal_secret",
 
     // ----------------------------
-    // ğŸ“§ Email - Ø¥Ø´Ø¹Ø§Ø±Ø§Øª Ø§Ù„Ø¨Ø±ÙŠØ¯
+    // ?? Email - ÅÔÚÇÑÇÊ ÇáÈÑíÏ
     // ----------------------------
     sendgridApiKey: "SG.your_sendgrid_key",
     emailFrom: "admin@yourdomain.com",
     emailTo: "admin@yourdomain.com",
 
     // ----------------------------
-    // ğŸ“Š Analytics - Ø£Ø¯ÙˆØ§Øª Ø§Ù„ØªØ­Ù„ÙŠÙ„
+    // ?? Analytics - ÃÏæÇÊ ÇáÊÍáíá
     // ----------------------------
     googleAnalyticsId: "G-XXXXXXXXXX",
     googleSearchConsole: "your-verification-code",
@@ -44,20 +44,20 @@ const KEYS = {
     tiktokPixelId: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 
     // ----------------------------
-    // ğŸ” JWT - Ø§Ù„ØªÙˆØ«ÙŠÙ‚
+    // ?? JWT - ÇáÊæËíŞ
     // ----------------------------
     jwtSecret: "your-jwt-secret-change-this",
     jwtExpiry: "7d",
 
     // ----------------------------
-    // ğŸŒ URLs - Ø±ÙˆØ§Ø¨Ø· Ø§Ù„Ù…ÙˆÙ‚Ø¹
+    // ?? URLs - ÑæÇÈØ ÇáãæŞÚ
     // ----------------------------
     siteUrl: "https://your-site-url.com",
     apiUrl: "https://your-api-url.com",
     adminEmail: "admin@yourdomain.com",
 
     // ----------------------------
-    // ğŸ› ï¸ Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø¥Ø¶Ø§ÙÙŠØ©
+    // ??? ÅÚÏÇÏÇÊ ÅÖÇİíÉ
     // ----------------------------
     debugMode: true,
     useMockData: true,
@@ -66,16 +66,17 @@ const KEYS = {
     defaultCurrency: "SAR",
 
     // ----------------------------
-    // ğŸ“¦ Ù…ÙØ§ØªÙŠØ­ APIs Ø¥Ø¶Ø§ÙÙŠØ©
+    // ?? ãİÇÊíÍ APIs ÅÖÇİíÉ
     // ----------------------------
-    // ğŸ‘‡ Ø£Ø¶Ù Ù…ÙØªØ§Ø­Ùƒ Ø§Ù„Ø¬Ø¯ÙŠØ¯ Ù‡Ù†Ø§
+    // ?? ÃÖİ ãİÊÇÍß ÇáÌÏíÏ åäÇ
     // newApiKey: "sk-...",
     // newApiSecret: "AC...",
 };
 
-// ====== ğŸ Ù†Ù‡Ø§ÙŠØ© Ø§Ù„Ù…ÙØ§ØªÙŠØ­ ======
+// ====== ?? äåÇíÉ ÇáãİÇÊíÍ ======
 
 export default KEYS;
 
-// âœ… ØªÙ†Ø¨ÙŠÙ‡ Ù„Ù„Ù…Ø·ÙˆØ±
-console.warn('âš ï¸ Using example keys! Copy this file to keys.js and add your real keys.');
+// ? ÊäÈíå ááãØæÑ
+console.warn('?? Using example keys! Copy this file to keys.example.js and add your real keys.');
+

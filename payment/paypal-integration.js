@@ -3,7 +3,7 @@
 // ==========================================
 
 import { PAYMENT_CONFIG, formatPrice } from './payment-config.js';
-import KEYS from '../keys.js';
+import KEYS from '../keys.example.js';
 
 class PayPalPayment {
     constructor() {

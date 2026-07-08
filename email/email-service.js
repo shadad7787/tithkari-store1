@@ -2,11 +2,11 @@
 // خدمة إرسال البريد الإلكتروني
 // ==========================================
 
-import KEYS from '../keys.js';
+import KEYS from '../keys.example.js';
 
 class EmailService {
     constructor() {
-        // ===== إعدادات البريد من keys.js =====
+        // ===== إعدادات البريد من keys.example.js =====
         this.config = {
             sendgrid: {
                 apiKey: KEYS.sendgridApiKey || '',
@@ -22,10 +22,10 @@ class EmailService {
         this.isConfigured = !!(this.config.sendgrid.apiKey && this.config.sendgrid.apiKey !== 'SG.your_sendgrid_key');
         
         if (this.isConfigured) {
-            console.log('✅ Email service initialized with keys from keys.js');
+            console.log('✅ Email service initialized with keys from keys.example.js');
         } else {
             console.warn('⚠️ Email service not configured - missing SendGrid API key');
-            console.warn('💡 To enable email, add sendgridApiKey to keys.js');
+            console.warn('💡 To enable email, add sendgridApiKey to keys.example.js');
         }
     }
 

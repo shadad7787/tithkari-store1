@@ -4,7 +4,7 @@
 
 // ===== استيراد Supabase ونظام المفاتيح =====
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
-import KEYS from './keys.js';
+import KEYS from './keys.example.js';
 
 // ===== إعدادات Supabase =====
 const SUPABASE_URL = KEYS.supabaseUrl;

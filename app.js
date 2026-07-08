@@ -2,10 +2,10 @@
 // استيراد Supabase ونظام المفاتيح
 // ============================================
 import { createClient } from '@supabase/supabase-js';
-import KEYS from './keys.js';
+import KEYS from './keys.example.js';
 
 // ============================================
-// إعدادات Supabase - مستوردة من keys.js فقط
+// إعدادات Supabase - مستوردة من keys.example.js فقط
 // ============================================
 const supabaseUrl = KEYS.supabaseUrl;
 const supabaseAnonKey = KEYS.supabaseAnonKey;
@@ -13,7 +13,7 @@ const supabaseAnonKey = KEYS.supabaseAnonKey;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 console.log('✅ Supabase initialized');
-console.log('🔐 Keys loaded from keys.js');
+console.log('🔐 Keys loaded from keys.example.js');
 
 // ============================================
 // 🛠️ دالة مساعدة للحصول على صورة افتراضية (SVG)

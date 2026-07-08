@@ -1,16 +1,16 @@
 // ============================================
 // استيراد الإعدادات من الملف المركزي
 // ============================================
-import KEYS from '../keys.js';
+import KEYS from '../keys.example.js';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
 
 // ============================================
-// تهيئة Supabase - استخدام المفاتيح من keys.js
+// تهيئة Supabase - استخدام المفاتيح من keys.example.js
 // ============================================
 const supabase = createClient(KEYS.supabaseUrl, KEYS.supabaseAnonKey);
 
 console.log('✅ Supabase initialized');
-console.log('🔐 Keys loaded from keys.js');
+console.log('🔐 Keys loaded from keys.example.js');
 
 // ============================================
 // التحقق من تسجيل الدخول

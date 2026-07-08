@@ -401,14 +401,14 @@
     
     <script type="module">
         // ============================================
-        // استيراد المفاتيح من keys.js
+        // استيراد المفاتيح من keys.example.js
         // ============================================
-        import KEYS from './keys.js';
+        import KEYS from './keys.example.js';
 
-        console.log('🔐 Keys loaded from keys.js');
+        console.log('🔐 Keys loaded from keys.example.js');
 
         // ============================================
-        // إعدادات Supabase - مستوردة من keys.js
+        // إعدادات Supabase - مستوردة من keys.example.js
         // ============================================
         const SUPABASE_URL = KEYS.supabaseUrl;
         const SUPABASE_ANON_KEY = KEYS.supabaseAnonKey;
@@ -635,7 +635,7 @@
         // ============================================
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 صفحة تسجيل الدخول جاهزة');
-            console.log('🔐 Keys loaded from keys.js');
+            console.log('🔐 Keys loaded from keys.example.js');
             
             // ملء البريد وكلمة المرور في حالة وجود تذكرني
             const rememberMe = localStorage.getItem('remember_me');

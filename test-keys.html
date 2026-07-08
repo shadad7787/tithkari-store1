@@ -148,7 +148,7 @@
                     💡 <strong>لإضافة مفتاح جديد:</strong>
                 </p>
                 <div style="margin-top: 10px;">
-                    <p style="color: #8899aa; font-size: 0.9em;">1. افتح ملف <code>keys.js</code></p>
+                    <p style="color: #8899aa; font-size: 0.9em;">1. افتح ملف <code>keys.example.js</code></p>
                     <p style="color: #8899aa; font-size: 0.9em;">2. ابحث عن قسم <code>// 📦 مفاتيح APIs إضافية</code></p>
                     <p style="color: #8899aa; font-size: 0.9em;">3. أضف مفتاحك بهذه الصيغة:</p>
                     <code style="display: block; margin: 10px 0; padding: 10px; background: #0a0e17; border-radius: 4px; color: #ffd700;">
@@ -156,7 +156,7 @@
                     </code>
                     <p style="color: #8899aa; font-size: 0.9em;">4. استخدمه في أي ملف:</p>
                     <code style="display: block; margin: 10px 0; padding: 10px; background: #0a0e17; border-radius: 4px; color: #ffd700;">
-                        import KEYS from './keys.js';<br>
+                        import KEYS from './keys.example.js';<br>
                         const myKey = KEYS.myNewKey;
                     </code>
                 </div>
@@ -169,7 +169,7 @@
     </div>
 
     <script type="module">
-        import KEYS from './keys.js';
+        import KEYS from './keys.example.js';
         import { validateAllKeys, displayKeys } from './keys-helper.js';
 
         // ✅ عرض حالة المفاتيح
