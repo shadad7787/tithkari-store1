@@ -10,28 +10,28 @@ const KEYS = {
     // ----------------------------
     // 🔗 Supabase - قاعدة البيانات
     // ----------------------------
-    supabaseUrl: "https://savtqajghyloevzwrzvt.supabase.co",
-    supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhdnRxYWpnaHlsb2V2endyenZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3ODA1OTMsImV4cCI6MjA5ODM1NjU5M30.CBq7eKyr3RR11op_SevMBBcKQNKF7uftpaa-URemEww",
+    supabaseUrl: "your_supabase_url_here",
+    supabaseAnonKey: "your_supabase_anon_key_here",
     supabaseServiceKey: "your_service_role_key_here",
 
     // ----------------------------
     // 💳 Stripe - بوابة الدفع
     // ----------------------------
-    stripePublishableKey: "pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    stripeSecretKey: "sk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    stripePublishableKey: "pk_test_...",
+    stripeSecretKey: "sk_test_...",
 
     // ----------------------------
     // 💰 PayPal - بوابة الدفع
     // ----------------------------
-    paypalClientId: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    paypalSecret: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    paypalClientId: "your_paypal_client_id",
+    paypalSecret: "your_paypal_secret",
 
     // ----------------------------
     // 📧 Email - إشعارات البريد
     // ----------------------------
-    sendgridApiKey: "SG.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    emailFrom: "admin@tithkari.com",
-    emailTo: "admin@tithkari.com",
+    sendgridApiKey: "SG.your_sendgrid_key",
+    emailFrom: "admin@yourdomain.com",
+    emailTo: "admin@yourdomain.com",
 
     // ----------------------------
     // 📊 Analytics - أدوات التحليل
@@ -52,15 +52,15 @@ const KEYS = {
     // ----------------------------
     // 🌐 URLs - روابط الموقع
     // ----------------------------
-    siteUrl: "https://shadad7787.github.io/tithkari-store1",
-    apiUrl: "https://savtqajghyloevzwrzvt.supabase.co",
-    adminEmail: "admin@tithkari.com",
+    siteUrl: "https://your-site-url.com",
+    apiUrl: "https://your-api-url.com",
+    adminEmail: "admin@yourdomain.com",
 
     // ----------------------------
     // 🛠️ إعدادات إضافية
     // ----------------------------
     debugMode: true,
-    useMockData: false,
+    useMockData: true,
     encryptionSalt: "your-encryption-salt",
     apiVersion: "v1",
     defaultCurrency: "SAR",

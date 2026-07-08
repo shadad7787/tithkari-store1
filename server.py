@@ -6,7 +6,7 @@ import sys
 import webbrowser
 from pathlib import Path
 
-PORT = 5515
+PORT = 5516
 
 # تغيير المجلد الحالي إلى مكان الملف
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
