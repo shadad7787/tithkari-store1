@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار المفاتيح - Tithkari</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #0a0e17;
+            color: #fff;
+            padding: 30px;
+            direction: rtl;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        .header {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        .header h1 { font-size: 2em; color: #ffd700; }
+        .header p { color: #8899aa; margin-top: 10px; }
+        .card {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid #2a2a4e;
+        }
+        .card h3 {
+            color: #ffd700;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        .key-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: #0a0e17;
+            border-radius: 6px;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+        .key-name { color: #66b3ff; font-weight: bold; }
+        .key-value {
+            color: #66ff88;
+            font-family: monospace;
+            max-width: 60%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .key-value.hidden {
+            color: #ff6666;
+            font-size: 0.8em;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            margin-right: 10px;
+        }
+        .status.success { background: #00cc66; color: #fff; }
+        .status.error { background: #ff4444; color: #fff; }
+        .status.warning { background: #ffaa00; color: #fff; }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            background: #2a2a4e;
+            color: #8899aa;
+        }
+        .btn {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        .btn-primary { background: #ffd700; color: #0a0e17; }
+        .btn-primary:hover { background: #ffed4a; transform: scale(1.05); }
+        .btn-secondary { background: #2a2a4e; color: #fff; }
+        .btn-secondary:hover { background: #3a3a6e; }
+        .footer { text-align: center; margin-top: 30px; color: #667788; }
+        .count {
+            color: #ffd700;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        code {
+            background: #0a0e17;
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: #ffd700;
+        }
+        .example-box {
+            background: #0a0e17;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px dashed #2a2a4e;
+            margin-top: 10px;
+        }
+        .example-box code {
+            display: block;
+            padding: 8px;
+            background: #0a0e17;
+            border-radius: 4px;
+            color: #ffd700;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 اختبار نظام المفاتيح</h1>
+            <p>تأكد من تحميل جميع المفاتيح بشكل صحيح</p>
+            <div style="margin-top: 15px;">
+                <button class="btn btn-primary" onclick="window.location.reload()">
+                    🔄 إعادة تحميل
+                </button>
+                <button class="btn btn-secondary" onclick="toggleKeys()">
+                    👁️ إظهار/إخفاء المفاتيح
+                </button>
+            </div>
+        </div>
+
+        <div id="key-status" class="card">
+            <h3>📊 حالة المفاتيح</h3>
+            <div id="status-content">جاري التحميل...</div>
+        </div>
+
+        <div class="card">
+            <h3>📋 جميع المفاتيح</h3>
+            <div id="keys-list"></div>
+        </div>
+
+        <div class="card">
+            <h3>📦 إضافة مفتاح جديد</h3>
+            <div class="example-box">
+                <p style="color: #8899aa; font-size: 0.9em; line-height: 1.8;">
+                    💡 <strong>لإضافة مفتاح جديد:</strong>
+                </p>
+                <div style="margin-top: 10px;">
+                    <p style="color: #8899aa; font-size: 0.9em;">1. افتح ملف <code>keys.js</code></p>
+                    <p style="color: #8899aa; font-size: 0.9em;">2. ابحث عن قسم <code>// 📦 مفاتيح APIs إضافية</code></p>
+                    <p style="color: #8899aa; font-size: 0.9em;">3. أضف مفتاحك بهذه الصيغة:</p>
+                    <code style="display: block; margin: 10px 0; padding: 10px; background: #0a0e17; border-radius: 4px; color: #ffd700;">
+                        myNewKey: "your-key-value-here",
+                    </code>
+                    <p style="color: #8899aa; font-size: 0.9em;">4. استخدمه في أي ملف:</p>
+                    <code style="display: block; margin: 10px 0; padding: 10px; background: #0a0e17; border-radius: 4px; color: #ffd700;">
+                        import KEYS from './keys.js';<br>
+                        const myKey = KEYS.myNewKey;
+                    </code>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>🔐 نظام آمن لإدارة المفاتيح | Tithkari Store</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import KEYS from './keys.js';
+        import { validateAllKeys, displayKeys } from './keys-helper.js';
+
+        // ✅ عرض حالة المفاتيح
+        function renderStatus() {
+            const statusDiv = document.getElementById('status-content');
+            const keysCount = Object.keys(KEYS).length;
+            const required = ['supabaseUrl', 'supabaseAnonKey'];
+            const validation = validateAllKeys(required);
+            
+            let html = `
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                    <div>
+                        <span class="count">${keysCount}</span> مفتاح تم تحميله
+                        <span class="badge">${new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <div>
+                        ${validation.isValid ? 
+                            '<span class="status success">✅ جميع المفاتيح صالحة</span>' :
+                            '<span class="status error">⚠️ بعض المفاتيح مفقودة</span>'
+                        }
+                    </div>
+                </div>
+                ${validation.missing.length > 0 ? `
+                    <div style="margin-top: 10px; color: #ff6666;">
+                        ⚠️ المفاتيح المفقودة: ${validation.missing.join(', ')}
+                    </div>
+                ` : ''}
+                ${validation.invalid.length > 0 ? `
+                    <div style="margin-top: 5px; color: #ffaa00;">
+                        ⚠️ مفاتيح غير مكتملة: ${validation.invalid.join(', ')}
+                    </div>
+                ` : ''}
+            `;
+            
+            statusDiv.innerHTML = html;
+        }
+
+        // ✅ عرض جميع المفاتيح
+        let showHidden = false;
+
+        function renderKeys() {
+            const listDiv = document.getElementById('keys-list');
+            const sensitive = ['supabaseAnonKey', 'supabaseServiceKey', 'stripeSecretKey', 'paypalSecret', 'jwtSecret', 'sendgridApiKey'];
+            
+            let html = '';
+            Object.entries(KEYS).forEach(([key, value]) => {
+                const isSensitive = sensitive.includes(key);
+                let displayValue = value;
+                let isHidden = false;
+                
+                if (isSensitive && !showHidden) {
+                    displayValue = '••••••••••••••••';
+                    isHidden = true;
+                } else if (typeof value === 'string' && value.length > 30) {
+                    displayValue = value.substring(0, 15) + '...' + value.substring(value.length - 5);
+                }
+                
+                html += `
+                    <div class="key-item">
+                        <span class="key-name">${key}</span>
+                        <span class="key-value ${isHidden ? 'hidden' : ''}">
+                            ${displayValue || '<span style="color: #ff4444;">❌ غير محدد</span>'}
+                        </span>
+                    </div>
+                `;
+            });
+            
+            listDiv.innerHTML = html;
+        }
+
+        // ✅ تبديل إظهار/إخفاء المفاتيح
+        window.toggleKeys = function() {
+            showHidden = !showHidden;
+            renderKeys();
+        };
+
+        // ✅ التنفيذ
+        renderStatus();
+        renderKeys();
+        displayKeys();
+
+        console.log('✅ Keys test completed');
+        console.log(`📦 ${Object.keys(KEYS).length} keys loaded`);
+    </script>
+</body>
+</html>

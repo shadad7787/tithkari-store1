@@ -1,93 +1,975 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
     <title>إدارة الحقول المخصصة - Tithkari</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <style>
+        /* ===== المتغيرات الأساسية ===== */
         :root {
             --primary: #8B0000;
             --gold: #FFD700;
+            --gold-light: #FFED4A;
             --dark: #0F0F1A;
             --dark-light: #1A1A2E;
+            --dark-card: #1A1A2E;
             --gray: #8A8A9B;
+            --gray-light: #B0B0C0;
             --white: #FFFFFF;
             --radius: 16px;
-            --transition: all 0.3s ease;
+            --radius-sm: 8px;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Cairo', sans-serif; background: var(--dark); color: var(--white); direction: rtl; padding: 20px; }
-        .container { max-width: 900px; margin: 0 auto; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 2px solid var(--gold); margin-bottom: 30px; }
-        .header h1 { color: var(--gold); display: flex; align-items: center; gap: 10px; }
-        .header a { color: var(--gray); text-decoration: none; transition: var(--transition); }
-        .header a:hover { color: var(--gold); }
+        body {
+            font-family: 'Cairo', 'Segoe UI', sans-serif;
+            background: var(--dark);
+            color: var(--white);
+            direction: rtl;
+            padding: 20px;
+            min-height: 100vh;
+            width: 100%;
+            overflow-x: hidden;
+            -webkit-text-size-adjust: 100%;
+        }
         
-        .product-selector { margin-bottom: 30px; }
-        .product-selector select { width: 100%; padding: 14px; border-radius: 12px; background: var(--dark-light); color: var(--white); border: 1px solid rgba(255,215,0,0.1); font-family: 'Cairo', sans-serif; font-size: 16px; }
-        .product-selector select:focus { border-color: var(--gold); outline: none; }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 0 4px;
+        }
         
-        .fields-list { margin-bottom: 30px; }
-        .field-card { background: var(--dark-light); border-radius: var(--radius); padding: 20px; margin-bottom: 15px; border: 1px solid rgba(255,215,0,0.05); transition: var(--transition); }
-        .field-card:hover { border-color: rgba(255,215,0,0.2); }
-        .field-card .field-header { display: flex; justify-content: space-between; align-items: center; }
-        .field-card .field-name { font-size: 18px; font-weight: 700; color: var(--gold); }
-        .field-card .field-type { font-size: 13px; color: var(--gray); background: rgba(255,255,255,0.05); padding: 2px 12px; border-radius: 12px; }
-        .field-card .field-details { margin-top: 10px; color: var(--gray); font-size: 14px; }
-        .field-card .field-actions { margin-top: 12px; display: flex; gap: 10px; }
-        .field-card .field-actions button { padding: 6px 16px; border: none; border-radius: 6px; cursor: pointer; font-family: 'Cairo', sans-serif; font-weight: 600; transition: var(--transition); }
-        .btn-edit { background: rgba(255,215,0,0.1); color: var(--gold); }
-        .btn-edit:hover { background: var(--gold); color: var(--dark); }
-        .btn-delete { background: rgba(244,67,54,0.1); color: #f44336; }
-        .btn-delete:hover { background: #f44336; color: white; }
-        .btn-toggle { background: rgba(76,175,80,0.1); color: #4CAF50; }
-        .btn-toggle:hover { background: #4CAF50; color: white; }
-        .btn-toggle.inactive { background: rgba(255,152,0,0.1); color: #FF9800; }
-        .btn-toggle.inactive:hover { background: #FF9800; color: white; }
+        /* ===== الهيدر ===== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 2px solid var(--gold);
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
         
-        .add-field-form { background: var(--dark-light); border-radius: var(--radius); padding: 25px; border: 1px solid rgba(255,215,0,0.05); }
-        .add-field-form h3 { color: var(--gold); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; color: var(--gray); font-weight: 600; font-size: 14px; margin-bottom: 5px; }
-        .form-group label .required { color: #f44336; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border-radius: 8px; background: var(--dark); color: var(--white); border: 1px solid rgba(255,215,0,0.1); font-family: 'Cairo', sans-serif; font-size: 14px; }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--gold); outline: none; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .btn-submit { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--gold), #FFED4A); color: var(--dark); border: none; border-radius: 12px; font-size: 18px; font-weight: 700; cursor: pointer; transition: var(--transition); font-family: 'Cairo', sans-serif; }
-        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,215,0,0.3); }
+        .header h1 {
+            color: var(--gold);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+        }
         
-        .empty-state { text-align: center; padding: 40px; color: var(--gray); }
-        .empty-state i { font-size: 48px; display: block; margin-bottom: 15px; opacity: 0.3; }
+        .header h1 i {
+            font-size: 28px;
+        }
         
-        @media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } }
+        .header a {
+            color: var(--gray);
+            text-decoration: none;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: var(--radius-sm);
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            font-size: 14px;
+        }
+        
+        .header a:hover {
+            color: var(--gold);
+            background: rgba(255,215,0,0.05);
+            border-color: rgba(255,215,0,0.1);
+        }
+        
+        /* ===== اختيار المنتج ===== */
+        .product-selector {
+            margin-bottom: 25px;
+        }
+        
+        .product-selector label {
+            color: var(--gray);
+            font-weight: 600;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .product-selector select {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 12px;
+            background: var(--dark-light);
+            color: var(--white);
+            border: 1px solid rgba(255, 215, 0, 0.08);
+            font-family: 'Cairo', sans-serif;
+            font-size: 16px;
+            transition: var(--transition);
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238A8A9B' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: left 16px center;
+            padding-left: 40px;
+        }
+        
+        .product-selector select:focus {
+            border-color: var(--gold);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.05);
+        }
+        
+        .product-selector select option {
+            background: var(--dark-light);
+            color: var(--white);
+        }
+        
+        /* ===== قائمة الحقول ===== */
+        .fields-list {
+            margin-bottom: 25px;
+        }
+        
+        .fields-list .section-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .fields-list .section-title h2 {
+            color: var(--gold);
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .field-card {
+            background: var(--dark-light);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+            transition: var(--transition);
+        }
+        
+        .field-card:hover {
+            border-color: rgba(255, 215, 0, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .field-card .field-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .field-card .field-name {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--gold);
+        }
+        
+        .field-card .field-type {
+            font-size: 12px;
+            color: var(--gray);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .field-card .field-details {
+            margin-top: 8px;
+            color: var(--gray);
+            font-size: 13px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .field-card .field-details .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .field-card .field-details .badge-required {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        
+        .field-card .field-details .badge-optional {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--gray);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .field-card .field-details .badge-active {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        
+        .field-card .field-details .badge-inactive {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        
+        .field-card .field-details .badge-order {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .field-card .field-actions {
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .field-card .field-actions button {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            transition: var(--transition);
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            min-height: 36px;
+            touch-action: manipulation;
+        }
+        
+        .btn-edit {
+            background: rgba(255, 215, 0, 0.1);
+            color: var(--gold);
+        }
+        
+        .btn-edit:hover {
+            background: var(--gold);
+            color: var(--dark);
+            transform: scale(1.02);
+        }
+        
+        .btn-delete {
+            background: rgba(244, 67, 54, 0.1);
+            color: #f44336;
+        }
+        
+        .btn-delete:hover {
+            background: #f44336;
+            color: white;
+            transform: scale(1.02);
+        }
+        
+        .btn-toggle {
+            background: rgba(76, 175, 80, 0.1);
+            color: #4CAF50;
+        }
+        
+        .btn-toggle:hover {
+            background: #4CAF50;
+            color: white;
+            transform: scale(1.02);
+        }
+        
+        .btn-toggle.inactive {
+            background: rgba(255, 152, 0, 0.1);
+            color: #FF9800;
+        }
+        
+        .btn-toggle.inactive:hover {
+            background: #FF9800;
+            color: white;
+            transform: scale(1.02);
+        }
+        
+        /* ===== نموذج إضافة حقل ===== */
+        .add-field-form {
+            background: var(--dark-light);
+            border-radius: var(--radius);
+            padding: 25px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+        }
+        
+        .add-field-form h3 {
+            color: var(--gold);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: var(--gray);
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .form-group label .required {
+            color: #f44336;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 8px;
+            background: var(--dark);
+            color: var(--white);
+            border: 1px solid rgba(255, 215, 0, 0.08);
+            font-family: 'Cairo', sans-serif;
+            font-size: 15px;
+            transition: var(--transition);
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--gold);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.05);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: var(--gray);
+            opacity: 0.5;
+        }
+        
+        .form-group select option {
+            background: var(--dark);
+            color: var(--white);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .form-check {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 6px 0;
+        }
+        
+        .form-check input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--gold);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        
+        .form-check label {
+            color: var(--gray);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 0;
+        }
+        
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: var(--dark);
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: 'Cairo', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 52px;
+            touch-action: manipulation;
+        }
+        
+        .btn-submit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
+        }
+        
+        .btn-submit:active {
+            transform: scale(0.97);
+        }
+        
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        /* ===== الحالة الفارغة ===== */
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--gray);
+        }
+        
+        .empty-state i {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 15px;
+            opacity: 0.3;
+        }
+        
+        .empty-state h3 {
+            color: var(--white);
+            margin-bottom: 5px;
+            font-size: 18px;
+        }
+        
+        .empty-state p {
+            font-size: 14px;
+        }
+        
+        /* ===== النافذة المنبثقة للتعديل ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--dark-light);
+            border-radius: var(--radius);
+            max-width: 550px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 30px;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            animation: modalFade 0.3s ease;
+        }
+        
+        @keyframes modalFade {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        
+        .modal-close {
+            float: left;
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            color: var(--white);
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+        }
+        
+        .modal-close:hover {
+            background: rgba(239, 68, 68, 0.3);
+            transform: rotate(90deg);
+        }
+        
+        .modal-content h2 {
+            color: var(--gold);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 22px;
+        }
+        
+        .modal-content .form-group {
+            margin-bottom: 14px;
+        }
+        
+        .modal-content .form-group label {
+            font-size: 13px;
+        }
+        
+        .modal-content .form-group input,
+        .modal-content .form-group select,
+        .modal-content .form-group textarea {
+            font-size: 14px;
+            padding: 10px 14px;
+        }
+        
+        /* ===== إشعار ===== */
+        .toast-notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--dark-light);
+            border: 1px solid var(--gold);
+            border-radius: 8px;
+            padding: 12px 24px;
+            color: #fff;
+            font-size: 14px;
+            z-index: 99999;
+            animation: slideUp 0.4s ease;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            font-family: 'Cairo', sans-serif;
+            max-width: 90%;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .toast-notification.success {
+            border-color: #10b981;
+        }
+        
+        .toast-notification.error {
+            border-color: #ef4444;
+        }
+        
+        .toast-notification.warning {
+            border-color: #fbbf24;
+        }
+        
+        .toast-notification.info {
+            border-color: #3b82f6;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+        
+        /* ===== مؤشر التحميل ===== */
+        .loading-spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(15, 15, 26, 0.1);
+            border-top-color: #0F0F1A;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        /* ============================================
+           📱 تحسينات التوافق مع الجوال
+           ============================================ */
+        
+        /* الأجهزة المتوسطة والصغيرة */
+        @media (max-width: 768px) {
+            body {
+                padding: 12px;
+            }
+            
+            .container {
+                padding: 0 2px;
+            }
+            
+            .header {
+                flex-direction: column;
+                text-align: center;
+                padding: 12px 0;
+                gap: 8px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+                justify-content: center;
+            }
+            
+            .header h1 i {
+                font-size: 22px;
+            }
+            
+            .header a {
+                font-size: 13px;
+                padding: 6px 12px;
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .product-selector select {
+                font-size: 15px;
+                padding: 12px 14px;
+                padding-left: 36px;
+            }
+            
+            .fields-list .section-title {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 6px;
+            }
+            
+            .fields-list .section-title h2 {
+                font-size: 18px;
+                justify-content: center;
+            }
+            
+            .field-card {
+                padding: 14px 16px;
+            }
+            
+            .field-card .field-name {
+                font-size: 15px;
+            }
+            
+            .field-card .field-details {
+                font-size: 12px;
+                gap: 8px;
+            }
+            
+            .field-card .field-actions {
+                gap: 6px;
+            }
+            
+            .field-card .field-actions button {
+                font-size: 12px;
+                padding: 4px 10px;
+                min-height: 32px;
+            }
+            
+            .add-field-form {
+                padding: 18px 16px;
+            }
+            
+            .add-field-form h3 {
+                font-size: 18px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .form-group input,
+            .form-group select,
+            .form-group textarea {
+                font-size: 14px;
+                padding: 10px 12px;
+            }
+            
+            .btn-submit {
+                font-size: 16px;
+                padding: 12px;
+                min-height: 46px;
+            }
+            
+            .modal-content {
+                padding: 20px;
+                max-width: 95%;
+                margin: 10px;
+            }
+            
+            .modal-content h2 {
+                font-size: 18px;
+            }
+            
+            .modal-close {
+                width: 30px;
+                height: 30px;
+                font-size: 16px;
+            }
+            
+            .empty-state {
+                padding: 30px 15px;
+            }
+            
+            .empty-state i {
+                font-size: 36px;
+            }
+            
+            .empty-state h3 {
+                font-size: 16px;
+            }
+            
+            .toast-notification {
+                font-size: 13px;
+                padding: 10px 16px;
+                max-width: 95%;
+            }
+        }
+        
+        /* الأجهزة الصغيرة جداً */
+        @media (max-width: 480px) {
+            body {
+                padding: 8px;
+            }
+            
+            .header h1 {
+                font-size: 17px;
+            }
+            
+            .header h1 i {
+                font-size: 18px;
+            }
+            
+            .product-selector select {
+                font-size: 14px;
+                padding: 10px 12px;
+                padding-left: 32px;
+            }
+            
+            .field-card {
+                padding: 12px 14px;
+            }
+            
+            .field-card .field-name {
+                font-size: 14px;
+            }
+            
+            .field-card .field-type {
+                font-size: 10px;
+                padding: 1px 8px;
+            }
+            
+            .field-card .field-details {
+                font-size: 11px;
+                gap: 6px;
+            }
+            
+            .field-card .field-actions button {
+                font-size: 11px;
+                padding: 4px 8px;
+                min-height: 28px;
+            }
+            
+            .field-card .field-actions button i {
+                font-size: 11px;
+            }
+            
+            .add-field-form {
+                padding: 14px 12px;
+            }
+            
+            .add-field-form h3 {
+                font-size: 16px;
+            }
+            
+            .add-field-form h3 i {
+                font-size: 16px;
+            }
+            
+            .form-group {
+                margin-bottom: 10px;
+            }
+            
+            .form-group label {
+                font-size: 12px;
+            }
+            
+            .form-group input,
+            .form-group select,
+            .form-group textarea {
+                font-size: 13px;
+                padding: 8px 10px;
+            }
+            
+            .form-check label {
+                font-size: 13px;
+            }
+            
+            .btn-submit {
+                font-size: 14px;
+                padding: 10px;
+                min-height: 40px;
+            }
+            
+            .modal-content {
+                padding: 15px;
+                max-width: 98%;
+            }
+            
+            .modal-content h2 {
+                font-size: 16px;
+            }
+            
+            .modal-content .form-group input,
+            .modal-content .form-group select,
+            .modal-content .form-group textarea {
+                font-size: 13px;
+                padding: 8px 10px;
+            }
+            
+            .modal-close {
+                width: 28px;
+                height: 28px;
+                font-size: 14px;
+            }
+            
+            .empty-state {
+                padding: 20px 10px;
+            }
+            
+            .empty-state i {
+                font-size: 28px;
+            }
+            
+            .empty-state h3 {
+                font-size: 14px;
+            }
+            
+            .empty-state p {
+                font-size: 12px;
+            }
+            
+            .toast-notification {
+                font-size: 12px;
+                padding: 8px 12px;
+                bottom: 10px;
+            }
+        }
+        
+        /* تحسينات اللمس للجوال */
+        @media (hover: none) and (pointer: coarse) {
+            .btn-edit,
+            .btn-delete,
+            .btn-toggle,
+            .btn-submit,
+            .modal-close,
+            .header a,
+            .product-selector select {
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+            }
+            
+            .btn-edit:active,
+            .btn-delete:active,
+            .btn-toggle:active,
+            .btn-submit:active {
+                transform: scale(0.95);
+            }
+            
+            .field-card {
+                cursor: default;
+            }
+        }
+        
+        /* تحسينات التمرير للجوال */
+        .modal-content::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .modal-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .modal-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 215, 0, 0.2);
+            border-radius: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- ===== الهيدر ===== -->
         <div class="header">
             <h1><i class="fas fa-pencil-alt"></i> إدارة الحقول المخصصة</h1>
-            <a href="index.html"><i class="fas fa-arrow-right"></i> العودة للمتجر</a>
+            <a href="admin.html"><i class="fas fa-arrow-right"></i> العودة للوحة التحكم</a>
         </div>
         
-        <!-- اختيار المنتج -->
+        <!-- ===== اختيار المنتج ===== -->
         <div class="product-selector">
-            <label style="color:var(--gray);font-weight:600;display:block;margin-bottom:8px;">اختر المنتج:</label>
+            <label for="productSelect">📦 اختر المنتج:</label>
             <select id="productSelect" onchange="loadFields()">
                 <option value="">-- اختر منتج --</option>
             </select>
         </div>
         
-        <!-- قائمة الحقول -->
-        <div id="fieldsList" class="fields-list"></div>
+        <!-- ===== قائمة الحقول ===== -->
+        <div class="fields-list">
+            <div class="section-title">
+                <h2><i class="fas fa-list"></i> الحقول المخصصة</h2>
+                <button class="btn-submit" style="width:auto;padding:8px 20px;font-size:14px;min-height:40px;" onclick="openAddFieldModal()">
+                    <i class="fas fa-plus"></i> إضافة حقل
+                </button>
+            </div>
+            <div id="fieldsContainer">
+                <div class="empty-state">
+                    <i class="fas fa-arrow-right"></i>
+                    <h3>اختر منتجاً لعرض حقوله</h3>
+                    <p>قم باختيار منتج من القائمة أعلاه</p>
+                </div>
+            </div>
+        </div>
         
-        <!-- إضافة حقل جديد -->
-        <div class="add-field-form">
-            <h3><i class="fas fa-plus-circle"></i> إضافة حقل مخصص</h3>
+        <!-- ===== نموذج إضافة حقل (في الصفحة) ===== -->
+        <div class="add-field-form" id="addFieldFormSection">
+            <h3><i class="fas fa-plus-circle"></i> <span id="formTitle">إضافة حقل مخصص</span></h3>
             <form id="addFieldForm" onsubmit="addField(event)">
+                <input type="hidden" id="editFieldId" />
+                
                 <div class="form-group">
                     <label>اسم الحقل <span class="required">*</span></label>
                     <input type="text" id="fieldName" placeholder="مثال: اسم على الدرع" required />
@@ -96,13 +978,13 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>نوع الحقل <span class="required">*</span></label>
-                        <select id="fieldType" required>
-                            <option value="text">نص قصير</option>
-                            <option value="textarea">نص طويل</option>
-                            <option value="select">قائمة منسدلة</option>
-                            <option value="file">رفع ملف</option>
-                            <option value="color">اختيار لون</option>
-                            <option value="date">تاريخ</option>
+                        <select id="fieldType" required onchange="toggleOptions()">
+                            <option value="text">📝 نص قصير</option>
+                            <option value="textarea">📄 نص طويل</option>
+                            <option value="select">📋 قائمة منسدلة</option>
+                            <option value="file">📎 رفع ملف</option>
+                            <option value="color">🎨 اختيار لون</option>
+                            <option value="date">📅 تاريخ</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -127,51 +1009,222 @@
                 </div>
                 
                 <div class="form-row">
-                    <div class="form-group">
-                        <label style="display:flex;align-items:center;gap:8px;">
-                            <input type="checkbox" id="isRequired" checked />
-                            حقل مطلوب
-                        </label>
+                    <div class="form-check">
+                        <input type="checkbox" id="isRequired" checked />
+                        <label for="isRequired">حقل مطلوب</label>
                     </div>
-                    <div class="form-group">
-                        <label style="display:flex;align-items:center;gap:8px;">
-                            <input type="checkbox" id="isActive" checked />
-                            مفعل
-                        </label>
+                    <div class="form-check">
+                        <input type="checkbox" id="isActive" checked />
+                        <label for="isActive">مفعل</label>
                     </div>
                 </div>
                 
-                <button type="submit" class="btn-submit">➕ إضافة الحقل</button>
+                <button type="submit" class="btn-submit" id="submitFieldBtn">
+                    <i class="fas fa-save"></i> <span id="submitBtnText">إضافة الحقل</span>
+                </button>
             </form>
         </div>
     </div>
 
-    <script>
+    <!-- ===== نافذة تعديل حقل (منبثقة) ===== -->
+    <div class="modal-overlay" id="editFieldModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeEditModal()"><i class="fas fa-times"></i></button>
+            <h2 id="editModalTitle">✏️ تعديل الحقل</h2>
+            <form id="editFieldForm" onsubmit="updateField(event)">
+                <input type="hidden" id="editFieldIdModal" />
+                
+                <div class="form-group">
+                    <label>اسم الحقل <span class="required">*</span></label>
+                    <input type="text" id="editFieldName" required placeholder="مثال: اسم على الدرع" />
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>نوع الحقل <span class="required">*</span></label>
+                        <select id="editFieldType" required onchange="toggleEditOptions()">
+                            <option value="text">📝 نص قصير</option>
+                            <option value="textarea">📄 نص طويل</option>
+                            <option value="select">📋 قائمة منسدلة</option>
+                            <option value="file">📎 رفع ملف</option>
+                            <option value="color">🎨 اختيار لون</option>
+                            <option value="date">📅 تاريخ</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>ترتيب العرض</label>
+                        <input type="number" id="editDisplayOrder" value="0" min="0" />
+                    </div>
+                </div>
+                
+                <div class="form-group" id="editOptionsGroup" style="display:none;">
+                    <label>خيارات القائمة (مفصولة بفاصلة)</label>
+                    <input type="text" id="editFieldOptions" placeholder="خيار1, خيار2, خيار3" />
+                </div>
+                
+                <div class="form-group">
+                    <label>نص مساعد</label>
+                    <input type="text" id="editHelpText" placeholder="مثال: اكتب الاسم الذي تريده على الدرع" />
+                </div>
+                
+                <div class="form-group">
+                    <label>مكان الحجز</label>
+                    <input type="text" id="editPlaceholder" placeholder="مثال: أدخل اسمك..." />
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-check">
+                        <input type="checkbox" id="editIsRequired" />
+                        <label for="editIsRequired">حقل مطلوب</label>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" id="editIsActive" />
+                        <label for="editIsActive">مفعل</label>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-submit" id="editSubmitBtn">
+                    <i class="fas fa-save"></i> تحديث الحقل
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
         // ============================================
-        // اتصال Supabase
+        // استيراد المفاتيح من keys.js
         // ============================================
-        const supabaseUrl = 'https://savtqajghyloevzwrzvt.supabase.co';
-        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhdnRxYWpnaHlsb2V2endyenZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3ODA1OTMsImV4cCI6MjA5ODM1NjU5M30.CBq7eKyr3RR11op_SevMBBcKQNKF7uftpaa-URemEww';
-        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+        import KEYS from '../keys.js';
+
+        console.log('🔐 Keys loaded from keys.js');
+
+        // ============================================
+        // اتصال Supabase - مستورد من keys.js
+        // ============================================
+        const supabaseUrl = KEYS.supabaseUrl;
+        const supabaseAnonKey = KEYS.supabaseAnonKey;
         
+        let supabaseClient = null;
+        let supabaseReady = false;
         let products = [];
         let currentProductId = '';
-        
+        let editingFieldId = null;
+
+        // ============================================
+        // تهيئة Supabase
+        // ============================================
+        function initSupabase() {
+            try {
+                if (typeof window.supabase !== 'undefined' && window.supabase) {
+                    supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+                    supabaseReady = true;
+                    console.log('✅ Supabase initialized with keys from keys.js');
+                    return true;
+                }
+                
+                console.warn('⚠️ Supabase library not found, attempting dynamic load...');
+                return new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+                    script.onload = function() {
+                        try {
+                            supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+                            supabaseReady = true;
+                            console.log('✅ Supabase initialized (dynamic load)');
+                            resolve(true);
+                        } catch (err) {
+                            console.error('❌ Failed to create Supabase client:', err);
+                            reject(err);
+                        }
+                    };
+                    script.onerror = function() {
+                        console.error('❌ Failed to load Supabase library');
+                        showToast('⚠️ فشل تحميل Supabase، يرجى تحديث الصفحة', 'error');
+                        reject(new Error('Supabase library load failed'));
+                    };
+                    document.head.appendChild(script);
+                });
+            } catch (error) {
+                console.error('❌ Supabase init error:', error);
+                showToast('⚠️ خطأ في تهيئة Supabase', 'error');
+                return false;
+            }
+        }
+
+        // تهيئة فوراً
+        initSupabase();
+
+        // ============================================
+        // إظهار الإشعارات
+        // ============================================
+        function showToast(message, type = 'info') {
+            const existing = document.querySelector('.toast-notification');
+            if (existing) existing.remove();
+            
+            const colors = {
+                success: '#10b981',
+                error: '#ef4444',
+                warning: '#fbbf24',
+                info: '#3b82f6'
+            };
+            
+            const icons = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                info: 'ℹ️'
+            };
+            
+            const toast = document.createElement('div');
+            toast.className = `toast-notification ${type}`;
+            toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span><span>${message}</span>`;
+            toast.style.borderColor = colors[type] || '#3b82f6';
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(20px)';
+                toast.style.transition = 'all 0.4s ease';
+                setTimeout(() => toast.remove(), 400);
+            }, 3500);
+        }
+
         // ============================================
         // تحميل المنتجات
         // ============================================
         async function loadProducts() {
-            const { data, error } = await supabase.from('products').select('id, name').order('name');
-            if (error) return console.error('خطأ في تحميل المنتجات:', error);
-            products = data || [];
-            
-            const select = document.getElementById('productSelect');
-            select.innerHTML = '<option value="">-- اختر منتج --</option>';
-            products.forEach(p => {
-                select.innerHTML += `<option value="${p.id}">${p.name}</option>`;
-            });
+            try {
+                if (!supabaseReady || !supabaseClient) {
+                    await initSupabase();
+                    if (!supabaseReady || !supabaseClient) {
+                        return;
+                    }
+                }
+                
+                const { data, error } = await supabaseClient
+                    .from('products')
+                    .select('id, name')
+                    .order('name');
+                
+                if (error) {
+                    console.error('❌ خطأ في تحميل المنتجات:', error);
+                    return;
+                }
+                
+                products = data || [];
+                
+                const select = document.getElementById('productSelect');
+                select.innerHTML = '<option value="">-- اختر منتج --</option>';
+                products.forEach(p => {
+                    select.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+                });
+                
+                console.log('✅ تم تحميل', products.length, 'منتج');
+            } catch (error) {
+                console.error('❌ خطأ في تحميل المنتجات:', error);
+            }
         }
-        
+
         // ============================================
         // تحميل الحقول
         // ============================================
@@ -179,50 +1232,97 @@
             const productId = document.getElementById('productSelect').value;
             currentProductId = productId;
             
+            const container = document.getElementById('fieldsContainer');
+            
             if (!productId) {
-                document.getElementById('fieldsList').innerHTML = '<div class="empty-state"><i class="fas fa-arrow-right"></i> اختر منتجاً لعرض حقوله</div>';
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-arrow-right"></i>
+                        <h3>اختر منتجاً لعرض حقوله</h3>
+                        <p>قم باختيار منتج من القائمة أعلاه</p>
+                    </div>
+                `;
                 return;
             }
             
-            const { data, error } = await supabase
-                .from('product_custom_fields')
-                .select('*')
-                .eq('product_id', productId)
-                .order('display_order', { ascending: true });
-            
-            if (error) return console.error('خطأ في تحميل الحقول:', error);
-            
-            const container = document.getElementById('fieldsList');
-            
-            if (!data || data.length === 0) {
-                container.innerHTML = '<div class="empty-state"><i class="fas fa-pencil-alt"></i> لا توجد حقول مخصصة لهذا المنتج</div>';
-                return;
+            try {
+                if (!supabaseReady || !supabaseClient) {
+                    await initSupabase();
+                    if (!supabaseReady || !supabaseClient) {
+                        return;
+                    }
+                }
+                
+                const { data, error } = await supabaseClient
+                    .from('product_custom_fields')
+                    .select('*')
+                    .eq('product_id', productId)
+                    .order('display_order', { ascending: true });
+                
+                if (error) {
+                    console.error('❌ خطأ في تحميل الحقول:', error);
+                    showToast('❌ حدث خطأ في تحميل الحقول', 'error');
+                    return;
+                }
+                
+                if (!data || data.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-pencil-alt"></i>
+                            <h3>لا توجد حقول مخصصة</h3>
+                            <p>أضف حقل جديد باستخدام النموذج أدناه</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const typeLabels = {
+                    text: '📝 نص قصير',
+                    textarea: '📄 نص طويل',
+                    select: '📋 قائمة منسدلة',
+                    file: '📎 رفع ملف',
+                    color: '🎨 اختيار لون',
+                    date: '📅 تاريخ'
+                };
+                
+                container.innerHTML = data.map((field, index) => `
+                    <div class="field-card">
+                        <div class="field-header">
+                            <span class="field-name">${field.field_name}</span>
+                            <span class="field-type">${typeLabels[field.field_type] || field.field_type}</span>
+                        </div>
+                        <div class="field-details">
+                            <span class="badge ${field.is_required ? 'badge-required' : 'badge-optional'}">
+                                ${field.is_required ? '🔴 مطلوب' : '⚪ اختياري'}
+                            </span>
+                            <span class="badge ${field.is_active ? 'badge-active' : 'badge-inactive'}">
+                                ${field.is_active ? '🟢 مفعل' : '🔴 غير مفعل'}
+                            </span>
+                            <span class="badge badge-order">📌 ترتيب: ${field.display_order || 0}</span>
+                            ${field.help_text ? `<span class="badge" style="background:rgba(139,92,246,0.15);color:#8B5CF6;border:1px solid rgba(139,92,246,0.2);">💡 ${field.help_text}</span>` : ''}
+                        </div>
+                        <div class="field-actions">
+                            <button class="btn-edit" onclick="openEditModal('${field.id}')">
+                                <i class="fas fa-edit"></i> تعديل
+                            </button>
+                            <button class="btn-toggle ${field.is_active ? '' : 'inactive'}" onclick="toggleField('${field.id}', ${field.is_active})">
+                                <i class="fas ${field.is_active ? 'fa-toggle-on' : 'fa-toggle-off'}"></i>
+                                ${field.is_active ? 'إلغاء تفعيل' : 'تفعيل'}
+                            </button>
+                            <button class="btn-delete" onclick="deleteField('${field.id}')">
+                                <i class="fas fa-trash"></i> حذف
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+                
+                console.log('✅ تم تحميل', data.length, 'حقل');
+            } catch (error) {
+                console.error('❌ خطأ في تحميل الحقول:', error);
+                showToast('❌ حدث خطأ في تحميل الحقول', 'error');
             }
-            
-            container.innerHTML = data.map(field => `
-                <div class="field-card">
-                    <div class="field-header">
-                        <span class="field-name">${field.field_name}</span>
-                        <span class="field-type">${field.field_type}</span>
-                    </div>
-                    <div class="field-details">
-                        ${field.is_required ? '🔴 مطلوب' : '⚪ اختياري'} | 
-                        ${field.is_active ? '🟢 مفعل' : '🔴 غير مفعل'} |
-                        ترتيب: ${field.display_order || 0}
-                        ${field.help_text ? `| ${field.help_text}` : ''}
-                    </div>
-                    <div class="field-actions">
-                        <button class="btn-edit" onclick="editField('${field.id}')"><i class="fas fa-edit"></i> تعديل</button>
-                        <button class="btn-toggle ${field.is_active ? '' : 'inactive'}" onclick="toggleField('${field.id}', ${field.is_active})">
-                            <i class="fas ${field.is_active ? 'fa-toggle-on' : 'fa-toggle-off'}"></i> 
-                            ${field.is_active ? 'إلغاء تفعيل' : 'تفعيل'}
-                        </button>
-                        <button class="btn-delete" onclick="deleteField('${field.id}')"><i class="fas fa-trash"></i> حذف</button>
-                    </div>
-                </div>
-            `).join('');
         }
-        
+
         // ============================================
         // إضافة حقل
         // ============================================
@@ -231,7 +1331,7 @@
             
             const productId = document.getElementById('productSelect').value;
             if (!productId) {
-                alert('⚠️ الرجاء اختيار منتج أولاً');
+                showToast('⚠️ الرجاء اختيار منتج أولاً', 'warning');
                 return;
             }
             
@@ -244,98 +1344,347 @@
             const isActive = document.getElementById('isActive').checked;
             const options = document.getElementById('fieldOptions').value.trim();
             
+            // التحقق من التعديل
+            const editId = document.getElementById('editFieldId').value;
+            
             if (!fieldName) {
-                alert('⚠️ الرجاء إدخال اسم الحقل');
+                showToast('⚠️ الرجاء إدخال اسم الحقل', 'warning');
                 return;
             }
             
-            const { data, error } = await supabase
-                .from('product_custom_fields')
-                .insert({
+            const btn = document.getElementById('submitFieldBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> جاري الحفظ...';
+            
+            try {
+                if (!supabaseReady || !supabaseClient) {
+                    await initSupabase();
+                    if (!supabaseReady || !supabaseClient) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-save"></i> <span id="submitBtnText">إضافة الحقل</span>';
+                        showToast('⚠️ Supabase غير متصل', 'error');
+                        return;
+                    }
+                }
+                
+                const data = {
                     product_id: productId,
                     field_name: fieldName,
                     field_type: fieldType,
                     display_order: displayOrder,
-                    help_text: helpText,
-                    placeholder: placeholder,
+                    help_text: helpText || null,
+                    placeholder: placeholder || null,
                     is_required: isRequired,
                     is_active: isActive,
-                    options: options || null
-                })
-                .select();
-            
-            if (error) {
-                console.error('خطأ في إضافة الحقل:', error);
-                alert('❌ حدث خطأ: ' + error.message);
-                return;
+                    options: (fieldType === 'select') ? options : null
+                };
+                
+                let result;
+                if (editId) {
+                    // تحديث
+                    data.updated_at = new Date().toISOString();
+                    result = await supabaseClient
+                        .from('product_custom_fields')
+                        .update(data)
+                        .eq('id', editId);
+                } else {
+                    // إضافة
+                    data.created_at = new Date().toISOString();
+                    result = await supabaseClient
+                        .from('product_custom_fields')
+                        .insert(data);
+                }
+                
+                if (result.error) throw result.error;
+                
+                showToast(editId ? '✅ تم تحديث الحقل بنجاح' : '✅ تم إضافة الحقل بنجاح', 'success');
+                
+                // إعادة تعيين النموذج
+                document.getElementById('addFieldForm').reset();
+                document.getElementById('editFieldId').value = '';
+                document.getElementById('formTitle').textContent = 'إضافة حقل مخصص';
+                document.getElementById('submitBtnText').textContent = 'إضافة الحقل';
+                document.getElementById('optionsGroup').style.display = 'none';
+                document.getElementById('isRequired').checked = true;
+                document.getElementById('isActive').checked = true;
+                
+                loadFields();
+                closeEditModal();
+                
+            } catch (error) {
+                console.error('❌ خطأ في حفظ الحقل:', error);
+                showToast('❌ حدث خطأ: ' + error.message, 'error');
             }
             
-            alert('✅ تم إضافة الحقل بنجاح');
-            document.getElementById('addFieldForm').reset();
-            document.getElementById('optionsGroup').style.display = 'none';
-            loadFields();
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> <span id="submitBtnText">' + (editId ? 'تحديث الحقل' : 'إضافة الحقل') + '</span>';
         }
-        
+
         // ============================================
         // تبديل حالة الحقل
         // ============================================
         async function toggleField(fieldId, currentStatus) {
-            const { error } = await supabase
-                .from('product_custom_fields')
-                .update({ is_active: !currentStatus })
-                .eq('id', fieldId);
-            
-            if (error) {
-                console.error('خطأ في تبديل الحالة:', error);
-                alert('❌ حدث خطأ');
-                return;
+            try {
+                if (!supabaseReady || !supabaseClient) {
+                    await initSupabase();
+                    if (!supabaseReady || !supabaseClient) {
+                        showToast('⚠️ Supabase غير متصل', 'error');
+                        return;
+                    }
+                }
+                
+                const { error } = await supabaseClient
+                    .from('product_custom_fields')
+                    .update({ 
+                        is_active: !currentStatus,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', fieldId);
+                
+                if (error) throw error;
+                
+                showToast(`✅ تم ${!currentStatus ? 'تفعيل' : 'إلغاء تفعيل'} الحقل`, 'success');
+                loadFields();
+                
+            } catch (error) {
+                console.error('❌ خطأ في تبديل الحالة:', error);
+                showToast('❌ حدث خطأ', 'error');
             }
-            
-            loadFields();
         }
-        
+
         // ============================================
         // حذف حقل
         // ============================================
         async function deleteField(fieldId) {
             if (!confirm('⚠️ هل أنت متأكد من حذف هذا الحقل؟')) return;
             
-            const { error } = await supabase
-                .from('product_custom_fields')
-                .delete()
-                .eq('id', fieldId);
-            
-            if (error) {
-                console.error('خطأ في حذف الحقل:', error);
-                alert('❌ حدث خطأ');
+            try {
+                if (!supabaseReady || !supabaseClient) {
+                    await initSupabase();
+                    if (!supabaseReady || !supabaseClient) {
+                        showToast('⚠️ Supabase غير متصل', 'error');
+                        return;
+                    }
+                }
+                
+                const { error } = await supabaseClient
+                    .from('product_custom_fields')
+                    .delete()
+                    .eq('id', fieldId);
+                
+                if (error) throw error;
+                
+                showToast('✅ تم حذف الحقل', 'success');
+                loadFields();
+                
+            } catch (error) {
+                console.error('❌ خطأ في حذف الحقل:', error);
+                showToast('❌ حدث خطأ', 'error');
+            }
+        }
+
+        // ============================================
+        // فتح نافذة التعديل
+        // ============================================
+        function openAddFieldModal() {
+            const productId = document.getElementById('productSelect').value;
+            if (!productId) {
+                showToast('⚠️ الرجاء اختيار منتج أولاً', 'warning');
                 return;
             }
             
-            alert('✅ تم حذف الحقل');
-            loadFields();
+            document.getElementById('editFieldId').value = '';
+            document.getElementById('formTitle').textContent = 'إضافة حقل مخصص';
+            document.getElementById('submitBtnText').textContent = 'إضافة الحقل';
+            document.getElementById('addFieldForm').reset();
+            document.getElementById('isRequired').checked = true;
+            document.getElementById('isActive').checked = true;
+            document.getElementById('optionsGroup').style.display = 'none';
+            
+            // التمرير إلى النموذج
+            document.getElementById('addFieldFormSection').scrollIntoView({ behavior: 'smooth' });
         }
-        
+
         // ============================================
-        // تعديل حقل (توجيه لصفحة التعديل)
+        // فتح نافذة التعديل المنبثقة
         // ============================================
-        function editField(fieldId) {
-            window.location.href = `custom-field-edit.html?id=${fieldId}`;
+        async function openEditModal(fieldId) {
+            try {
+                if (!supabaseReady || !supabaseClient) {
+                    await initSupabase();
+                    if (!supabaseReady || !supabaseClient) {
+                        showToast('⚠️ Supabase غير متصل', 'error');
+                        return;
+                    }
+                }
+                
+                const { data, error } = await supabaseClient
+                    .from('product_custom_fields')
+                    .select('*')
+                    .eq('id', fieldId)
+                    .single();
+                
+                if (error) throw error;
+                
+                document.getElementById('editFieldIdModal').value = data.id;
+                document.getElementById('editFieldName').value = data.field_name || '';
+                document.getElementById('editFieldType').value = data.field_type || 'text';
+                document.getElementById('editDisplayOrder').value = data.display_order || 0;
+                document.getElementById('editFieldOptions').value = data.options || '';
+                document.getElementById('editHelpText').value = data.help_text || '';
+                document.getElementById('editPlaceholder').value = data.placeholder || '';
+                document.getElementById('editIsRequired').checked = data.is_required || false;
+                document.getElementById('editIsActive').checked = data.is_active !== false;
+                
+                if (data.field_type === 'select') {
+                    document.getElementById('editOptionsGroup').style.display = 'block';
+                } else {
+                    document.getElementById('editOptionsGroup').style.display = 'none';
+                }
+                
+                document.getElementById('editModalTitle').textContent = '✏️ تعديل الحقل: ' + data.field_name;
+                document.getElementById('editFieldModal').classList.add('active');
+                
+            } catch (error) {
+                console.error('❌ خطأ في تحميل الحقل:', error);
+                showToast('❌ حدث خطأ في تحميل الحقل', 'error');
+            }
         }
-        
+
+        // ============================================
+        // إغلاق نافذة التعديل
+        // ============================================
+        function closeEditModal() {
+            document.getElementById('editFieldModal').classList.remove('active');
+        }
+
+        // ============================================
+        // تحديث حقل من النافذة المنبثقة
+        // ============================================
+        async function updateField(e) {
+            e.preventDefault();
+            
+            const fieldId = document.getElementById('editFieldIdModal').value;
+            const fieldName = document.getElementById('editFieldName').value.trim();
+            const fieldType = document.getElementById('editFieldType').value;
+            const displayOrder = parseInt(document.getElementById('editDisplayOrder').value) || 0;
+            const helpText = document.getElementById('editHelpText').value.trim();
+            const placeholder = document.getElementById('editPlaceholder').value.trim();
+            const isRequired = document.getElementById('editIsRequired').checked;
+            const isActive = document.getElementById('editIsActive').checked;
+            const options = document.getElementById('editFieldOptions').value.trim();
+            
+            if (!fieldName) {
+                showToast('⚠️ الرجاء إدخال اسم الحقل', 'warning');
+                return;
+            }
+            
+            const btn = document.getElementById('editSubmitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> جاري التحديث...';
+            
+            try {
+                if (!supabaseReady || !supabaseClient) {
+                    await initSupabase();
+                    if (!supabaseReady || !supabaseClient) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-save"></i> تحديث الحقل';
+                        showToast('⚠️ Supabase غير متصل', 'error');
+                        return;
+                    }
+                }
+                
+                const data = {
+                    field_name: fieldName,
+                    field_type: fieldType,
+                    display_order: displayOrder,
+                    help_text: helpText || null,
+                    placeholder: placeholder || null,
+                    is_required: isRequired,
+                    is_active: isActive,
+                    options: (fieldType === 'select') ? options : null,
+                    updated_at: new Date().toISOString()
+                };
+                
+                const { error } = await supabaseClient
+                    .from('product_custom_fields')
+                    .update(data)
+                    .eq('id', fieldId);
+                
+                if (error) throw error;
+                
+                showToast('✅ تم تحديث الحقل بنجاح', 'success');
+                closeEditModal();
+                loadFields();
+                
+            } catch (error) {
+                console.error('❌ خطأ في تحديث الحقل:', error);
+                showToast('❌ حدث خطأ: ' + error.message, 'error');
+            }
+            
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> تحديث الحقل';
+        }
+
         // ============================================
         // إظهار/إخفاء خيارات القائمة
         // ============================================
-        document.getElementById('fieldType').addEventListener('change', function() {
+        function toggleOptions() {
+            const type = document.getElementById('fieldType').value;
             const optionsGroup = document.getElementById('optionsGroup');
-            optionsGroup.style.display = this.value === 'select' ? 'block' : 'none';
-        });
+            optionsGroup.style.display = (type === 'select') ? 'block' : 'none';
+        }
         
+        function toggleEditOptions() {
+            const type = document.getElementById('editFieldType').value;
+            const optionsGroup = document.getElementById('editOptionsGroup');
+            optionsGroup.style.display = (type === 'select') ? 'block' : 'none';
+        }
+
         // ============================================
         // تهيئة الصفحة
         // ============================================
-        document.addEventListener('DOMContentLoaded', function() {
-            loadProducts();
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 Custom Fields Admin loaded');
+            console.log('🔐 Keys loaded from keys.js');
+            
+            await loadProducts();
+            
+            // التحقق من وجود منتج محدد في الرابط
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = urlParams.get('productId');
+            if (productId) {
+                const select = document.getElementById('productSelect');
+                select.value = productId;
+                loadFields();
+            }
+            
+            // إغلاق النافذة المنبثقة بالنقر خارجها
+            document.getElementById('editFieldModal').addEventListener('click', function(e) {
+                if (e.target === this) closeEditModal();
+            });
+            
+            // إغلاق بالنقر على ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') closeEditModal();
+            });
         });
+        
+        // ============================================
+        // جعل الدوال عامة
+        // ============================================
+        window.loadFields = loadFields;
+        window.addField = addField;
+        window.toggleField = toggleField;
+        window.deleteField = deleteField;
+        window.openAddFieldModal = openAddFieldModal;
+        window.openEditModal = openEditModal;
+        window.closeEditModal = closeEditModal;
+        window.updateField = updateField;
+        window.toggleOptions = toggleOptions;
+        window.toggleEditOptions = toggleEditOptions;
+        
+        console.log('✅ Custom Fields Admin ready');
     </script>
 </body>
 </html>

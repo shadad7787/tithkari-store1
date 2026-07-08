@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
     <title>لوحة التحكم - Tithkari Admin</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -22,6 +22,1448 @@
     
     <link rel="stylesheet" href="../style.css" />
     <link rel="stylesheet" href="../css/admin.css" />
+    
+    <style>
+        /* ===== تحسينات التوافق مع الجوال ===== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        html {
+            font-size: 16px;
+            -webkit-text-size-adjust: 100%;
+        }
+        
+        body {
+            font-family: 'Cairo', 'Segoe UI', sans-serif;
+            background: #0F0F1A;
+            color: #F5F0EB;
+            direction: rtl;
+            min-height: 100vh;
+            overflow-x: hidden;
+            width: 100%;
+        }
+        
+        /* ===== الحاوية الرئيسية ===== */
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+            width: 100%;
+            max-width: 100vw;
+            overflow: hidden;
+        }
+        
+        /* ===== الشريط الجانبي ===== */
+        .admin-sidebar {
+            width: 240px;
+            min-width: 240px;
+            background: #1A1A2E;
+            padding: 20px 0;
+            border-left: 1px solid rgba(255, 215, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+        
+        .admin-sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .admin-sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .admin-sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 215, 0, 0.2);
+            border-radius: 10px;
+        }
+        
+        .admin-logo {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.05);
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .admin-logo i {
+            font-size: 32px;
+            color: #FFD700;
+        }
+        .admin-logo span {
+            display: block;
+            font-size: 20px;
+            font-weight: 800;
+            color: #FFD700;
+            margin-top: 4px;
+        }
+        .admin-logo small {
+            display: block;
+            color: #8A8A9B;
+            font-size: 12px;
+        }
+        
+        .admin-nav {
+            flex: 1;
+            padding: 10px 0;
+            overflow-y: auto;
+        }
+        .admin-nav a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            color: #8A8A9B;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-radius: 8px;
+            margin: 2px 8px;
+            font-size: 14px;
+            cursor: pointer;
+            border-right: 3px solid transparent;
+            min-height: 44px;
+        }
+        .admin-nav a:hover {
+            background: rgba(255, 215, 0, 0.08);
+            color: #F5F0EB;
+            transform: translateX(-3px);
+        }
+        .admin-nav a.active {
+            background: rgba(255, 215, 0, 0.12);
+            color: #FFD700;
+            border-right-color: #FFD700;
+        }
+        .admin-nav a i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .admin-nav a span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .admin-bottom {
+            padding: 15px 20px;
+            border-top: 1px solid rgba(255, 215, 0, 0.05);
+            flex-shrink: 0;
+        }
+        .admin-bottom .admin-back {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #8A8A9B;
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+        .admin-bottom .admin-back:hover {
+            background: rgba(255, 215, 0, 0.05);
+            color: #FFD700;
+        }
+        .admin-bottom .admin-back i {
+            width: 18px;
+            text-align: center;
+        }
+        .admin-bottom .admin-back.admin-design {
+            background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+            color: white;
+            justify-content: center;
+            border-radius: 8px;
+            padding: 10px;
+            font-weight: 600;
+        }
+        .admin-bottom .admin-back.admin-design:hover {
+            opacity: 0.85;
+            transform: scale(1.02);
+        }
+        
+        .admin-logout {
+            width: 100%;
+            padding: 10px;
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 6px;
+        }
+        .admin-logout:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+        
+        /* ===== المحتوى الرئيسي ===== */
+        .admin-main {
+            flex: 1;
+            padding: 20px 30px;
+            overflow-y: auto;
+            min-height: 100vh;
+            width: 100%;
+            max-width: calc(100vw - 240px);
+        }
+        
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.1);
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .admin-header h1 {
+            color: #FFD700;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .admin-user {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #8A8A9B;
+            font-size: 14px;
+        }
+        .admin-user i {
+            font-size: 28px;
+            color: #FFD700;
+        }
+        
+        /* ===== التبويبات ===== */
+        .admin-tab {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .admin-tab.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* ===== الإحصائيات ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background: #1A1A2E;
+            border-radius: 12px;
+            padding: 18px 20px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s ease;
+            cursor: default;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.1);
+            border-color: rgba(255, 215, 0, 0.15);
+        }
+        .stat-card i {
+            font-size: 32px;
+            color: #FFD700;
+            opacity: 0.7;
+            width: 45px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .stat-card div {
+            flex: 1;
+            min-width: 0;
+        }
+        .stat-card h3 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #FFD700;
+            line-height: 1.2;
+        }
+        .stat-card p {
+            color: #8A8A9B;
+            font-size: 13px;
+            margin: 0;
+        }
+        
+        /* ===== الأزرار ===== */
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #FFD700, #FFED4A);
+            color: #0F0F1A;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            white-space: nowrap;
+            min-height: 44px;
+            justify-content: center;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
+        }
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #FFFFFF;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            min-height: 44px;
+            justify-content: center;
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .btn-danger {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s ease;
+            font-size: 13px;
+            min-height: 36px;
+        }
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+        .btn-success {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s ease;
+            font-size: 13px;
+            min-height: 36px;
+        }
+        .btn-success:hover {
+            background: rgba(16, 185, 129, 0.3);
+        }
+        
+        /* ===== الجداول ===== */
+        .admin-table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -4px;
+            padding: 0 4px;
+            width: 100%;
+        }
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            min-width: 600px;
+        }
+        .admin-table th {
+            background: rgba(255, 215, 0, 0.05);
+            color: #FFD700;
+            padding: 12px 15px;
+            text-align: right;
+            font-weight: 700;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.1);
+            white-space: nowrap;
+        }
+        .admin-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            color: #D0D0D0;
+            vertical-align: middle;
+            word-break: break-word;
+        }
+        .admin-table tr:hover td {
+            background: rgba(255, 215, 0, 0.02);
+        }
+        .admin-table .product-thumb {
+            width: 45px;
+            height: 45px;
+            object-fit: cover;
+            border-radius: 6px;
+            background: #0F0F1A;
+            display: block;
+        }
+        .admin-table .status-badge {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+            white-space: nowrap;
+        }
+        .status-active { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .status-inactive { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .status-pending { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.2); }
+        .status-delivered { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .status-cancelled { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+        
+        .btn-edit, .btn-delete, .btn-view {
+            padding: 4px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s ease;
+            font-family: 'Cairo', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            min-height: 32px;
+        }
+        .btn-edit { background: #3b82f6; color: white; }
+        .btn-edit:hover { opacity: 0.85; transform: scale(1.05); }
+        .btn-delete { background: #ef4444; color: white; }
+        .btn-delete:hover { opacity: 0.85; transform: scale(1.05); }
+        .btn-view { background: #8B5CF6; color: white; }
+        .btn-view:hover { opacity: 0.85; transform: scale(1.05); }
+        
+        /* ===== نماذج ===== */
+        .admin-form {
+            max-width: 700px;
+            width: 100%;
+        }
+        .admin-form .form-group {
+            margin-bottom: 18px;
+        }
+        .admin-form .form-group label {
+            display: block;
+            color: #8A8A9B;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .admin-form .form-group input,
+        .admin-form .form-group textarea,
+        .admin-form .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            background: #0F0F1A;
+            color: #FFFFFF;
+            border: 1px solid rgba(255, 215, 0, 0.08);
+            font-family: 'Cairo', sans-serif;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+        .admin-form .form-group input:focus,
+        .admin-form .form-group textarea:focus,
+        .admin-form .form-group select:focus {
+            border-color: #FFD700;
+            outline: none;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.05);
+        }
+        .admin-form .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .admin-form .form-group select option {
+            background: #1A1A2E;
+            color: #FFFFFF;
+        }
+        .admin-form .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        /* ===== التحليلات ===== */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .analytics-card {
+            background: #1A1A2E;
+            border-radius: 12px;
+            padding: 18px 20px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+            text-align: center;
+        }
+        .analytics-card h4 {
+            color: #8A8A9B;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        .analytics-card p {
+            color: #FFD700;
+            font-size: 22px;
+            font-weight: 700;
+        }
+        
+        .chart-container {
+            background: #1A1A2E;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+            margin-top: 15px;
+        }
+        .chart-container h4 {
+            color: #FFD700;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        .chart-container canvas {
+            max-width: 100%;
+            height: auto !important;
+        }
+        
+        /* ===== محرر الأكواد ===== */
+        .code-editor-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .code-editor-sidebar {
+            width: 250px;
+            min-width: 200px;
+            flex: 1;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .code-editor-sidebar h3 {
+            color: #FFD700;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .code-editor-main {
+            flex: 3;
+            min-width: 300px;
+        }
+        .file-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .file-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .file-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        .file-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 215, 0, 0.3);
+            border-radius: 10px;
+        }
+        .file-item {
+            padding: 8px 12px;
+            margin: 4px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #8A8A9B;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .file-item:hover {
+            background: rgba(255, 215, 0, 0.08);
+            color: #F5F0EB;
+        }
+        .file-item.active {
+            background: rgba(255, 215, 0, 0.12);
+            color: #FFD700;
+            border-right: 2px solid #FFD700;
+        }
+        .code-area {
+            margin-bottom: 15px;
+        }
+        .code-area label {
+            display: block;
+            color: #8A8A9B;
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        .code-area textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #E0E0E0;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            resize: vertical;
+            min-height: 100px;
+        }
+        .code-area textarea:focus {
+            border-color: #FFD700;
+            outline: none;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.05);
+        }
+        .code-area textarea[readonly] {
+            color: #8A8A9B;
+            cursor: default;
+        }
+        .code-editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .code-editor-header #currentFileDisplay {
+            color: #FFD700;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .code-editor-header #editStatus {
+            font-size: 12px;
+            color: #8A8A9B;
+        }
+        .edit-locations-hint {
+            margin-top: 15px;
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+        .edit-locations-hint h4 {
+            color: #FFD700;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+        .edit-locations-hint .location-tag {
+            display: inline-block;
+            padding: 2px 10px;
+            background: rgba(255, 215, 0, 0.08);
+            color: #FFD700;
+            border-radius: 12px;
+            font-size: 11px;
+            margin: 2px 4px 2px 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .edit-locations-hint .location-tag:hover {
+            background: rgba(255, 215, 0, 0.15);
+        }
+        
+        /* ===== النوافذ المنبثقة ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-content {
+            background: #1A1A2E;
+            border-radius: 16px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 30px;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            animation: modalFade 0.3s ease;
+        }
+        @keyframes modalFade {
+            from { opacity: 0; transform: scale(0.95) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .modal-close {
+            float: left;
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            color: #FFFFFF;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-close:hover {
+            background: rgba(239, 68, 68, 0.3);
+            transform: rotate(90deg);
+        }
+        .modal-content h2 {
+            color: #FFD700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 22px;
+        }
+        .modal-body {
+            max-height: calc(90vh - 120px);
+            overflow-y: auto;
+        }
+        
+        /* ===== الإعدادات المتقدمة ===== */
+        .settings-section {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+        }
+        .settings-section h3 {
+            color: #FFD700;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .settings-section .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .admin-header-tab {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .admin-header-tab h2 {
+            color: #FFD700;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .admin-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        /* ===== البحث ===== */
+        .search-input {
+            padding: 10px 16px;
+            border-radius: 8px;
+            background: #0F0F1A;
+            color: #FFFFFF;
+            border: 1px solid rgba(255, 215, 0, 0.08);
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            width: 100%;
+            max-width: 280px;
+            min-height: 44px;
+        }
+        .search-input:focus {
+            border-color: #FFD700;
+            outline: none;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.05);
+        }
+        .search-input::placeholder {
+            color: #8A8A9B;
+        }
+        
+        /* ===== رفع الملفات ===== */
+        input[type="file"] {
+            color: #8A8A9B;
+            font-family: 'Cairo', sans-serif;
+            padding: 8px;
+            background: #0F0F1A;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            width: 100%;
+        }
+        input[type="file"]::-webkit-file-upload-button {
+            background: rgba(255, 215, 0, 0.12);
+            color: #FFD700;
+            border: 1px solid rgba(255, 215, 0, 0.15);
+            border-radius: 4px;
+            padding: 6px 14px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.2s ease;
+        }
+        input[type="file"]::-webkit-file-upload-button:hover {
+            background: rgba(255, 215, 0, 0.2);
+        }
+        
+        #imagePreview, #templatePreview, #editImagePreview, #editTemplatePreview {
+            margin-top: 8px;
+            min-height: 60px;
+        }
+        #imagePreview img, #templatePreview img,
+        #editImagePreview img, #editTemplatePreview img {
+            max-width: 150px;
+            max-height: 150px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            object-fit: contain;
+        }
+        
+        /* ===== ستايلات عامة ===== */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #8A8A9B;
+            grid-column: 1 / -1;
+        }
+        .empty-state i {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 15px;
+            opacity: 0.3;
+        }
+        .empty-state h3 {
+            color: #FFFFFF;
+            margin-bottom: 5px;
+        }
+        
+        .status-toggle {
+            padding: 3px 10px;
+            border: none;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.2s ease;
+        }
+        .status-toggle.active {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+        .status-toggle.inactive {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+        .status-toggle:hover {
+            opacity: 0.8;
+        }
+        
+        .form-group .help-text {
+            font-size: 12px;
+            color: #8A8A9B;
+            margin-top: 3px;
+        }
+        .form-group .help-text code {
+            color: #FFD700;
+            background: rgba(255, 215, 0, 0.05);
+            padding: 1px 6px;
+            border-radius: 4px;
+        }
+        
+        /* ===== إشعار ===== */
+        .toast-notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1A1A2E;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 8px;
+            padding: 10px 20px;
+            color: #fff;
+            font-size: 13px;
+            z-index: 99999;
+            animation: slideUp 0.4s ease;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            font-family: 'Cairo', sans-serif;
+            max-width: 90%;
+            text-align: center;
+        }
+        .toast-notification.success { border-color: #16a34a; }
+        .toast-notification.error { border-color: #ef4444; }
+        .toast-notification.warning { border-color: #fbbf24; }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateX(-50%) translateY(30px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(15, 15, 26, 0.1);
+            border-top-color: #0F0F1A;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* ===== تنسيقات الأزرار في الجداول ===== */
+        .admin-table td select {
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: #0F0F1A;
+            color: #F5F0EB;
+            border: 1px solid rgba(255, 215, 0, 0.15);
+            font-family: 'Cairo', sans-serif;
+            font-size: 12px;
+        }
+        .admin-table td select:focus {
+            border-color: #FFD700;
+            outline: none;
+        }
+        
+        /* ============================================
+           📱 تحسينات التوافق مع الجوال
+           ============================================ */
+        
+        /* الأجهزة الصغيرة (الهواتف) */
+        @media (max-width: 768px) {
+            .admin-container {
+                flex-direction: column;
+            }
+            
+            .admin-sidebar {
+                width: 100%;
+                min-width: unset;
+                height: auto;
+                max-height: 60vh;
+                position: relative;
+                border-left: none;
+                border-bottom: 1px solid rgba(255, 215, 0, 0.05);
+                padding: 10px 0;
+                overflow-y: auto;
+            }
+            
+            .admin-sidebar .admin-logo {
+                padding: 0 15px 15px;
+            }
+            
+            .admin-sidebar .admin-logo i {
+                font-size: 28px;
+            }
+            .admin-sidebar .admin-logo span {
+                font-size: 18px;
+            }
+            
+            .admin-nav {
+                display: flex;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                overflow-y: hidden;
+                padding: 5px 10px;
+                gap: 4px;
+                -webkit-overflow-scrolling: touch;
+                scroll-snap-type: x mandatory;
+            }
+            
+            .admin-nav a {
+                flex: 0 0 auto;
+                padding: 8px 14px;
+                margin: 0 2px;
+                border-radius: 8px;
+                border-right: none;
+                border-bottom: 2px solid transparent;
+                font-size: 12px;
+                min-height: 40px;
+                white-space: nowrap;
+                scroll-snap-align: start;
+            }
+            
+            .admin-nav a.active {
+                border-right: none;
+                border-bottom-color: #FFD700;
+            }
+            
+            .admin-nav a span {
+                font-size: 11px;
+            }
+            
+            .admin-nav a i {
+                font-size: 14px;
+                width: 18px;
+            }
+            
+            .admin-bottom {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                padding: 10px 15px;
+                border-top: 1px solid rgba(255, 215, 0, 0.05);
+            }
+            
+            .admin-bottom .admin-back {
+                font-size: 12px;
+                padding: 6px 10px;
+                margin: 0;
+            }
+            
+            .admin-bottom .admin-back.admin-design {
+                padding: 8px 14px;
+                font-size: 12px;
+            }
+            
+            .admin-logout {
+                padding: 8px;
+                font-size: 12px;
+                min-height: 40px;
+            }
+            
+            .admin-main {
+                padding: 15px;
+                max-width: 100%;
+            }
+            
+            .admin-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+                padding-bottom: 10px;
+                margin-bottom: 15px;
+            }
+            
+            .admin-header h1 {
+                font-size: 20px;
+                justify-content: center;
+            }
+            
+            .admin-user {
+                justify-content: center;
+                font-size: 13px;
+            }
+            
+            .admin-user i {
+                font-size: 22px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            
+            .stat-card {
+                padding: 12px 14px;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                gap: 6px;
+            }
+            
+            .stat-card i {
+                font-size: 24px;
+                width: auto;
+            }
+            
+            .stat-card h3 {
+                font-size: 20px;
+            }
+            
+            .stat-card p {
+                font-size: 11px;
+            }
+            
+            .admin-table-wrapper {
+                margin: 0 -8px;
+                padding: 0 8px;
+            }
+            
+            .admin-table {
+                font-size: 12px;
+                min-width: 500px;
+            }
+            
+            .admin-table th,
+            .admin-table td {
+                padding: 8px 10px;
+            }
+            
+            .admin-table .product-thumb {
+                width: 32px;
+                height: 32px;
+            }
+            
+            .admin-table .status-badge {
+                font-size: 10px;
+                padding: 2px 8px;
+            }
+            
+            .admin-form {
+                max-width: 100%;
+            }
+            
+            .admin-form .form-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .admin-form .form-group input,
+            .admin-form .form-group textarea,
+            .admin-form .form-group select {
+                font-size: 14px;
+                padding: 10px 14px;
+            }
+            
+            .admin-header-tab {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            
+            .admin-header-tab h2 {
+                font-size: 18px;
+            }
+            
+            .admin-header-tab .btn-primary,
+            .admin-header-tab .btn-secondary {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .admin-actions {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .admin-actions .btn-primary,
+            .admin-actions .btn-secondary {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .analytics-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            
+            .analytics-card {
+                padding: 12px 14px;
+            }
+            
+            .analytics-card p {
+                font-size: 18px;
+            }
+            
+            .chart-container {
+                padding: 15px;
+                overflow-x: auto;
+            }
+            
+            .modal-content {
+                padding: 20px;
+                max-width: 100%;
+                margin: 10px;
+                max-height: 95vh;
+            }
+            
+            .modal-content h2 {
+                font-size: 18px;
+            }
+            
+            .modal-close {
+                width: 30px;
+                height: 30px;
+                font-size: 14px;
+            }
+            
+            .code-editor-container {
+                flex-direction: column;
+            }
+            
+            .code-editor-sidebar {
+                width: 100%;
+                min-width: unset;
+            }
+            
+            .code-editor-main {
+                width: 100%;
+                min-width: unset;
+            }
+            
+            .code-editor-header {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+            
+            .code-editor-header #currentFileDisplay {
+                font-size: 13px;
+            }
+            
+            .file-list {
+                max-height: 150px;
+                display: flex;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                gap: 4px;
+                padding: 4px 0;
+            }
+            
+            .file-item {
+                flex: 0 0 auto;
+                white-space: nowrap;
+                padding: 6px 12px;
+                font-size: 12px;
+                border-radius: 6px;
+            }
+            
+            .search-input {
+                max-width: 100%;
+                font-size: 14px;
+            }
+            
+            .settings-section .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .settings-section {
+                padding: 15px;
+            }
+            
+            #imagePreview img, #templatePreview img,
+            #editImagePreview img, #editTemplatePreview img {
+                max-width: 100px;
+                max-height: 100px;
+            }
+            
+            .btn-primary, .btn-secondary {
+                font-size: 13px;
+                padding: 8px 16px;
+                min-height: 40px;
+            }
+            
+            .btn-danger, .btn-success {
+                font-size: 12px;
+                padding: 4px 10px;
+                min-height: 32px;
+            }
+            
+            .btn-edit, .btn-delete, .btn-view {
+                font-size: 11px;
+                padding: 3px 8px;
+                min-height: 28px;
+            }
+        }
+        
+        /* الأجهزة الصغيرة جداً (هواتف صغيرة) */
+        @media (max-width: 480px) {
+            .admin-main {
+                padding: 10px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            
+            .stat-card {
+                padding: 10px 8px;
+            }
+            
+            .stat-card i {
+                font-size: 20px;
+            }
+            
+            .stat-card h3 {
+                font-size: 18px;
+            }
+            
+            .stat-card p {
+                font-size: 10px;
+            }
+            
+            .admin-header h1 {
+                font-size: 18px;
+            }
+            
+            .admin-table {
+                font-size: 11px;
+                min-width: 400px;
+            }
+            
+            .admin-table th,
+            .admin-table td {
+                padding: 6px 8px;
+            }
+            
+            .admin-table .product-thumb {
+                width: 28px;
+                height: 28px;
+            }
+            
+            .admin-nav a {
+                padding: 6px 10px;
+                font-size: 11px;
+                min-height: 34px;
+            }
+            
+            .admin-nav a i {
+                font-size: 12px;
+                width: 16px;
+            }
+            
+            .admin-nav a span {
+                font-size: 10px;
+            }
+            
+            .modal-content {
+                padding: 15px;
+                margin: 5px;
+            }
+            
+            .modal-content h2 {
+                font-size: 16px;
+            }
+            
+            .analytics-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            
+            .analytics-card p {
+                font-size: 16px;
+            }
+            
+            .admin-form .form-group input,
+            .admin-form .form-group textarea,
+            .admin-form .form-group select {
+                font-size: 13px;
+                padding: 8px 12px;
+            }
+            
+            .code-area textarea {
+                font-size: 12px;
+                min-height: 80px;
+                padding: 8px 10px;
+            }
+        }
+        
+        /* تحسينات اللمس للجوال */
+        @media (hover: none) and (pointer: coarse) {
+            .admin-nav a,
+            .btn-primary,
+            .btn-secondary,
+            .btn-danger,
+            .btn-success,
+            .btn-edit,
+            .btn-delete,
+            .btn-view,
+            .admin-logout,
+            .admin-bottom .admin-back,
+            .file-item,
+            .modal-close,
+            .status-toggle {
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
+            }
+            
+            .admin-nav a:active {
+                background: rgba(255, 215, 0, 0.15);
+            }
+            
+            .btn-primary:active,
+            .btn-secondary:active {
+                transform: scale(0.97);
+            }
+            
+            .stat-card {
+                cursor: default;
+            }
+        }
+        
+        /* تحسينات التمرير للجوال */
+        .admin-table-wrapper {
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .admin-nav::-webkit-scrollbar {
+            height: 3px;
+        }
+        .admin-nav::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .admin-nav::-webkit-scrollbar-thumb {
+            background: rgba(255, 215, 0, 0.2);
+            border-radius: 10px;
+        }
+        
+        /* تحسينات النوافذ المنبثقة للجوال */
+        .modal-overlay {
+            padding: 10px;
+        }
+        .modal-content {
+            border-radius: 12px;
+        }
+        
+        /* تحسينات النماذج للجوال */
+        .admin-form .form-group {
+            margin-bottom: 12px;
+        }
+        
+        /* تحسينات الجداول للجوال */
+        .admin-table td:last-child {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            align-items: center;
+        }
+        
+        @media (max-width: 768px) {
+            .admin-table td:last-child {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="admin-container">
@@ -85,49 +1527,41 @@
                     <i class="fas fa-cog" style="color: #FFD700;"></i>
                     <span style="color: #FFD700;">إعدادات متقدمة</span>
                 </a>
-                <!-- إضافة قسم إدارة التذييل -->
                 <a href="#" onclick="switchTab('footer'); return false;" style="background: rgba(16, 185, 129, 0.1); border-right: 2px solid #10b981;">
                     <i class="fas fa-shoe-prints" style="color: #10b981;"></i>
                     <span style="color: #10b981;">التذييل</span>
                 </a>
-                <!-- إضافة قسم إدارة التصنيفات -->
                 <a href="#" onclick="switchTab('categories'); return false;" style="background: rgba(255, 215, 0, 0.08); border-right: 2px solid #FFD700;">
                     <i class="fas fa-tags" style="color: #FFD700;"></i>
                     <span style="color: #FFD700;">التصنيفات</span>
                 </a>
-                <!-- إضافة قسم إدارة الكوبونات -->
                 <a href="#" onclick="switchTab('coupons'); return false;" style="background: rgba(236, 72, 153, 0.1); border-right: 2px solid #ec4899;">
                     <i class="fas fa-ticket" style="color: #ec4899;"></i>
                     <span style="color: #ec4899;">الكوبونات</span>
                 </a>
-                <!-- إضافة قسم إدارة التقييمات -->
                 <a href="#" onclick="switchTab('reviews'); return false;" style="background: rgba(251, 191, 36, 0.1); border-right: 2px solid #fbbf24;">
                     <i class="fas fa-star" style="color: #fbbf24;"></i>
                     <span style="color: #fbbf24;">التقييمات</span>
                 </a>
-                <!-- إضافة قسم إدارة الدفع -->
                 <a href="#" onclick="switchTab('payment-settings'); return false;" style="background: rgba(139, 92, 246, 0.1); border-right: 2px solid #8B5CF6;">
                     <i class="fas fa-credit-card" style="color: #8B5CF6;"></i>
                     <span style="color: #8B5CF6;">إعدادات الدفع</span>
                 </a>
-                <!-- إضافة قسم إدارة البريد -->
                 <a href="#" onclick="switchTab('email-settings'); return false;" style="background: rgba(59, 130, 246, 0.1); border-right: 2px solid #3b82f6;">
                     <i class="fas fa-envelope" style="color: #3b82f6;"></i>
                     <span style="color: #3b82f6;">إعدادات البريد</span>
                 </a>
-                <!-- ===== ✅ إضافة قسم إدارة الدفع والشحن ===== -->
                 <a href="#" onclick="switchTab('payment-shipping'); return false;" style="background: rgba(16, 185, 129, 0.1); border-right: 2px solid #10b981;">
                     <i class="fas fa-credit-card" style="color: #10b981;"></i>
                     <span style="color: #10b981;">إدارة الدفع والشحن</span>
                 </a>
-                <!-- ===== ✅ إضافة قسم إدارة الأدوات ===== -->
                 <a href="#" onclick="switchTab('tools'); return false;" style="background: rgba(139, 92, 246, 0.1); border-right: 2px solid #8B5CF6;">
                     <i class="fas fa-plug" style="color: #8B5CF6;"></i>
                     <span style="color: #8B5CF6;">إدارة الأدوات</span>
                 </a>
             </nav>
             <div class="admin-bottom">
-                <a href="../design-studio.html" class="admin-back" target="_blank" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: white;">
+                <a href="../design-studio.html" class="admin-back admin-design" target="_blank">
                     <i class="fas fa-paint-brush"></i> مصمم الدروع
                 </a>
                 <a href="../index.html" class="admin-back" target="_blank">
@@ -441,7 +1875,7 @@
                     <div class="admin-header-tab">
                         <h2>👥 إدارة العملاء</h2>
                         <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                            <input type="text" id="customerSearch" placeholder="🔍 بحث عن عميل..." style="padding:8px 12px;border-radius:6px;background:#0F0F1A;color:#F5F0EB;border:1px solid rgba(255,215,0,0.15);font-family:'Cairo',sans-serif;width:200px;" oninput="filterCustomers()" />
+                            <input type="text" id="customerSearch" class="search-input" placeholder="🔍 بحث عن عميل..." oninput="filterCustomers()" />
                             <button class="btn-primary" onclick="exportCustomersCSV()" style="background:#10b981;color:white;">
                                 <i class="fas fa-file-export"></i> تصدير CSV
                             </button>
@@ -498,15 +1932,17 @@
                 <div id="code-editor-tab" class="admin-tab">
                     <div class="admin-header-tab">
                         <h2>💻 محرر الأكواد - حقن وتعديل الكود</h2>
-                        <button class="btn-primary" onclick="saveCodeChanges()" style="background: #10b981; color: white;">
-                            <i class="fas fa-save"></i> حفظ التغييرات
-                        </button>
-                        <button class="btn-secondary" onclick="previewChanges()" style="background: #3b82f6; color: white; border-color: #3b82f6;">
-                            <i class="fas fa-eye"></i> معاينة
-                        </button>
-                        <button class="btn-danger" onclick="resetToOriginal()" style="background: #ef4444; color: white; border-color: #ef4444;">
-                            <i class="fas fa-undo"></i> استعادة
-                        </button>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                            <button class="btn-primary" onclick="saveCodeChanges()" style="background: #10b981; color: white;">
+                                <i class="fas fa-save"></i> حفظ التغييرات
+                            </button>
+                            <button class="btn-secondary" onclick="previewChanges()" style="background: #3b82f6; color: white; border-color: #3b82f6;">
+                                <i class="fas fa-eye"></i> معاينة
+                            </button>
+                            <button class="btn-danger" onclick="resetToOriginal()" style="background: #ef4444; color: white; border-color: #ef4444;">
+                                <i class="fas fa-undo"></i> استعادة
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="code-editor-container">
@@ -532,7 +1968,7 @@
                                 <div class="code-areas">
                                     <div class="code-area">
                                         <label>🔍 موقع التعديل (المعرف)</label>
-                                        <input type="text" id="editLocation" placeholder="مثال: renderProducts" />
+                                        <input type="text" id="editLocation" placeholder="مثال: renderProducts" style="width:100%;padding:10px 14px;border-radius:8px;background:#0F0F1A;color:#FFFFFF;border:1px solid rgba(255,215,0,0.08);font-family:'Cairo',sans-serif;font-size:14px;" />
                                         <small style="color: var(--gray);">أدخل اسم الدالة أو المعرف المراد التعديل عليه</small>
                                     </div>
                                     
@@ -603,12 +2039,14 @@
                 <div id="footer-tab" class="admin-tab">
                     <div class="admin-header-tab">
                         <h2>🦶 إدارة التذييل</h2>
-                        <button class="btn-primary" onclick="openFooterItemForm()" style="background: #10b981; color: white;">
-                            <i class="fas fa-plus"></i> إضافة عنصر
-                        </button>
-                        <button class="btn-primary" onclick="loadFooterItems()" style="background: #3b82f6; color: white;">
-                            <i class="fas fa-sync"></i> تحديث
-                        </button>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                            <button class="btn-primary" onclick="openFooterItemForm()" style="background: #10b981; color: white;">
+                                <i class="fas fa-plus"></i> إضافة عنصر
+                            </button>
+                            <button class="btn-primary" onclick="loadFooterItems()" style="background: #3b82f6; color: white;">
+                                <i class="fas fa-sync"></i> تحديث
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="admin-table-wrapper">
@@ -634,12 +2072,14 @@
                 <div id="categories-tab" class="admin-tab">
                     <div class="admin-header-tab">
                         <h2>🏷️ إدارة التصنيفات</h2>
-                        <button class="btn-primary" onclick="openCategoryForm()" style="background: #FFD700; color: #0F0F1A;">
-                            <i class="fas fa-plus"></i> إضافة تصنيف
-                        </button>
-                        <button class="btn-primary" onclick="loadCategories()" style="background: #3b82f6; color: white;">
-                            <i class="fas fa-sync"></i> تحديث
-                        </button>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                            <button class="btn-primary" onclick="openCategoryForm()" style="background: #FFD700; color: #0F0F1A;">
+                                <i class="fas fa-plus"></i> إضافة تصنيف
+                            </button>
+                            <button class="btn-primary" onclick="loadCategories()" style="background: #3b82f6; color: white;">
+                                <i class="fas fa-sync"></i> تحديث
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="admin-table-wrapper">
@@ -666,12 +2106,14 @@
                 <div id="coupons-tab" class="admin-tab">
                     <div class="admin-header-tab">
                         <h2>🎫 إدارة الكوبونات</h2>
-                        <button class="btn-primary" onclick="openCouponForm()" style="background: #ec4899; color: white;">
-                            <i class="fas fa-plus"></i> إضافة كوبون
-                        </button>
-                        <button class="btn-primary" onclick="loadCoupons()" style="background: #3b82f6; color: white;">
-                            <i class="fas fa-sync"></i> تحديث
-                        </button>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                            <button class="btn-primary" onclick="openCouponForm()" style="background: #ec4899; color: white;">
+                                <i class="fas fa-plus"></i> إضافة كوبون
+                            </button>
+                            <button class="btn-primary" onclick="loadCoupons()" style="background: #3b82f6; color: white;">
+                                <i class="fas fa-sync"></i> تحديث
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="admin-table-wrapper">
@@ -818,12 +2260,14 @@
                 <div id="email-settings-tab" class="admin-tab">
                     <div class="admin-header-tab">
                         <h2>📧 إعدادات البريد الإلكتروني</h2>
-                        <button class="btn-primary" onclick="saveEmailSettings()" style="background: #3b82f6; color: white;">
-                            <i class="fas fa-save"></i> حفظ الإعدادات
-                        </button>
-                        <button class="btn-primary" onclick="sendTestEmail()" style="background: #10b981; color: white;">
-                            <i class="fas fa-paper-plane"></i> إرسال بريد تجريبي
-                        </button>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                            <button class="btn-primary" onclick="saveEmailSettings()" style="background: #3b82f6; color: white;">
+                                <i class="fas fa-save"></i> حفظ الإعدادات
+                            </button>
+                            <button class="btn-primary" onclick="sendTestEmail()" style="background: #10b981; color: white;">
+                                <i class="fas fa-paper-plane"></i> إرسال بريد تجريبي
+                            </button>
+                        </div>
                     </div>
                     
                     <div id="emailSettingsContainer">
@@ -1594,23 +3038,30 @@
     ============================================ -->
     <script>
         // ============================================
+        // استيراد المفاتيح من keys.js
+        // ============================================
+        import KEYS from '../keys.js';
+
+        console.log('🔐 Keys loaded from keys.js');
+
+        // ============================================
         // إصلاح مشكلة process.env في بيئة المتصفح
         // ============================================
         if (typeof process === 'undefined') {
             window.process = {
                 env: {
-                    STRIPE_PUBLISHABLE_KEY: '',
-                    STRIPE_SECRET_KEY: '',
-                    PAYPAL_CLIENT_ID: '',
-                    PAYPAL_SECRET_KEY: '',
-                    SENDGRID_API_KEY: '',
-                    GOOGLE_ANALYTICS_ID: '',
-                    FACEBOOK_PIXEL_ID: '',
-                    CLARITY_PROJECT_ID: '',
-                    HOTJAR_SITE_ID: ''
+                    STRIPE_PUBLISHABLE_KEY: KEYS.stripePublishableKey || '',
+                    STRIPE_SECRET_KEY: KEYS.stripeSecretKey || '',
+                    PAYPAL_CLIENT_ID: KEYS.paypalClientId || '',
+                    PAYPAL_SECRET_KEY: KEYS.paypalSecret || '',
+                    SENDGRID_API_KEY: KEYS.sendgridApiKey || '',
+                    GOOGLE_ANALYTICS_ID: KEYS.googleAnalyticsId || '',
+                    FACEBOOK_PIXEL_ID: KEYS.facebookPixelId || '',
+                    CLARITY_PROJECT_ID: KEYS.microsoftClarityId || '',
+                    HOTJAR_SITE_ID: KEYS.hotjarId || ''
                 }
             };
-            console.log('✅ process.env initialized for browser environment');
+            console.log('✅ process.env initialized from keys.js');
         }
 
         // ============================================
@@ -1733,6 +3184,7 @@
         // ============================================
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Admin page loaded');
+            console.log('🔐 Keys loaded from keys.js');
             
             // التحقق من الجلسة
             const session = localStorage.getItem('session');
@@ -2101,13 +3553,13 @@
 
         @media (max-width: 768px) {
             .admin-sidebar {
-                width: 70px;
-            }
-            .admin-sidebar span {
-                display: none;
+                width: 100%;
+                min-width: unset;
             }
             .admin-main {
-                margin-right: 70px;
+                margin-right: 0;
+                padding: 15px;
+                max-width: 100%;
             }
             .admin-header-tab {
                 flex-direction: column;

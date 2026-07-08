@@ -773,7 +773,6 @@
                 <div class="form-group">
                     <label>💰 رسوم إضافية</label>
                     <input type="number" id="pmFee" step="0.01" placeholder="0.00" />
-                    <div class="help-text">رسوم إضافية عند استخدام هذه الطريقة</div>
                 </div>
                 <div class="form-group">
                     <label>🔢 ترتيب العرض</label>
@@ -1015,1148 +1014,1179 @@
 <!-- ===== Toast Container ===== -->
 <div id="toastContainer"></div>
 
-<script>
-// ============================================
-// 🔧 تهيئة Supabase
-// ============================================
-const supabaseUrl = 'https://savtqajghyloevzwrzvt.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhdnRxYWpnaHlsb2V2endyenZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3ODA1OTMsImV4cCI6MjA5ODM1NjU5M30.CBq7eKyr3RR11op_SevMBBcKQNKF7uftpaa-URemEww';
+<script type="module">
+    // ============================================
+    // استيراد المفاتيح من keys.js
+    // ============================================
+    import KEYS from '../keys.js';
 
-let supabaseClient = null;
-let supabaseReady = false;
+    // ============================================
+    // تهيئة Supabase باستخدام المفاتيح من keys.js
+    // ============================================
+    const supabaseUrl = KEYS.supabaseUrl;
+    const supabaseAnonKey = KEYS.supabaseAnonKey;
 
-function initSupabase() {
-    try {
-        if (typeof supabase !== 'undefined' && supabase) {
-            supabaseClient = supabase;
-            supabaseReady = true;
-            console.log('✅ Supabase client from CDN (global)');
-            return true;
+    let supabaseClient = null;
+    let supabaseReady = false;
+
+    function initSupabase() {
+        try {
+            if (typeof window.supabase !== 'undefined' && window.supabase) {
+                supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+                supabaseReady = true;
+                console.log('✅ Supabase initialized with keys from keys.js');
+                return true;
+            }
+            
+            console.warn('⚠️ Supabase library not found, attempting dynamic load...');
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+                script.onload = function() {
+                    try {
+                        supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+                        supabaseReady = true;
+                        console.log('✅ Supabase initialized (dynamic load)');
+                        resolve(true);
+                    } catch (err) {
+                        console.error('❌ Failed to create Supabase client:', err);
+                        reject(err);
+                    }
+                };
+                script.onerror = function() {
+                    console.error('❌ Failed to load Supabase library');
+                    showToast('⚠️ فشل تحميل Supabase، يرجى تحديث الصفحة', 'error');
+                    reject(new Error('Supabase library load failed'));
+                };
+                document.head.appendChild(script);
+            });
+        } catch (error) {
+            console.error('❌ Supabase init error:', error);
+            showToast('⚠️ خطأ في تهيئة Supabase', 'error');
+            return false;
         }
+    }
+
+    // ============================================
+    // المتغيرات العامة
+    // ============================================
+    let paymentMethods = [];
+    let shippingMethods = [];
+    let checkoutFields = [];
+    let filteredPayments = [];
+    let currentTab = 'payment-methods';
+
+    // ============================================
+    // التبويبات
+    // ============================================
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === tab);
+        });
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.toggle('active', content.id === tab + '-tab');
+        });
         
-        if (window.supabase && typeof window.supabase.createClient === 'function') {
-            supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
-            supabaseReady = true;
-            console.log('✅ Supabase client from window.supabase.createClient');
-            return true;
-        }
-        
-        console.warn('⚠️ Supabase not found, attempting dynamic load...');
-        return false;
-    } catch (error) {
-        console.error('❌ Error initializing Supabase:', error);
-        return false;
-    }
-}
-
-initSupabase();
-
-function getSupabase() {
-    if (!supabaseReady || !supabaseClient) {
-        initSupabase();
-        if (!supabaseReady || !supabaseClient) {
-            showToast('⚠️ يرجى تحديث الصفحة أو التحقق من اتصال Supabase', 'warning');
-            return null;
-        }
-    }
-    return supabaseClient;
-}
-
-// ============================================
-// المتغيرات العامة
-// ============================================
-let paymentMethods = [];
-let shippingMethods = [];
-let checkoutFields = [];
-let filteredPayments = [];
-let currentTab = 'payment-methods';
-
-// ============================================
-// التبويبات
-// ============================================
-function switchTab(tab) {
-    currentTab = tab;
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.tab === tab);
-    });
-    document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.toggle('active', content.id === tab + '-tab');
-    });
-    
-    if (tab === 'payment-methods') {
-        filteredPayments = [...paymentMethods];
-        renderPaymentMethods();
-    } else if (tab === 'shipping-methods') {
-        renderShippingMethods();
-    } else if (tab === 'checkout-fields') {
-        renderCheckoutFields();
-    }
-}
-window.switchTab = switchTab;
-
-// ============================================
-// إظهار الإشعارات
-// ============================================
-function showToast(message, type = 'info') {
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
-    
-    const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
-    const toast = document.createElement('div');
-    toast.className = `toast-item ${type}`;
-    toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span><span>${message}</span>`;
-    container.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.style.animation = 'slideOutRight 0.3s ease';
-        setTimeout(() => toast.remove(), 300);
-    }, 3500);
-}
-window.showToast = showToast;
-
-// ============================================
-// إغلاق النوافذ
-// ============================================
-function closeModal(modalId) {
-    document.getElementById(modalId).classList.remove('active');
-}
-window.closeModal = closeModal;
-
-// ============================================
-// تحميل جميع البيانات
-// ============================================
-async function loadAllData() {
-    await loadPaymentMethods();
-    await loadShippingMethods();
-    await loadCheckoutFields();
-    updateStats();
-    showToast('✅ تم تحديث جميع البيانات', 'success');
-}
-window.loadAllData = loadAllData;
-
-// ============================================
-// تحديث الإحصائيات
-// ============================================
-function updateStats() {
-    document.getElementById('totalPayments').textContent = paymentMethods.length;
-    document.getElementById('totalShipping').textContent = shippingMethods.length;
-    document.getElementById('totalFields').textContent = checkoutFields.length;
-    document.getElementById('activePayments').textContent = paymentMethods.filter(p => p.status === 'active').length;
-}
-
-// ============================================
-// ===== 1. إدارة طرق الدفع =====
-// ============================================
-
-async function loadPaymentMethods() {
-    try {
-        const client = getSupabase();
-        if (!client) {
+        if (tab === 'payment-methods') {
+            filteredPayments = [...paymentMethods];
             renderPaymentMethods();
-            return;
+        } else if (tab === 'shipping-methods') {
+            renderShippingMethods();
+        } else if (tab === 'checkout-fields') {
+            renderCheckoutFields();
         }
+    }
+    window.switchTab = switchTab;
+
+    // ============================================
+    // إظهار الإشعارات
+    // ============================================
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
         
-        const { data, error } = await client
-            .from('payment_methods')
-            .select('*')
-            .order('display_order', { ascending: true });
+        const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+        const toast = document.createElement('div');
+        toast.className = `toast-item ${type}`;
+        toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span><span>${message}</span>`;
+        container.appendChild(toast);
         
-        if (error) {
+        setTimeout(() => {
+            toast.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 3500);
+    }
+    window.showToast = showToast;
+
+    // ============================================
+    // إغلاق النوافذ
+    // ============================================
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.remove('active');
+    }
+    window.closeModal = closeModal;
+
+    // ============================================
+    // تحميل جميع البيانات
+    // ============================================
+    async function loadAllData() {
+        await loadPaymentMethods();
+        await loadShippingMethods();
+        await loadCheckoutFields();
+        updateStats();
+        showToast('✅ تم تحديث جميع البيانات', 'success');
+    }
+    window.loadAllData = loadAllData;
+
+    // ============================================
+    // تحديث الإحصائيات
+    // ============================================
+    function updateStats() {
+        document.getElementById('totalPayments').textContent = paymentMethods.length;
+        document.getElementById('totalShipping').textContent = shippingMethods.length;
+        document.getElementById('totalFields').textContent = checkoutFields.length;
+        document.getElementById('activePayments').textContent = paymentMethods.filter(p => p.status === 'active').length;
+    }
+
+    // ============================================
+    // ===== 1. إدارة طرق الدفع =====
+    // ============================================
+
+    async function loadPaymentMethods() {
+        try {
+            if (!supabaseReady || !supabaseClient) {
+                await initSupabase();
+                if (!supabaseReady || !supabaseClient) {
+                    renderPaymentMethods();
+                    return;
+                }
+            }
+            
+            const { data, error } = await supabaseClient
+                .from('payment_methods')
+                .select('*')
+                .order('display_order', { ascending: true });
+            
+            if (error) {
+                console.error('❌ خطأ في تحميل طرق الدفع:', error);
+                paymentMethods = [];
+                filteredPayments = [];
+                renderPaymentMethods();
+                return;
+            }
+            
+            paymentMethods = data || [];
+            filteredPayments = [...paymentMethods];
+            renderPaymentMethods();
+            updateStats();
+            
+        } catch (error) {
             console.error('❌ خطأ في تحميل طرق الدفع:', error);
             paymentMethods = [];
             filteredPayments = [];
             renderPaymentMethods();
+            showToast('❌ حدث خطأ في تحميل طرق الدفع', 'error');
+        }
+    }
+    window.loadPaymentMethods = loadPaymentMethods;
+
+    function filterPaymentMethods() {
+        const query = document.getElementById('paymentSearch').value.toLowerCase().trim();
+        const category = document.getElementById('paymentCategoryFilter').value;
+        const status = document.getElementById('paymentStatusFilter').value;
+        
+        filteredPayments = paymentMethods.filter(method => {
+            const matchesSearch = !query || 
+                method.name.toLowerCase().includes(query) ||
+                (method.description && method.description.toLowerCase().includes(query));
+            
+            const matchesCategory = !category || method.category === category;
+            const matchesStatus = !status || method.status === status;
+            
+            return matchesSearch && matchesCategory && matchesStatus;
+        });
+        
+        renderPaymentMethods();
+    }
+    window.filterPaymentMethods = filterPaymentMethods;
+
+    function renderPaymentMethods() {
+        const grid = document.getElementById('paymentMethodsGrid');
+        if (!grid) return;
+        
+        const data = currentTab === 'payment-methods' ? filteredPayments : paymentMethods;
+        
+        if (data.length === 0) {
+            grid.innerHTML = `
+                <div class="empty-state" style="grid-column:1/-1;">
+                    <i class="fas fa-credit-card"></i>
+                    <h3>${filteredPayments.length === 0 && paymentMethods.length > 0 ? 'لا توجد نتائج مطابقة للبحث' : 'لا توجد طرق دفع'}</h3>
+                    <p>${filteredPayments.length === 0 && paymentMethods.length > 0 ? 'جرب تغيير معايير البحث' : 'أضف طريقة الدفع الأولى بالضغط على "إضافة طريقة دفع"'}</p>
+                </div>
+            `;
             return;
         }
         
-        paymentMethods = data || [];
-        filteredPayments = [...paymentMethods];
-        renderPaymentMethods();
-        updateStats();
-        
-    } catch (error) {
-        console.error('❌ خطأ في تحميل طرق الدفع:', error);
-        paymentMethods = [];
-        filteredPayments = [];
-        renderPaymentMethods();
-        showToast('❌ حدث خطأ في تحميل طرق الدفع', 'error');
-    }
-}
-window.loadPaymentMethods = loadPaymentMethods;
-
-function filterPaymentMethods() {
-    const query = document.getElementById('paymentSearch').value.toLowerCase().trim();
-    const category = document.getElementById('paymentCategoryFilter').value;
-    const status = document.getElementById('paymentStatusFilter').value;
-    
-    filteredPayments = paymentMethods.filter(method => {
-        const matchesSearch = !query || 
-            method.name.toLowerCase().includes(query) ||
-            (method.description && method.description.toLowerCase().includes(query));
-        
-        const matchesCategory = !category || method.category === category;
-        const matchesStatus = !status || method.status === status;
-        
-        return matchesSearch && matchesCategory && matchesStatus;
-    });
-    
-    renderPaymentMethods();
-}
-window.filterPaymentMethods = filterPaymentMethods;
-
-function renderPaymentMethods() {
-    const grid = document.getElementById('paymentMethodsGrid');
-    if (!grid) return;
-    
-    const data = currentTab === 'payment-methods' ? filteredPayments : paymentMethods;
-    
-    if (data.length === 0) {
-        grid.innerHTML = `
-            <div class="empty-state" style="grid-column:1/-1;">
-                <i class="fas fa-credit-card"></i>
-                <h3>${filteredPayments.length === 0 && paymentMethods.length > 0 ? 'لا توجد نتائج مطابقة للبحث' : 'لا توجد طرق دفع'}</h3>
-                <p>${filteredPayments.length === 0 && paymentMethods.length > 0 ? 'جرب تغيير معايير البحث' : 'أضف طريقة الدفع الأولى بالضغط على "إضافة طريقة دفع"'}</p>
-            </div>
-        `;
-        return;
-    }
-    
-    grid.innerHTML = data.map(method => {
-        const isActive = method.status === 'active';
-        return `
-        <div class="card">
-            <div class="card-header">
-                <div style="display:flex;align-items:center;gap:12px;">
-                    <div class="icon"><i class="fas ${method.icon || 'fa-credit-card'}"></i></div>
-                    <div>
-                        <div class="card-title">${method.name}</div>
-                        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:2px;">
-                            <span class="badge ${isActive ? 'badge-active' : 'badge-inactive'}">${isActive ? '✅ نشط' : '❌ غير نشط'}</span>
-                            <span style="font-size:11px;color:#8A8A9B;">${method.category || 'أخرى'}</span>
-                            ${method.fee ? `<span style="font-size:11px;color:#FFD700;">💰 ${method.fee} ر.س</span>` : ''}
+        grid.innerHTML = data.map(method => {
+            const isActive = method.status === 'active';
+            return `
+            <div class="card">
+                <div class="card-header">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div class="icon"><i class="fas ${method.icon || 'fa-credit-card'}"></i></div>
+                        <div>
+                            <div class="card-title">${method.name}</div>
+                            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:2px;">
+                                <span class="badge ${isActive ? 'badge-active' : 'badge-inactive'}">${isActive ? '✅ نشط' : '❌ غير نشط'}</span>
+                                <span style="font-size:11px;color:#8A8A9B;">${method.category || 'أخرى'}</span>
+                                ${method.fee ? `<span style="font-size:11px;color:#FFD700;">💰 ${method.fee} ر.س</span>` : ''}
+                            </div>
                         </div>
                     </div>
+                    <div>
+                        <button class="btn-purple" onclick="previewPaymentCode('${method.id}')" style="padding:4px 10px;font-size:11px;">
+                            <i class="fas fa-code"></i>
+                        </button>
+                    </div>
                 </div>
-                <div>
-                    <button class="btn-purple" onclick="previewPaymentCode('${method.id}')" style="padding:4px 10px;font-size:11px;">
-                        <i class="fas fa-code"></i>
+                <div class="card-desc">${method.description || 'لا يوجد وصف'}</div>
+                <div class="card-fields">
+                    <div class="field-row">
+                        <span class="label">📌 موقع الحقن</span>
+                        <span class="value">${method.position || 'checkout'}</span>
+                    </div>
+                    <div class="field-row">
+                        <span class="label">🔢 الترتيب</span>
+                        <span class="value">${method.display_order || 0}</span>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-success" onclick="togglePaymentStatus('${method.id}')" style="padding:4px 12px;font-size:11px;">
+                        ${isActive ? 'إيقاف' : 'تفعيل'}
+                    </button>
+                    <button class="btn-secondary" onclick="editPaymentMethod('${method.id}')" style="padding:4px 12px;font-size:11px;">
+                        <i class="fas fa-edit"></i> تعديل
+                    </button>
+                    <button class="btn-danger" onclick="deletePaymentMethod('${method.id}')" style="padding:4px 12px;font-size:11px;">
+                        <i class="fas fa-trash"></i>
                     </button>
                 </div>
             </div>
-            <div class="card-desc">${method.description || 'لا يوجد وصف'}</div>
-            <div class="card-fields">
-                <div class="field-row">
-                    <span class="label">📌 موقع الحقن</span>
-                    <span class="value">${method.position || 'checkout'}</span>
-                </div>
-                <div class="field-row">
-                    <span class="label">🔢 الترتيب</span>
-                    <span class="value">${method.display_order || 0}</span>
-                </div>
-            </div>
-            <div class="card-actions">
-                <button class="btn-success" onclick="togglePaymentStatus('${method.id}')" style="padding:4px 12px;font-size:11px;">
-                    ${isActive ? 'إيقاف' : 'تفعيل'}
-                </button>
-                <button class="btn-secondary" onclick="editPaymentMethod('${method.id}')" style="padding:4px 12px;font-size:11px;">
-                    <i class="fas fa-edit"></i> تعديل
-                </button>
-                <button class="btn-danger" onclick="deletePaymentMethod('${method.id}')" style="padding:4px 12px;font-size:11px;">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-        </div>
-    `}).join('');
-}
-
-function openAddPaymentMethod() {
-    document.getElementById('paymentMethodId').value = '';
-    document.getElementById('paymentMethodModalTitle').innerHTML = '<i class="fas fa-plus"></i> إضافة طريقة دفع';
-    document.getElementById('paymentMethodForm').reset();
-    document.getElementById('pmStatus').value = 'active';
-    document.getElementById('pmPosition').value = 'checkout';
-    document.getElementById('pmCategory').value = 'card';
-    document.getElementById('pmFee').value = '';
-    document.getElementById('pmCustomPositionGroup').style.display = 'none';
-    document.getElementById('paymentMethodModal').classList.add('active');
-}
-window.openAddPaymentMethod = openAddPaymentMethod;
-
-async function editPaymentMethod(id) {
-    const method = paymentMethods.find(p => p.id === id);
-    if (!method) {
-        showToast('⚠️ طريقة الدفع غير موجودة', 'warning');
-        return;
+        `}).join('');
     }
-    
-    document.getElementById('paymentMethodId').value = method.id;
-    document.getElementById('paymentMethodModalTitle').innerHTML = '<i class="fas fa-edit"></i> تعديل طريقة الدفع';
-    document.getElementById('pmName').value = method.name || '';
-    document.getElementById('pmIcon').value = method.icon || 'fa-credit-card';
-    document.getElementById('pmDescription').value = method.description || '';
-    document.getElementById('pmCode').value = method.code || '';
-    document.getElementById('pmCss').value = method.css || '';
-    document.getElementById('pmPosition').value = method.position || 'checkout';
-    document.getElementById('pmOrder').value = method.display_order || 0;
-    document.getElementById('pmStatus').value = method.status || 'inactive';
-    document.getElementById('pmCategory').value = method.category || 'card';
-    document.getElementById('pmFee').value = method.fee || '';
-    document.getElementById('pmApiKey').value = method.api_key || '';
-    
-    if (method.position === 'custom') {
-        document.getElementById('pmCustomPositionGroup').style.display = 'block';
-        document.getElementById('pmCustomPosition').value = method.custom_position || '';
-    } else {
+
+    function openAddPaymentMethod() {
+        document.getElementById('paymentMethodId').value = '';
+        document.getElementById('paymentMethodModalTitle').innerHTML = '<i class="fas fa-plus"></i> إضافة طريقة دفع';
+        document.getElementById('paymentMethodForm').reset();
+        document.getElementById('pmStatus').value = 'active';
+        document.getElementById('pmPosition').value = 'checkout';
+        document.getElementById('pmCategory').value = 'card';
+        document.getElementById('pmFee').value = '';
         document.getElementById('pmCustomPositionGroup').style.display = 'none';
+        document.getElementById('paymentMethodModal').classList.add('active');
     }
-    
-    document.getElementById('paymentMethodModal').classList.add('active');
-}
-window.editPaymentMethod = editPaymentMethod;
+    window.openAddPaymentMethod = openAddPaymentMethod;
 
-async function savePaymentMethod(event) {
-    event.preventDefault();
-    
-    const id = document.getElementById('paymentMethodId').value;
-    const name = document.getElementById('pmName').value.trim();
-    const icon = document.getElementById('pmIcon').value;
-    const description = document.getElementById('pmDescription').value.trim();
-    const code = document.getElementById('pmCode').value.trim();
-    const css = document.getElementById('pmCss').value.trim();
-    const position = document.getElementById('pmPosition').value;
-    const display_order = parseInt(document.getElementById('pmOrder').value) || 0;
-    const status = document.getElementById('pmStatus').value;
-    const category = document.getElementById('pmCategory').value;
-    const fee = parseFloat(document.getElementById('pmFee').value) || null;
-    const api_key = document.getElementById('pmApiKey').value.trim();
-    const custom_position = document.getElementById('pmCustomPosition').value.trim();
-    
-    if (!name) {
-        showToast('⚠️ الرجاء إدخال اسم طريقة الدفع', 'warning');
-        return;
-    }
-    
-    const data = {
-        name,
-        icon,
-        description: description || null,
-        code: code || null,
-        css: css || null,
-        position,
-        display_order,
-        status,
-        category,
-        fee,
-        api_key: api_key || null,
-        custom_position: position === 'custom' ? custom_position : null,
-        updated_at: new Date().toISOString()
-    };
-    
-    try {
-        const client = getSupabase();
-        if (!client) {
-            showToast('⚠️ Supabase غير متصل، يرجى تحديث الصفحة', 'error');
+    async function editPaymentMethod(id) {
+        const method = paymentMethods.find(p => p.id === id);
+        if (!method) {
+            showToast('⚠️ طريقة الدفع غير موجودة', 'warning');
             return;
         }
         
-        let result;
-        if (id) {
-            result = await client
-                .from('payment_methods')
-                .update(data)
-                .eq('id', id);
+        document.getElementById('paymentMethodId').value = method.id;
+        document.getElementById('paymentMethodModalTitle').innerHTML = '<i class="fas fa-edit"></i> تعديل طريقة الدفع';
+        document.getElementById('pmName').value = method.name || '';
+        document.getElementById('pmIcon').value = method.icon || 'fa-credit-card';
+        document.getElementById('pmDescription').value = method.description || '';
+        document.getElementById('pmCode').value = method.code || '';
+        document.getElementById('pmCss').value = method.css || '';
+        document.getElementById('pmPosition').value = method.position || 'checkout';
+        document.getElementById('pmOrder').value = method.display_order || 0;
+        document.getElementById('pmStatus').value = method.status || 'inactive';
+        document.getElementById('pmCategory').value = method.category || 'card';
+        document.getElementById('pmFee').value = method.fee || '';
+        document.getElementById('pmApiKey').value = method.api_key || '';
+        
+        if (method.position === 'custom') {
+            document.getElementById('pmCustomPositionGroup').style.display = 'block';
+            document.getElementById('pmCustomPosition').value = method.custom_position || '';
         } else {
-            data.created_at = new Date().toISOString();
-            result = await client
+            document.getElementById('pmCustomPositionGroup').style.display = 'none';
+        }
+        
+        document.getElementById('paymentMethodModal').classList.add('active');
+    }
+    window.editPaymentMethod = editPaymentMethod;
+
+    async function savePaymentMethod(event) {
+        event.preventDefault();
+        
+        const id = document.getElementById('paymentMethodId').value;
+        const name = document.getElementById('pmName').value.trim();
+        const icon = document.getElementById('pmIcon').value;
+        const description = document.getElementById('pmDescription').value.trim();
+        const code = document.getElementById('pmCode').value.trim();
+        const css = document.getElementById('pmCss').value.trim();
+        const position = document.getElementById('pmPosition').value;
+        const display_order = parseInt(document.getElementById('pmOrder').value) || 0;
+        const status = document.getElementById('pmStatus').value;
+        const category = document.getElementById('pmCategory').value;
+        const fee = parseFloat(document.getElementById('pmFee').value) || null;
+        const api_key = document.getElementById('pmApiKey').value.trim();
+        const custom_position = document.getElementById('pmCustomPosition').value.trim();
+        
+        if (!name) {
+            showToast('⚠️ الرجاء إدخال اسم طريقة الدفع', 'warning');
+            return;
+        }
+        
+        const data = {
+            name,
+            icon,
+            description: description || null,
+            code: code || null,
+            css: css || null,
+            position,
+            display_order,
+            status,
+            category,
+            fee,
+            api_key: api_key || null,
+            custom_position: position === 'custom' ? custom_position : null,
+            updated_at: new Date().toISOString()
+        };
+        
+        try {
+            if (!supabaseReady || !supabaseClient) {
+                await initSupabase();
+                if (!supabaseReady || !supabaseClient) {
+                    showToast('⚠️ Supabase غير متصل، يرجى تحديث الصفحة', 'error');
+                    return;
+                }
+            }
+            
+            let result;
+            if (id) {
+                result = await supabaseClient
+                    .from('payment_methods')
+                    .update(data)
+                    .eq('id', id);
+            } else {
+                data.created_at = new Date().toISOString();
+                result = await supabaseClient
+                    .from('payment_methods')
+                    .insert(data);
+            }
+            
+            if (result.error) throw result.error;
+            
+            showToast(id ? '✅ تم تحديث طريقة الدفع' : '✅ تم إضافة طريقة الدفع', 'success');
+            closeModal('paymentMethodModal');
+            loadPaymentMethods();
+            
+        } catch (error) {
+            console.error('❌ خطأ:', error);
+            showToast('❌ حدث خطأ: ' + (error.message || 'غير معروف'), 'error');
+        }
+    }
+    window.savePaymentMethod = savePaymentMethod;
+
+    async function togglePaymentStatus(id) {
+        const method = paymentMethods.find(p => p.id === id);
+        if (!method) return;
+        
+        const newStatus = method.status === 'active' ? 'inactive' : 'active';
+        
+        try {
+            if (!supabaseReady || !supabaseClient) {
+                await initSupabase();
+                if (!supabaseReady || !supabaseClient) {
+                    showToast('⚠️ Supabase غير متصل', 'error');
+                    return;
+                }
+            }
+            
+            const { error } = await supabaseClient
                 .from('payment_methods')
-                .insert(data);
+                .update({ 
+                    status: newStatus,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', id);
+            
+            if (error) throw error;
+            
+            showToast(`✅ تم ${newStatus === 'active' ? 'تفعيل' : 'إيقاف'} طريقة الدفع`, 'success');
+            loadPaymentMethods();
+            
+        } catch (error) {
+            console.error('❌ خطأ:', error);
+            showToast('❌ حدث خطأ', 'error');
         }
-        
-        if (result.error) throw result.error;
-        
-        showToast(id ? '✅ تم تحديث طريقة الدفع' : '✅ تم إضافة طريقة الدفع', 'success');
-        closeModal('paymentMethodModal');
-        loadPaymentMethods();
-        
-    } catch (error) {
-        console.error('❌ خطأ:', error);
-        showToast('❌ حدث خطأ: ' + (error.message || 'غير معروف'), 'error');
     }
-}
-window.savePaymentMethod = savePaymentMethod;
+    window.togglePaymentStatus = togglePaymentStatus;
 
-async function togglePaymentStatus(id) {
-    const method = paymentMethods.find(p => p.id === id);
-    if (!method) return;
-    
-    const newStatus = method.status === 'active' ? 'inactive' : 'active';
-    
-    try {
-        const client = getSupabase();
-        if (!client) {
-            showToast('⚠️ Supabase غير متصل', 'error');
+    async function deletePaymentMethod(id) {
+        if (!confirm('⚠️ هل أنت متأكد من حذف طريقة الدفع؟')) return;
+        
+        try {
+            if (!supabaseReady || !supabaseClient) {
+                await initSupabase();
+                if (!supabaseReady || !supabaseClient) {
+                    showToast('⚠️ Supabase غير متصل', 'error');
+                    return;
+                }
+            }
+            
+            const { error } = await supabaseClient
+                .from('payment_methods')
+                .delete()
+                .eq('id', id);
+            
+            if (error) throw error;
+            
+            showToast('✅ تم حذف طريقة الدفع', 'success');
+            loadPaymentMethods();
+            
+        } catch (error) {
+            console.error('❌ خطأ:', error);
+            showToast('❌ حدث خطأ', 'error');
+        }
+    }
+    window.deletePaymentMethod = deletePaymentMethod;
+
+    function previewPaymentCode(id) {
+        const method = paymentMethods.find(p => p.id === id);
+        if (!method) {
+            showToast('⚠️ طريقة الدفع غير موجودة', 'warning');
             return;
         }
         
-        const { error } = await client
-            .from('payment_methods')
-            .update({ 
-                status: newStatus,
-                updated_at: new Date().toISOString()
-            })
-            .eq('id', id);
+        const content = document.getElementById('codePreviewContent');
+        content.innerHTML = `
+            <div style="margin-bottom:10px;">
+                <strong style="color:#FFD700;">📌 ${method.name}</strong>
+                <span style="color:#8A8A9B;font-size:12px;margin-right:10px;">${method.position || 'checkout'}</span>
+                ${method.css ? '<span style="color:#8B5CF6;font-size:11px;margin-right:10px;">🎨 مع CSS</span>' : ''}
+            </div>
+            <pre style="background:#0a0a12;padding:15px;border-radius:6px;overflow:auto;font-size:12px;color:#e0e0e0;font-family:'Courier New',monospace;white-space:pre-wrap;">${method.code || '// لا يوجد كود'}</pre>
+            ${method.css ? `<div style="margin-top:10px;"><strong style="color:#8B5CF6;">🎨 CSS:</strong><pre style="background:#0a0a12;padding:10px;border-radius:6px;overflow:auto;font-size:11px;color:#e0e0e0;font-family:'Courier New',monospace;white-space:pre-wrap;margin-top:5px;">${method.css}</pre></div>` : ''}
+        `;
         
-        if (error) throw error;
-        
-        showToast(`✅ تم ${newStatus === 'active' ? 'تفعيل' : 'إيقاف'} طريقة الدفع`, 'success');
-        loadPaymentMethods();
-        
-    } catch (error) {
-        console.error('❌ خطأ:', error);
-        showToast('❌ حدث خطأ', 'error');
+        document.getElementById('codePreviewModal').classList.add('active');
     }
-}
-window.togglePaymentStatus = togglePaymentStatus;
+    window.previewPaymentCode = previewPaymentCode;
 
-async function deletePaymentMethod(id) {
-    if (!confirm('⚠️ هل أنت متأكد من حذف طريقة الدفع؟')) return;
-    
-    try {
-        const client = getSupabase();
-        if (!client) {
-            showToast('⚠️ Supabase غير متصل', 'error');
-            return;
-        }
-        
-        const { error } = await client
-            .from('payment_methods')
-            .delete()
-            .eq('id', id);
-        
-        if (error) throw error;
-        
-        showToast('✅ تم حذف طريقة الدفع', 'success');
-        loadPaymentMethods();
-        
-    } catch (error) {
-        console.error('❌ خطأ:', error);
-        showToast('❌ حدث خطأ', 'error');
-    }
-}
-window.deletePaymentMethod = deletePaymentMethod;
+    // ============================================
+    // ===== 2. إدارة شركات الشحن =====
+    // ============================================
 
-function previewPaymentCode(id) {
-    const method = paymentMethods.find(p => p.id === id);
-    if (!method) {
-        showToast('⚠️ طريقة الدفع غير موجودة', 'warning');
-        return;
-    }
-    
-    const content = document.getElementById('codePreviewContent');
-    content.innerHTML = `
-        <div style="margin-bottom:10px;">
-            <strong style="color:#FFD700;">📌 ${method.name}</strong>
-            <span style="color:#8A8A9B;font-size:12px;margin-right:10px;">${method.position || 'checkout'}</span>
-            ${method.css ? '<span style="color:#8B5CF6;font-size:11px;margin-right:10px;">🎨 مع CSS</span>' : ''}
-        </div>
-        <pre style="background:#0a0a12;padding:15px;border-radius:6px;overflow:auto;font-size:12px;color:#e0e0e0;font-family:'Courier New',monospace;white-space:pre-wrap;">${method.code || '// لا يوجد كود'}</pre>
-        ${method.css ? `<div style="margin-top:10px;"><strong style="color:#8B5CF6;">🎨 CSS:</strong><pre style="background:#0a0a12;padding:10px;border-radius:6px;overflow:auto;font-size:11px;color:#e0e0e0;font-family:'Courier New',monospace;white-space:pre-wrap;margin-top:5px;">${method.css}</pre></div>` : ''}
-    `;
-    
-    document.getElementById('codePreviewModal').classList.add('active');
-}
-window.previewPaymentCode = previewPaymentCode;
-
-// ============================================
-// ===== 2. إدارة شركات الشحن =====
-// ============================================
-
-async function loadShippingMethods() {
-    try {
-        const client = getSupabase();
-        if (!client) {
+    async function loadShippingMethods() {
+        try {
+            if (!supabaseReady || !supabaseClient) {
+                await initSupabase();
+                if (!supabaseReady || !supabaseClient) {
+                    renderShippingMethods();
+                    return;
+                }
+            }
+            
+            const { data, error } = await supabaseClient
+                .from('shipping_methods')
+                .select('*')
+                .order('display_order', { ascending: true });
+            
+            if (error) {
+                console.error('❌ خطأ في تحميل شركات الشحن:', error);
+                shippingMethods = [];
+                renderShippingMethods();
+                return;
+            }
+            
+            shippingMethods = data || [];
             renderShippingMethods();
-            return;
-        }
-        
-        const { data, error } = await client
-            .from('shipping_methods')
-            .select('*')
-            .order('display_order', { ascending: true });
-        
-        if (error) {
+            updateStats();
+            
+        } catch (error) {
             console.error('❌ خطأ في تحميل شركات الشحن:', error);
             shippingMethods = [];
             renderShippingMethods();
+            showToast('❌ حدث خطأ في تحميل شركات الشحن', 'error');
+        }
+    }
+    window.loadShippingMethods = loadShippingMethods;
+
+    function renderShippingMethods() {
+        const grid = document.getElementById('shippingMethodsGrid');
+        if (!grid) return;
+        
+        if (shippingMethods.length === 0) {
+            grid.innerHTML = `
+                <div class="empty-state" style="grid-column:1/-1;">
+                    <i class="fas fa-truck"></i>
+                    <h3>لا توجد شركات شحن</h3>
+                    <p>أضف شركة الشحن الأولى بالضغط على "إضافة شركة شحن"</p>
+                </div>
+            `;
             return;
         }
         
-        shippingMethods = data || [];
-        renderShippingMethods();
-        updateStats();
-        
-    } catch (error) {
-        console.error('❌ خطأ في تحميل شركات الشحن:', error);
-        shippingMethods = [];
-        renderShippingMethods();
-        showToast('❌ حدث خطأ في تحميل شركات الشحن', 'error');
-    }
-}
-window.loadShippingMethods = loadShippingMethods;
-
-function renderShippingMethods() {
-    const grid = document.getElementById('shippingMethodsGrid');
-    if (!grid) return;
-    
-    if (shippingMethods.length === 0) {
-        grid.innerHTML = `
-            <div class="empty-state" style="grid-column:1/-1;">
-                <i class="fas fa-truck"></i>
-                <h3>لا توجد شركات شحن</h3>
-                <p>أضف شركة الشحن الأولى بالضغط على "إضافة شركة شحن"</p>
-            </div>
-        `;
-        return;
-    }
-    
-    grid.innerHTML = shippingMethods.map(method => {
-        const isActive = method.status === 'active';
-        return `
-        <div class="card">
-            <div class="card-header">
-                <div style="display:flex;align-items:center;gap:12px;">
-                    <div class="icon"><i class="fas ${method.icon || 'fa-truck'}"></i></div>
-                    <div>
-                        <div class="card-title">${method.name}</div>
-                        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:2px;">
-                            <span class="badge ${isActive ? 'badge-active' : 'badge-inactive'}">${isActive ? '✅ نشط' : '❌ غير نشط'}</span>
+        grid.innerHTML = shippingMethods.map(method => {
+            const isActive = method.status === 'active';
+            return `
+            <div class="card">
+                <div class="card-header">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div class="icon"><i class="fas ${method.icon || 'fa-truck'}"></i></div>
+                        <div>
+                            <div class="card-title">${method.name}</div>
+                            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:2px;">
+                                <span class="badge ${isActive ? 'badge-active' : 'badge-inactive'}">${isActive ? '✅ نشط' : '❌ غير نشط'}</span>
+                            </div>
                         </div>
                     </div>
+                    ${method.image ? `<img src="${method.image}" alt="${method.name}" style="width:40px;height:40px;object-fit:contain;border-radius:8px;background:rgba(255,255,255,0.05);padding:4px;" />` : ''}
                 </div>
-                ${method.image ? `<img src="${method.image}" alt="${method.name}" style="width:40px;height:40px;object-fit:contain;border-radius:8px;background:rgba(255,255,255,0.05);padding:4px;" />` : ''}
+                <div class="card-desc">${method.description || 'لا يوجد وصف'}</div>
+                <div class="card-fields">
+                    <div class="field-row">
+                        <span class="label">💰 سعر الشحن</span>
+                        <span class="value">${method.price ? method.price + ' ر.س' : 'مجاني'}</span>
+                    </div>
+                    <div class="field-row">
+                        <span class="label">⏱️ مدة التوصيل</span>
+                        <span class="value">${method.delivery_days || 'غير محدد'} أيام</span>
+                    </div>
+                    <div class="field-row">
+                        <span class="label">📍 الدول</span>
+                        <span class="value">${method.countries || 'جميع الدول'}</span>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-success" onclick="toggleShippingStatus('${method.id}')" style="padding:4px 12px;font-size:11px;">
+                        ${isActive ? 'إيقاف' : 'تفعيل'}
+                    </button>
+                    <button class="btn-secondary" onclick="editShippingMethod('${method.id}')" style="padding:4px 12px;font-size:11px;">
+                        <i class="fas fa-edit"></i> تعديل
+                    </button>
+                    <button class="btn-danger" onclick="deleteShippingMethod('${method.id}')" style="padding:4px 12px;font-size:11px;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
             </div>
-            <div class="card-desc">${method.description || 'لا يوجد وصف'}</div>
-            <div class="card-fields">
-                <div class="field-row">
-                    <span class="label">💰 سعر الشحن</span>
-                    <span class="value">${method.price ? method.price + ' ر.س' : 'مجاني'}</span>
-                </div>
-                <div class="field-row">
-                    <span class="label">⏱️ مدة التوصيل</span>
-                    <span class="value">${method.delivery_days || 'غير محدد'} أيام</span>
-                </div>
-                <div class="field-row">
-                    <span class="label">📍 الدول</span>
-                    <span class="value">${method.countries || 'جميع الدول'}</span>
-                </div>
-            </div>
-            <div class="card-actions">
-                <button class="btn-success" onclick="toggleShippingStatus('${method.id}')" style="padding:4px 12px;font-size:11px;">
-                    ${isActive ? 'إيقاف' : 'تفعيل'}
-                </button>
-                <button class="btn-secondary" onclick="editShippingMethod('${method.id}')" style="padding:4px 12px;font-size:11px;">
-                    <i class="fas fa-edit"></i> تعديل
-                </button>
-                <button class="btn-danger" onclick="deleteShippingMethod('${method.id}')" style="padding:4px 12px;font-size:11px;">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-        </div>
-    `}).join('');
-}
-
-function openAddShippingMethod() {
-    document.getElementById('shippingMethodId').value = '';
-    document.getElementById('shippingMethodModalTitle').innerHTML = '<i class="fas fa-plus"></i> إضافة شركة شحن';
-    document.getElementById('shippingMethodForm').reset();
-    document.getElementById('smStatus').value = 'active';
-    document.getElementById('smPrice').value = '';
-    document.getElementById('smDeliveryDays').value = '';
-    document.getElementById('shippingMethodModal').classList.add('active');
-}
-window.openAddShippingMethod = openAddShippingMethod;
-
-async function editShippingMethod(id) {
-    const method = shippingMethods.find(s => s.id === id);
-    if (!method) {
-        showToast('⚠️ شركة الشحن غير موجودة', 'warning');
-        return;
+        `}).join('');
     }
-    
-    document.getElementById('shippingMethodId').value = method.id;
-    document.getElementById('shippingMethodModalTitle').innerHTML = '<i class="fas fa-edit"></i> تعديل شركة شحن';
-    document.getElementById('smName').value = method.name || '';
-    document.getElementById('smIcon').value = method.icon || 'fa-truck';
-    document.getElementById('smDescription').value = method.description || '';
-    document.getElementById('smPrice').value = method.price || '';
-    document.getElementById('smDeliveryDays').value = method.delivery_days || '';
-    document.getElementById('smCountries').value = method.countries || '';
-    document.getElementById('smApiUrl').value = method.api_url || '';
-    document.getElementById('smApiKey').value = method.api_key || '';
-    document.getElementById('smStatus').value = method.status || 'inactive';
-    document.getElementById('smImage').value = method.image || '';
-    
-    document.getElementById('shippingMethodModal').classList.add('active');
-}
-window.editShippingMethod = editShippingMethod;
 
-async function saveShippingMethod(event) {
-    event.preventDefault();
-    
-    const id = document.getElementById('shippingMethodId').value;
-    const name = document.getElementById('smName').value.trim();
-    const icon = document.getElementById('smIcon').value;
-    const description = document.getElementById('smDescription').value.trim();
-    const price = parseFloat(document.getElementById('smPrice').value) || null;
-    const delivery_days = document.getElementById('smDeliveryDays').value.trim();
-    const countries = document.getElementById('smCountries').value.trim();
-    const api_url = document.getElementById('smApiUrl').value.trim();
-    const api_key = document.getElementById('smApiKey').value.trim();
-    const status = document.getElementById('smStatus').value;
-    const image = document.getElementById('smImage').value.trim();
-    
-    if (!name) {
-        showToast('⚠️ الرجاء إدخال اسم شركة الشحن', 'warning');
-        return;
+    function openAddShippingMethod() {
+        document.getElementById('shippingMethodId').value = '';
+        document.getElementById('shippingMethodModalTitle').innerHTML = '<i class="fas fa-plus"></i> إضافة شركة شحن';
+        document.getElementById('shippingMethodForm').reset();
+        document.getElementById('smStatus').value = 'active';
+        document.getElementById('smPrice').value = '';
+        document.getElementById('smDeliveryDays').value = '';
+        document.getElementById('shippingMethodModal').classList.add('active');
     }
-    
-    const data = {
-        name,
-        icon,
-        description: description || null,
-        price,
-        delivery_days: delivery_days || null,
-        countries: countries || null,
-        api_url: api_url || null,
-        api_key: api_key || null,
-        status,
-        image: image || null,
-        updated_at: new Date().toISOString()
-    };
-    
-    try {
-        const client = getSupabase();
-        if (!client) {
-            showToast('⚠️ Supabase غير متصل', 'error');
+    window.openAddShippingMethod = openAddShippingMethod;
+
+    async function editShippingMethod(id) {
+        const method = shippingMethods.find(s => s.id === id);
+        if (!method) {
+            showToast('⚠️ شركة الشحن غير موجودة', 'warning');
             return;
         }
         
-        let result;
-        if (id) {
-            result = await client
+        document.getElementById('shippingMethodId').value = method.id;
+        document.getElementById('shippingMethodModalTitle').innerHTML = '<i class="fas fa-edit"></i> تعديل شركة شحن';
+        document.getElementById('smName').value = method.name || '';
+        document.getElementById('smIcon').value = method.icon || 'fa-truck';
+        document.getElementById('smDescription').value = method.description || '';
+        document.getElementById('smPrice').value = method.price || '';
+        document.getElementById('smDeliveryDays').value = method.delivery_days || '';
+        document.getElementById('smCountries').value = method.countries || '';
+        document.getElementById('smApiUrl').value = method.api_url || '';
+        document.getElementById('smApiKey').value = method.api_key || '';
+        document.getElementById('smStatus').value = method.status || 'inactive';
+        document.getElementById('smImage').value = method.image || '';
+        
+        document.getElementById('shippingMethodModal').classList.add('active');
+    }
+    window.editShippingMethod = editShippingMethod;
+
+    async function saveShippingMethod(event) {
+        event.preventDefault();
+        
+        const id = document.getElementById('shippingMethodId').value;
+        const name = document.getElementById('smName').value.trim();
+        const icon = document.getElementById('smIcon').value;
+        const description = document.getElementById('smDescription').value.trim();
+        const price = parseFloat(document.getElementById('smPrice').value) || null;
+        const delivery_days = document.getElementById('smDeliveryDays').value.trim();
+        const countries = document.getElementById('smCountries').value.trim();
+        const api_url = document.getElementById('smApiUrl').value.trim();
+        const api_key = document.getElementById('smApiKey').value.trim();
+        const status = document.getElementById('smStatus').value;
+        const image = document.getElementById('smImage').value.trim();
+        
+        if (!name) {
+            showToast('⚠️ الرجاء إدخال اسم شركة الشحن', 'warning');
+            return;
+        }
+        
+        const data = {
+            name,
+            icon,
+            description: description || null,
+            price,
+            delivery_days: delivery_days || null,
+            countries: countries || null,
+            api_url: api_url || null,
+            api_key: api_key || null,
+            status,
+            image: image || null,
+            updated_at: new Date().toISOString()
+        };
+        
+        try {
+            if (!supabaseReady || !supabaseClient) {
+                await initSupabase();
+                if (!supabaseReady || !supabaseClient) {
+                    showToast('⚠️ Supabase غير متصل', 'error');
+                    return;
+                }
+            }
+            
+            let result;
+            if (id) {
+                result = await supabaseClient
+                    .from('shipping_methods')
+                    .update(data)
+                    .eq('id', id);
+            } else {
+                data.created_at = new Date().toISOString();
+                data.display_order = 0;
+                result = await supabaseClient
+                    .from('shipping_methods')
+                    .insert(data);
+            }
+            
+            if (result.error) throw result.error;
+            
+            showToast(id ? '✅ تم تحديث شركة الشحن' : '✅ تم إضافة شركة الشحن', 'success');
+            closeModal('shippingMethodModal');
+            loadShippingMethods();
+            
+        } catch (error) {
+            console.error('❌ خطأ:', error);
+            showToast('❌ حدث خطأ: ' + (error.message || 'غير معروف'), 'error');
+        }
+    }
+    window.saveShippingMethod = saveShippingMethod;
+
+    async function toggleShippingStatus(id) {
+        const method = shippingMethods.find(s => s.id === id);
+        if (!method) return;
+        
+        const newStatus = method.status === 'active' ? 'inactive' : 'active';
+        
+        try {
+            if (!supabaseReady || !supabaseClient) {
+                await initSupabase();
+                if (!supabaseReady || !supabaseClient) {
+                    showToast('⚠️ Supabase غير متصل', 'error');
+                    return;
+                }
+            }
+            
+            const { error } = await supabaseClient
                 .from('shipping_methods')
-                .update(data)
+                .update({ 
+                    status: newStatus,
+                    updated_at: new Date().toISOString()
+                })
                 .eq('id', id);
-        } else {
-            data.created_at = new Date().toISOString();
-            data.display_order = 0;
-            result = await client
+            
+            if (error) throw error;
+            
+            showToast(`✅ تم ${newStatus === 'active' ? 'تفعيل' : 'إيقاف'} شركة الشحن`, 'success');
+            loadShippingMethods();
+            
+        } catch (error) {
+            console.error('❌ خطأ:', error);
+            showToast('❌ حدث خطأ', 'error');
+        }
+    }
+    window.toggleShippingStatus = toggleShippingStatus;
+
+    async function deleteShippingMethod(id) {
+        if (!confirm('⚠️ هل أنت متأكد من حذف شركة الشحن؟')) return;
+        
+        try {
+            if (!supabaseReady || !supabaseClient) {
+                await initSupabase();
+                if (!supabaseReady || !supabaseClient) {
+                    showToast('⚠️ Supabase غير متصل', 'error');
+                    return;
+                }
+            }
+            
+            const { error } = await supabaseClient
                 .from('shipping_methods')
-                .insert(data);
+                .delete()
+                .eq('id', id);
+            
+            if (error) throw error;
+            
+            showToast('✅ تم حذف شركة الشحن', 'success');
+            loadShippingMethods();
+            
+        } catch (error) {
+            console.error('❌ خطأ:', error);
+            showToast('❌ حدث خطأ', 'error');
         }
-        
-        if (result.error) throw result.error;
-        
-        showToast(id ? '✅ تم تحديث شركة الشحن' : '✅ تم إضافة شركة الشحن', 'success');
-        closeModal('shippingMethodModal');
-        loadShippingMethods();
-        
-    } catch (error) {
-        console.error('❌ خطأ:', error);
-        showToast('❌ حدث خطأ: ' + (error.message || 'غير معروف'), 'error');
     }
-}
-window.saveShippingMethod = saveShippingMethod;
+    window.deleteShippingMethod = deleteShippingMethod;
 
-async function toggleShippingStatus(id) {
-    const method = shippingMethods.find(s => s.id === id);
-    if (!method) return;
-    
-    const newStatus = method.status === 'active' ? 'inactive' : 'active';
-    
-    try {
-        const client = getSupabase();
-        if (!client) {
-            showToast('⚠️ Supabase غير متصل', 'error');
-            return;
-        }
-        
-        const { error } = await client
-            .from('shipping_methods')
-            .update({ 
-                status: newStatus,
-                updated_at: new Date().toISOString()
-            })
-            .eq('id', id);
-        
-        if (error) throw error;
-        
-        showToast(`✅ تم ${newStatus === 'active' ? 'تفعيل' : 'إيقاف'} شركة الشحن`, 'success');
-        loadShippingMethods();
-        
-    } catch (error) {
-        console.error('❌ خطأ:', error);
-        showToast('❌ حدث خطأ', 'error');
-    }
-}
-window.toggleShippingStatus = toggleShippingStatus;
+    // ============================================
+    // ===== 3. إدارة حقول الطلب =====
+    // ============================================
 
-async function deleteShippingMethod(id) {
-    if (!confirm('⚠️ هل أنت متأكد من حذف شركة الشحن؟')) return;
-    
-    try {
-        const client = getSupabase();
-        if (!client) {
-            showToast('⚠️ Supabase غير متصل', 'error');
-            return;
-        }
-        
-        const { error } = await client
-            .from('shipping_methods')
-            .delete()
-            .eq('id', id);
-        
-        if (error) throw error;
-        
-        showToast('✅ تم حذف شركة الشحن', 'success');
-        loadShippingMethods();
-        
-    } catch (error) {
-        console.error('❌ خطأ:', error);
-        showToast('❌ حدث خطأ', 'error');
-    }
-}
-window.deleteShippingMethod = deleteShippingMethod;
-
-// ============================================
-// ===== 3. إدارة حقول الطلب =====
-// ============================================
-
-async function loadCheckoutFields() {
-    try {
-        const client = getSupabase();
-        if (!client) {
+    async function loadCheckoutFields() {
+        try {
+            if (!supabaseReady || !supabaseClient) {
+                await initSupabase();
+                if (!supabaseReady || !supabaseClient) {
+                    renderCheckoutFields();
+                    return;
+                }
+            }
+            
+            const { data, error } = await supabaseClient
+                .from('checkout_fields')
+                .select('*')
+                .order('display_order', { ascending: true });
+            
+            if (error) {
+                console.error('❌ خطأ في تحميل حقول الطلب:', error);
+                checkoutFields = [];
+                renderCheckoutFields();
+                return;
+            }
+            
+            checkoutFields = data || [];
             renderCheckoutFields();
-            return;
-        }
-        
-        const { data, error } = await client
-            .from('checkout_fields')
-            .select('*')
-            .order('display_order', { ascending: true });
-        
-        if (error) {
+            updateStats();
+            
+        } catch (error) {
             console.error('❌ خطأ في تحميل حقول الطلب:', error);
             checkoutFields = [];
             renderCheckoutFields();
-            return;
+            showToast('❌ حدث خطأ في تحميل حقول الطلب', 'error');
         }
-        
-        checkoutFields = data || [];
-        renderCheckoutFields();
-        updateStats();
-        
-    } catch (error) {
-        console.error('❌ خطأ في تحميل حقول الطلب:', error);
-        checkoutFields = [];
-        renderCheckoutFields();
-        showToast('❌ حدث خطأ في تحميل حقول الطلب', 'error');
     }
-}
-window.loadCheckoutFields = loadCheckoutFields;
+    window.loadCheckoutFields = loadCheckoutFields;
 
-function renderCheckoutFields() {
-    const container = document.getElementById('checkoutFieldsContainer');
-    if (!container) return;
-    
-    if (checkoutFields.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-pencil-alt"></i>
-                <h3>لا توجد حقول</h3>
-                <p>أضف الحقل الأول بالضغط على "إضافة حقل جديد"</p>
-            </div>
-        `;
-        return;
-    }
-    
-    const typeLabels = {
-        text: '📝 نص قصير',
-        textarea: '📄 نص طويل',
-        select: '📋 قائمة منسدلة',
-        file: '📎 رفع ملف',
-        number: '🔢 رقم',
-        email: '📧 بريد إلكتروني',
-        phone: '📱 رقم هاتف',
-        date: '📅 تاريخ',
-        time: '⏰ وقت',
-        map: '🗺️ خريطة',
-        checkbox: '☑️ خانة اختيار',
-        radio: '⭕ اختيار واحد'
-    };
-    
-    container.innerHTML = `
-        <div class="fields-list">
-            ${checkoutFields.map(field => `
-                <div class="field-item">
-                    <div class="field-info">
-                        <div class="field-name">${field.field_name} ${field.is_required ? '<span style="color:#ef4444;">*</span>' : ''}</div>
-                        <div class="field-meta">${typeLabels[field.field_type] || field.field_type} ${field.category ? '| ' + field.category : ''} ${field.is_active ? '✅' : '❌'}</div>
-                    </div>
-                    <div class="field-actions">
-                        <button class="edit-btn" onclick="editCheckoutField('${field.id}')" title="تعديل">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="toggle-btn ${field.is_active ? 'active' : ''}" onclick="toggleCheckoutField('${field.id}')" title="${field.is_active ? 'إيقاف' : 'تفعيل'}">
-                            <i class="fas ${field.is_active ? 'fa-pause' : 'fa-play'}"></i>
-                        </button>
-                        <button class="delete-btn" onclick="deleteCheckoutField('${field.id}')" title="حذف">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
+    function renderCheckoutFields() {
+        const container = document.getElementById('checkoutFieldsContainer');
+        if (!container) return;
+        
+        if (checkoutFields.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-pencil-alt"></i>
+                    <h3>لا توجد حقول</h3>
+                    <p>أضف الحقل الأول بالضغط على "إضافة حقل جديد"</p>
                 </div>
-            `).join('')}
-        </div>
-    `;
-}
-
-function openAddCheckoutField() {
-    document.getElementById('checkoutFieldId').value = '';
-    document.getElementById('checkoutFieldModalTitle').innerHTML = '<i class="fas fa-plus"></i> إضافة حقل جديد';
-    document.getElementById('checkoutFieldForm').reset();
-    document.getElementById('cfRequired').checked = true;
-    document.getElementById('cfActive').checked = true;
-    document.getElementById('cfType').value = 'text';
-    document.getElementById('cfWidth').value = '2';
-    document.getElementById('cfOptionsGroup').style.display = 'none';
-    document.getElementById('checkoutFieldModal').classList.add('active');
-}
-window.openAddCheckoutField = openAddCheckoutField;
-
-async function editCheckoutField(id) {
-    const field = checkoutFields.find(f => f.id === id);
-    if (!field) {
-        showToast('⚠️ الحقل غير موجود', 'warning');
-        return;
-    }
-    
-    document.getElementById('checkoutFieldId').value = field.id;
-    document.getElementById('checkoutFieldModalTitle').innerHTML = '<i class="fas fa-edit"></i> تعديل الحقل';
-    document.getElementById('cfName').value = field.field_name || '';
-    document.getElementById('cfSlug').value = field.slug || '';
-    document.getElementById('cfType').value = field.field_type || 'text';
-    document.getElementById('cfOptions').value = field.options || '';
-    document.getElementById('cfPlaceholder').value = field.placeholder || '';
-    document.getElementById('cfHelpText').value = field.help_text || '';
-    document.getElementById('cfRequired').checked = field.is_required || false;
-    document.getElementById('cfActive').checked = field.is_active !== false;
-    document.getElementById('cfOrder').value = field.display_order || 0;
-    document.getElementById('cfWidth').value = field.width || '2';
-    document.getElementById('cfCategory').value = field.category || 'custom';
-    
-    if (field.field_type === 'select' || field.field_type === 'radio') {
-        document.getElementById('cfOptionsGroup').style.display = 'block';
-    } else {
-        document.getElementById('cfOptionsGroup').style.display = 'none';
-    }
-    
-    document.getElementById('checkoutFieldModal').classList.add('active');
-}
-window.editCheckoutField = editCheckoutField;
-
-function toggleFieldOptions() {
-    const type = document.getElementById('cfType').value;
-    const optionsGroup = document.getElementById('cfOptionsGroup');
-    if (type === 'select' || type === 'radio') {
-        optionsGroup.style.display = 'block';
-    } else {
-        optionsGroup.style.display = 'none';
-    }
-}
-window.toggleFieldOptions = toggleFieldOptions;
-
-async function saveCheckoutField(event) {
-    event.preventDefault();
-    
-    const id = document.getElementById('checkoutFieldId').value;
-    const field_name = document.getElementById('cfName').value.trim();
-    const slug = document.getElementById('cfSlug').value.trim() || generateSlug(field_name);
-    const field_type = document.getElementById('cfType').value;
-    const options = document.getElementById('cfOptions').value.trim();
-    const placeholder = document.getElementById('cfPlaceholder').value.trim();
-    const help_text = document.getElementById('cfHelpText').value.trim();
-    const is_required = document.getElementById('cfRequired').checked;
-    const is_active = document.getElementById('cfActive').checked;
-    const display_order = parseInt(document.getElementById('cfOrder').value) || 0;
-    const width = parseInt(document.getElementById('cfWidth').value) || 2;
-    const category = document.getElementById('cfCategory').value;
-    
-    if (!field_name) {
-        showToast('⚠️ الرجاء إدخال اسم الحقل', 'warning');
-        return;
-    }
-    
-    const data = {
-        field_name,
-        slug: slug.toLowerCase().replace(/\s+/g, '_'),
-        field_type,
-        options: (field_type === 'select' || field_type === 'radio') ? options : null,
-        placeholder: placeholder || null,
-        help_text: help_text || null,
-        is_required,
-        is_active,
-        display_order,
-        width,
-        category,
-        updated_at: new Date().toISOString()
-    };
-    
-    try {
-        const client = getSupabase();
-        if (!client) {
-            showToast('⚠️ Supabase غير متصل', 'error');
+            `;
             return;
         }
         
-        let result;
-        if (id) {
-            result = await client
-                .from('checkout_fields')
-                .update(data)
-                .eq('id', id);
-        } else {
-            data.created_at = new Date().toISOString();
-            result = await client
-                .from('checkout_fields')
-                .insert(data);
-        }
-        
-        if (result.error) throw result.error;
-        
-        showToast(id ? '✅ تم تحديث الحقل' : '✅ تم إضافة الحقل', 'success');
-        closeModal('checkoutFieldModal');
-        loadCheckoutFields();
-        
-    } catch (error) {
-        console.error('❌ خطأ:', error);
-        showToast('❌ حدث خطأ: ' + (error.message || 'غير معروف'), 'error');
-    }
-}
-window.saveCheckoutField = saveCheckoutField;
-
-async function deleteCheckoutField(id) {
-    if (!confirm('⚠️ هل أنت متأكد من حذف هذا الحقل؟')) return;
-    
-    try {
-        const client = getSupabase();
-        if (!client) {
-            showToast('⚠️ Supabase غير متصل', 'error');
-            return;
-        }
-        
-        const { error } = await client
-            .from('checkout_fields')
-            .delete()
-            .eq('id', id);
-        
-        if (error) throw error;
-        
-        showToast('✅ تم حذف الحقل', 'success');
-        loadCheckoutFields();
-        
-    } catch (error) {
-        console.error('❌ خطأ:', error);
-        showToast('❌ حدث خطأ', 'error');
-    }
-}
-window.deleteCheckoutField = deleteCheckoutField;
-
-async function toggleCheckoutField(id) {
-    const field = checkoutFields.find(f => f.id === id);
-    if (!field) return;
-    
-    const newStatus = !field.is_active;
-    
-    try {
-        const client = getSupabase();
-        if (!client) {
-            showToast('⚠️ Supabase غير متصل', 'error');
-            return;
-        }
-        
-        const { error } = await client
-            .from('checkout_fields')
-            .update({ 
-                is_active: newStatus,
-                updated_at: new Date().toISOString()
-            })
-            .eq('id', id);
-        
-        if (error) throw error;
-        
-        showToast(`✅ تم ${newStatus ? 'تفعيل' : 'إيقاف'} الحقل`, 'success');
-        loadCheckoutFields();
-        
-    } catch (error) {
-        console.error('❌ خطأ:', error);
-        showToast('❌ حدث خطأ', 'error');
-    }
-}
-window.toggleCheckoutField = toggleCheckoutField;
-
-// ============================================
-// ===== 4. التصدير والاستيراد =====
-// ============================================
-
-function exportAllData() {
-    try {
-        const data = {
-            payment_methods: paymentMethods,
-            shipping_methods: shippingMethods,
-            checkout_fields: checkoutFields,
-            exported_at: new Date().toISOString()
+        const typeLabels = {
+            text: '📝 نص قصير',
+            textarea: '📄 نص طويل',
+            select: '📋 قائمة منسدلة',
+            file: '📎 رفع ملف',
+            number: '🔢 رقم',
+            email: '📧 بريد إلكتروني',
+            phone: '📱 رقم هاتف',
+            date: '📅 تاريخ',
+            time: '⏰ وقت',
+            map: '🗺️ خريطة',
+            checkbox: '☑️ خانة اختيار',
+            radio: '⭕ اختيار واحد'
         };
         
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `payment_config_${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-        
-        const total = paymentMethods.length + shippingMethods.length + checkoutFields.length;
-        showToast(`✅ تم تصدير ${total} عنصر بنجاح`, 'success');
-    } catch (error) {
-        console.error('❌ خطأ في التصدير:', error);
-        showToast('❌ حدث خطأ في التصدير', 'error');
+        container.innerHTML = `
+            <div class="fields-list">
+                ${checkoutFields.map(field => `
+                    <div class="field-item">
+                        <div class="field-info">
+                            <div class="field-name">${field.field_name} ${field.is_required ? '<span style="color:#ef4444;">*</span>' : ''}</div>
+                            <div class="field-meta">${typeLabels[field.field_type] || field.field_type} ${field.category ? '| ' + field.category : ''} ${field.is_active ? '✅' : '❌'}</div>
+                        </div>
+                        <div class="field-actions">
+                            <button class="edit-btn" onclick="editCheckoutField('${field.id}')" title="تعديل">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="toggle-btn ${field.is_active ? 'active' : ''}" onclick="toggleCheckoutField('${field.id}')" title="${field.is_active ? 'إيقاف' : 'تفعيل'}">
+                                <i class="fas ${field.is_active ? 'fa-pause' : 'fa-play'}"></i>
+                            </button>
+                            <button class="delete-btn" onclick="deleteCheckoutField('${field.id}')" title="حذف">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
     }
-}
-window.exportAllData = exportAllData;
 
-async function importAllData(file) {
-    if (!file) return;
-    
-    try {
-        const text = await file.text();
-        const data = JSON.parse(text);
-        
-        let count = 0;
-        const client = getSupabase();
-        if (!client) {
-            showToast('⚠️ Supabase غير متصل', 'error');
+    function openAddCheckoutField() {
+        document.getElementById('checkoutFieldId').value = '';
+        document.getElementById('checkoutFieldModalTitle').innerHTML = '<i class="fas fa-plus"></i> إضافة حقل جديد';
+        document.getElementById('checkoutFieldForm').reset();
+        document.getElementById('cfRequired').checked = true;
+        document.getElementById('cfActive').checked = true;
+        document.getElementById('cfType').value = 'text';
+        document.getElementById('cfWidth').value = '2';
+        document.getElementById('cfOptionsGroup').style.display = 'none';
+        document.getElementById('checkoutFieldModal').classList.add('active');
+    }
+    window.openAddCheckoutField = openAddCheckoutField;
+
+    async function editCheckoutField(id) {
+        const field = checkoutFields.find(f => f.id === id);
+        if (!field) {
+            showToast('⚠️ الحقل غير موجود', 'warning');
             return;
         }
         
-        if (data.payment_methods && Array.isArray(data.payment_methods)) {
-            for (const item of data.payment_methods) {
-                const { error } = await client
-                    .from('payment_methods')
-                    .insert({
-                        ...item,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    });
-                if (!error) count++;
-            }
+        document.getElementById('checkoutFieldId').value = field.id;
+        document.getElementById('checkoutFieldModalTitle').innerHTML = '<i class="fas fa-edit"></i> تعديل الحقل';
+        document.getElementById('cfName').value = field.field_name || '';
+        document.getElementById('cfSlug').value = field.slug || '';
+        document.getElementById('cfType').value = field.field_type || 'text';
+        document.getElementById('cfOptions').value = field.options || '';
+        document.getElementById('cfPlaceholder').value = field.placeholder || '';
+        document.getElementById('cfHelpText').value = field.help_text || '';
+        document.getElementById('cfRequired').checked = field.is_required || false;
+        document.getElementById('cfActive').checked = field.is_active !== false;
+        document.getElementById('cfOrder').value = field.display_order || 0;
+        document.getElementById('cfWidth').value = field.width || '2';
+        document.getElementById('cfCategory').value = field.category || 'custom';
+        
+        if (field.field_type === 'select' || field.field_type === 'radio') {
+            document.getElementById('cfOptionsGroup').style.display = 'block';
+        } else {
+            document.getElementById('cfOptionsGroup').style.display = 'none';
         }
         
-        if (data.shipping_methods && Array.isArray(data.shipping_methods)) {
-            for (const item of data.shipping_methods) {
-                const { error } = await client
-                    .from('shipping_methods')
-                    .insert({
-                        ...item,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    });
-                if (!error) count++;
-            }
+        document.getElementById('checkoutFieldModal').classList.add('active');
+    }
+    window.editCheckoutField = editCheckoutField;
+
+    function toggleFieldOptions() {
+        const type = document.getElementById('cfType').value;
+        const optionsGroup = document.getElementById('cfOptionsGroup');
+        if (type === 'select' || type === 'radio') {
+            optionsGroup.style.display = 'block';
+        } else {
+            optionsGroup.style.display = 'none';
+        }
+    }
+    window.toggleFieldOptions = toggleFieldOptions;
+
+    async function saveCheckoutField(event) {
+        event.preventDefault();
+        
+        const id = document.getElementById('checkoutFieldId').value;
+        const field_name = document.getElementById('cfName').value.trim();
+        const slug = document.getElementById('cfSlug').value.trim() || generateSlug(field_name);
+        const field_type = document.getElementById('cfType').value;
+        const options = document.getElementById('cfOptions').value.trim();
+        const placeholder = document.getElementById('cfPlaceholder').value.trim();
+        const help_text = document.getElementById('cfHelpText').value.trim();
+        const is_required = document.getElementById('cfRequired').checked;
+        const is_active = document.getElementById('cfActive').checked;
+        const display_order = parseInt(document.getElementById('cfOrder').value) || 0;
+        const width = parseInt(document.getElementById('cfWidth').value) || 2;
+        const category = document.getElementById('cfCategory').value;
+        
+        if (!field_name) {
+            showToast('⚠️ الرجاء إدخال اسم الحقل', 'warning');
+            return;
         }
         
-        if (data.checkout_fields && Array.isArray(data.checkout_fields)) {
-            for (const item of data.checkout_fields) {
-                const { error } = await client
+        const data = {
+            field_name,
+            slug: slug.toLowerCase().replace(/\s+/g, '_'),
+            field_type,
+            options: (field_type === 'select' || field_type === 'radio') ? options : null,
+            placeholder: placeholder || null,
+            help_text: help_text || null,
+            is_required,
+            is_active,
+            display_order,
+            width,
+            category,
+            updated_at: new Date().toISOString()
+        };
+        
+        try {
+            if (!supabaseReady || !supabaseClient) {
+                await initSupabase();
+                if (!supabaseReady || !supabaseClient) {
+                    showToast('⚠️ Supabase غير متصل', 'error');
+                    return;
+                }
+            }
+            
+            let result;
+            if (id) {
+                result = await supabaseClient
                     .from('checkout_fields')
-                    .insert({
-                        ...item,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    });
-                if (!error) count++;
+                    .update(data)
+                    .eq('id', id);
+            } else {
+                data.created_at = new Date().toISOString();
+                result = await supabaseClient
+                    .from('checkout_fields')
+                    .insert(data);
             }
+            
+            if (result.error) throw result.error;
+            
+            showToast(id ? '✅ تم تحديث الحقل' : '✅ تم إضافة الحقل', 'success');
+            closeModal('checkoutFieldModal');
+            loadCheckoutFields();
+            
+        } catch (error) {
+            console.error('❌ خطأ:', error);
+            showToast('❌ حدث خطأ: ' + (error.message || 'غير معروف'), 'error');
         }
+    }
+    window.saveCheckoutField = saveCheckoutField;
+
+    async function deleteCheckoutField(id) {
+        if (!confirm('⚠️ هل أنت متأكد من حذف هذا الحقل؟')) return;
         
-        showToast(`✅ تم استيراد ${count} عنصر بنجاح`, 'success');
-        loadAllData();
-    } catch (error) {
-        console.error('❌ خطأ في الاستيراد:', error);
-        showToast('❌ خطأ في الاستيراد: ' + error.message, 'error');
+        try {
+            if (!supabaseReady || !supabaseClient) {
+                await initSupabase();
+                if (!supabaseReady || !supabaseClient) {
+                    showToast('⚠️ Supabase غير متصل', 'error');
+                    return;
+                }
+            }
+            
+            const { error } = await supabaseClient
+                .from('checkout_fields')
+                .delete()
+                .eq('id', id);
+            
+            if (error) throw error;
+            
+            showToast('✅ تم حذف الحقل', 'success');
+            loadCheckoutFields();
+            
+        } catch (error) {
+            console.error('❌ خطأ:', error);
+            showToast('❌ حدث خطأ', 'error');
+        }
     }
-}
-window.importAllData = importAllData;
+    window.deleteCheckoutField = deleteCheckoutField;
 
-// ============================================
-// ===== دوال مساعدة =====
-// ============================================
+    async function toggleCheckoutField(id) {
+        const field = checkoutFields.find(f => f.id === id);
+        if (!field) return;
+        
+        const newStatus = !field.is_active;
+        
+        try {
+            if (!supabaseReady || !supabaseClient) {
+                await initSupabase();
+                if (!supabaseReady || !supabaseClient) {
+                    showToast('⚠️ Supabase غير متصل', 'error');
+                    return;
+                }
+            }
+            
+            const { error } = await supabaseClient
+                .from('checkout_fields')
+                .update({ 
+                    is_active: newStatus,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', id);
+            
+            if (error) throw error;
+            
+            showToast(`✅ تم ${newStatus ? 'تفعيل' : 'إيقاف'} الحقل`, 'success');
+            loadCheckoutFields();
+            
+        } catch (error) {
+            console.error('❌ خطأ:', error);
+            showToast('❌ حدث خطأ', 'error');
+        }
+    }
+    window.toggleCheckoutField = toggleCheckoutField;
 
-function generateSlug(text) {
-    return text
-        .toLowerCase()
-        .replace(/[^a-zA-Z0-9\u0600-\u06FF\s]/g, '')
-        .replace(/\s+/g, '_')
-        .substring(0, 50);
-}
+    // ============================================
+    // ===== 4. التصدير والاستيراد =====
+    // ============================================
 
-function copyPreviewCode() {
-    const content = document.getElementById('codePreviewContent');
-    const code = content.querySelector('pre')?.textContent || '';
-    
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(code).then(() => {
-            showToast('✅ تم نسخ الكود', 'success');
-        }).catch(() => {
+    function exportAllData() {
+        try {
+            const data = {
+                payment_methods: paymentMethods,
+                shipping_methods: shippingMethods,
+                checkout_fields: checkoutFields,
+                exported_at: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `payment_config_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            const total = paymentMethods.length + shippingMethods.length + checkoutFields.length;
+            showToast(`✅ تم تصدير ${total} عنصر بنجاح`, 'success');
+        } catch (error) {
+            console.error('❌ خطأ في التصدير:', error);
+            showToast('❌ حدث خطأ في التصدير', 'error');
+        }
+    }
+    window.exportAllData = exportAllData;
+
+    async function importAllData(file) {
+        if (!file) return;
+        
+        try {
+            const text = await file.text();
+            const data = JSON.parse(text);
+            
+            let count = 0;
+            if (!supabaseReady || !supabaseClient) {
+                await initSupabase();
+                if (!supabaseReady || !supabaseClient) {
+                    showToast('⚠️ Supabase غير متصل', 'error');
+                    return;
+                }
+            }
+            
+            if (data.payment_methods && Array.isArray(data.payment_methods)) {
+                for (const item of data.payment_methods) {
+                    const { error } = await supabaseClient
+                        .from('payment_methods')
+                        .insert({
+                            ...item,
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                        });
+                    if (!error) count++;
+                }
+            }
+            
+            if (data.shipping_methods && Array.isArray(data.shipping_methods)) {
+                for (const item of data.shipping_methods) {
+                    const { error } = await supabaseClient
+                        .from('shipping_methods')
+                        .insert({
+                            ...item,
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                        });
+                    if (!error) count++;
+                }
+            }
+            
+            if (data.checkout_fields && Array.isArray(data.checkout_fields)) {
+                for (const item of data.checkout_fields) {
+                    const { error } = await supabaseClient
+                        .from('checkout_fields')
+                        .insert({
+                            ...item,
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                        });
+                    if (!error) count++;
+                }
+            }
+            
+            showToast(`✅ تم استيراد ${count} عنصر بنجاح`, 'success');
+            loadAllData();
+        } catch (error) {
+            console.error('❌ خطأ في الاستيراد:', error);
+            showToast('❌ خطأ في الاستيراد: ' + error.message, 'error');
+        }
+    }
+    window.importAllData = importAllData;
+
+    // ============================================
+    // ===== دوال مساعدة =====
+    // ============================================
+
+    function generateSlug(text) {
+        return text
+            .toLowerCase()
+            .replace(/[^a-zA-Z0-9\u0600-\u06FF\s]/g, '')
+            .replace(/\s+/g, '_')
+            .substring(0, 50);
+    }
+
+    function copyPreviewCode() {
+        const content = document.getElementById('codePreviewContent');
+        const code = content.querySelector('pre')?.textContent || '';
+        
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(code).then(() => {
+                showToast('✅ تم نسخ الكود', 'success');
+            }).catch(() => {
+                fallbackCopy(code);
+            });
+        } else {
             fallbackCopy(code);
+        }
+    }
+    window.copyPreviewCode = copyPreviewCode;
+
+    function fallbackCopy(text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            document.execCommand('copy');
+            showToast('✅ تم نسخ الكود', 'success');
+        } catch (e) {
+            showToast('❌ فشل نسخ الكود', 'error');
+        }
+        textarea.remove();
+    }
+
+    // ============================================
+    // ===== تهيئة الصفحة =====
+    // ============================================
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        console.log('🚀 Payment Methods Manager loaded');
+        console.log('🔐 Keys loaded from keys.js');
+        
+        await initSupabase();
+        
+        // مراقبة تغيير موقع الحقن المخصص
+        document.getElementById('pmPosition').addEventListener('change', function() {
+            const customGroup = document.getElementById('pmCustomPositionGroup');
+            customGroup.style.display = this.value === 'custom' ? 'block' : 'none';
         });
-    } else {
-        fallbackCopy(code);
-    }
-}
-window.copyPreviewCode = copyPreviewCode;
-
-function fallbackCopy(text) {
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    document.body.appendChild(textarea);
-    textarea.select();
-    try {
-        document.execCommand('copy');
-        showToast('✅ تم نسخ الكود', 'success');
-    } catch (e) {
-        showToast('❌ فشل نسخ الكود', 'error');
-    }
-    textarea.remove();
-}
-
-// ============================================
-// ===== تهيئة الصفحة =====
-// ============================================
-
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Payment Methods Manager loaded');
-    
-    if (!supabaseReady) {
-        initSupabase();
-    }
-    
-    // مراقبة تغيير موقع الحقن المخصص
-    document.getElementById('pmPosition').addEventListener('change', function() {
-        const customGroup = document.getElementById('pmCustomPositionGroup');
-        customGroup.style.display = this.value === 'custom' ? 'block' : 'none';
+        
+        loadAllData();
     });
-    
-    loadAllData();
-});
 </script>
 
 </body>

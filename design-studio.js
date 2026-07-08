@@ -1,818 +1,658 @@
 // ============================================
-// محرك تصميم الدروع - Tithkari Studio
+// محرك تصميم الدروع - Tithkari Studio (محسن)
 // ============================================
 
-// ===== استيراد Supabase =====
+// ===== استيراد Supabase ونظام المفاتيح =====
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
+import KEYS from './keys.js';
 
 // ===== إعدادات Supabase =====
-const SUPABASE_URL = 'https://savtqajghyloevzwrzvt.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhdnRxYWpnaHlsb2V2endyenZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3ODA1OTMsImV4cCI6MjA5ODM1NjU5M30.CBq7eKyr3RR11op_SevMBBcKQNKF7uftpaa-URemEww';
+const SUPABASE_URL = KEYS.supabaseUrl;
+const SUPABASE_KEY = KEYS.supabaseAnonKey;
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 console.log('✅ Supabase initialized in Design Studio');
 
 // ============================================
-// 🆕 إنشاء الجداول تلقائياً (محسّن)
+// الحالة العامة
 // ============================================
+let layers = [];
+let activeLayerId = null;
+let nextId = 1;
+let history = [];
+let historyIndex = -1;
+let designImages = [];
+let currentProductId = null;
+let currentProductData = null;
+let currentTemplateId = null;
+let isAdminUser = false;
+let currentCustomer = null;
+let isUsingProductImage = false;
+let isEditing = false;
+let isDragging = false;
+let isResizing = false;
+let adminQuotes = [];
+let productsList = [];
+let resizeData = null;
+let autoSaveTimer = null;
+let animationFrame = null;
+let layerCounter = 0;
 
-async function createTablesIfNotExist() {
-    try {
-        console.log('🔍 التحقق من وجود الجداول...');
-        
-        // التحقق من الجداول فقط، لا نحاول إنشائها لأنها تتطلب صلاحيات خاصة
-        // سنستخدم localStorage كحل بديل للجداول غير الموجودة
-        
-        // 1. التحقق من جدول templates
-        try {
-            const { error } = await supabase
-                .from('templates')
-                .select('id')
-                .limit(1);
-            
-            if (error && (error.code === '42P01' || error.code === '404')) {
-                console.log('⚠️ جدول templates غير موجود، سيتم استخدام localStorage');
-            }
-        } catch (e) {
-            console.log('⚠️ لا يمكن الوصول لجدول templates، استخدام localStorage');
-        }
-        
-        // 2. التحقق من جدول custom_orders
-        try {
-            const { error } = await supabase
-                .from('custom_orders')
-                .select('id')
-                .limit(1);
-            
-            if (error && (error.code === '42P01' || error.code === '404')) {
-                console.log('⚠️ جدول custom_orders غير موجود، سيتم استخدام localStorage');
-            }
-        } catch (e) {
-            console.log('⚠️ لا يمكن الوصول لجدول custom_orders، استخدام localStorage');
-        }
-        
-        // 3. التحقق من جدول customizations
-        try {
-            const { error } = await supabase
-                .from('customizations')
-                .select('id')
-                .limit(1);
-            
-            if (error && (error.code === '42P01' || error.code === '404')) {
-                console.log('⚠️ جدول customizations غير موجود، سيتم استخدام localStorage');
-            }
-        } catch (e) {
-            console.log('⚠️ لا يمكن الوصول لجدول customizations، استخدام localStorage');
-        }
-        
-        console.log('✅ فحص الجداول مكتمل - سيتم استخدام localStorage كبديل');
-        
-    } catch (error) {
-        console.warn('⚠️ خطأ في فحص الجداول، سيتم استخدام localStorage:', error);
-    }
+// ============================================
+// دوال مساعدة محسنة
+// ============================================
+function showToast(msg, type = 'info') {
+    const existing = document.querySelector('.toast-notification');
+    if (existing) existing.remove();
+    const el = document.createElement('div');
+    el.className = 'toast-notification ' + type;
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(-50%) translateY(30px)';
+        el.style.transition = 'all 0.4s ease';
+        setTimeout(() => el.remove(), 400);
+    }, 3000);
+}
+window.showToast = showToast;
+
+function getLayersSurface() { 
+    return document.getElementById('layersSurface'); 
 }
 
-// ===== الحالة =====
-var layers = [];
-var activeLayerId = null;
-var layerCounter = 0;
-var undoStack = [];
-var redoStack = [];
-var currentTemplate = 'shield_1';
-var currentTemplateId = null;
-var isDragging = false;
-var isResizing = false;
-var isEditing = false;
-var currentHandle = '';
-var dragStartX = 0;
-var dragStartY = 0;
-var dragStartLeft = 0;
-var dragStartTop = 0;
-var dragStartWidth = 0;
-var dragStartHeight = 0;
-var activeResizeLayer = null;
-var currentProductId = null;
-var touchStartTime = 0;
-
-// ===== القوالب الافتراضية (باستخدام صور محلية آمنة) =====
-var defaultTemplates = [
-    { id: 'shield_1', name: 'درع الفارس الذهبي', image: 'https://i.ibb.co/vxn3p7C7/Gemini-Generated-Image-g2xtelg2xtelg2xt.png' },
-    { id: 'shield_2', name: 'درع التنين الأسود', image: 'https://i.ibb.co/dwkh437W/Gemini-Generated-Image-bt95o2bt95o2bt95-1.png' },
-    { id: 'shield_3', name: 'درع الوفاء الفخم', image: 'https://i.ibb.co/Y7Xm6f8f/Gemini-Generated-Image-bt95o2bt95o2bt95.png' },
-    { id: 'shield_4', name: 'درع التكريم الكلاسيكي', image: 'https://i.ibb.co/v6yX3Wf4/Gemini-Generated-Image-g2xtelg2xtelg2xt-1.png' }
-];
-
-// ===== العبارات الجاهزة =====
-var presetQuotes = [
-    { name: 'شكر وتقدير', text: 'بكل فخر واعتزاز، نقدم هذا الدرع تعبيراً عن شكرنا وتقديرنا لجهودكم المتميزة.' },
-    { name: 'وفاء وعرفان', text: 'من وفاء وولاء، نهديكم هذا الدرع رمزاً للعرفان والامتنان على عطائكم المستمر.' },
-    { name: 'تميز وإبداع', text: 'تميزتم فأبدعتم، وهذا الدرع شهادة على إخلاصكم وتفانيكم في العمل.' },
-    { name: 'تكريم وتقدير', text: 'تقديراً لعطائكم وإخلاصكم، نمنحكم هذا الدرع كرمز للفخر والاعتزاز.' },
-    { name: 'مسيرة عطاء', text: 'مسيرة عطاء حافلة بالإنجازات، وهذا الدرع تكريم لمسيرتكم المباركة.' }
-];
-
-// ============================================
-// التهيئة
-// ============================================
-document.addEventListener('DOMContentLoaded', function() {
-    // ✅ إنشاء الجداول تلقائياً
-    createTablesIfNotExist();
-    
-    loadProductData();
-    loadTemplates();
-    loadCustomQuotes();
-    
-    // التحقق من وضع التشغيل (إدارة أم زبون)
-    var urlParams = new URLSearchParams(window.location.search);
-    var mode = urlParams.get('mode') || 'customer';
-    var productId = urlParams.get('productId');
-    
-    // ✅ إضافة الطبقات الافتراضية (تظهر للجميع)
-    addDefaultTextLayer();
-    addTextLayer('اسم صاحب الإهداء', '42%', '5%', '90%', '45px');
-    addTextLayer('عبارة الإهداء أو التكريم', '52%', '5%', '90%', '30%');
-    
-    updateLayerCount();
-    saveState();
-    setupDragListeners();
-    loadProductsForLinking();
-    
-    // ===== التحقق من صلاحيات الإدارة (محسّن نهائياً) =====
-    var session = localStorage.getItem('session');
-    var userStr = localStorage.getItem('user');
-    var user = JSON.parse(userStr || '{}');
-    
-    // التحقق من البريد الإلكتروني
-    var userEmail = user?.email || '';
-    var isAdminEmail = userEmail === 'admin@tithkari.com';
-    var isAdminRole = user?.role === 'admin';
-    var isAdminFlag = localStorage.getItem('is_admin') === 'true';
-    var isAdminUser = session && (isAdminEmail || isAdminRole || isAdminFlag);
-    
-    console.log('🔐 حالة المسؤول النهائية:', {
-        session: !!session,
-        email: userEmail,
-        isAdminEmail: isAdminEmail,
-        isAdminRole: isAdminRole,
-        isAdminFlag: isAdminFlag,
-        isAdminUser: isAdminUser
-    });
-    
-    // ✅ إظهار/إخفاء تبويب الإدارة (للمسؤول فقط)
-    var adminTab = document.getElementById('adminDesignTab');
-    if (adminTab) {
-        adminTab.style.display = isAdminUser ? 'inline-block' : 'none';
-    }
-    
-    // ✅ إظهار/إخفاء أدوات الإدارة (للمسؤول فقط)
-    var adminControls = document.querySelectorAll('.admin-controls');
-    adminControls.forEach(function(el) {
-        if (isAdminUser) {
-            el.classList.add('show');
-            el.style.display = 'block';
-        } else {
-            el.classList.remove('show');
-            el.style.display = 'none';
-        }
-    });
-    
-    // ✅ إظهار/إخفاء أزرار الإدارة في تبويب الإجراءات (للمسؤول فقط)
-    var adminActionBtns = document.querySelectorAll('.admin-action-btn');
-    adminActionBtns.forEach(function(el) {
-        if (isAdminUser) {
-            el.style.display = 'inline-flex';
-        } else {
-            el.style.display = 'none';
-        }
-    });
-    
-    // ✅ إظهار/إخفاء زر حفظ القالب في تبويب الإجراءات (للمسؤول فقط)
-    var saveTemplateBtn = document.getElementById('saveTemplateBtn');
-    if (saveTemplateBtn) {
-        saveTemplateBtn.style.display = isAdminUser ? 'inline-flex' : 'none';
-    }
-    
-    // إذا كان المستخدم مسؤولاً، عرض رسالة تأكيد
-    if (isAdminUser) {
-        showToast('🔐 مرحباً مسؤول! جميع أدوات الإدارة متاحة', 'info');
-    } else {
-        console.log('👤 وضع الزبون - أدوات الإدارة مخفية');
-    }
-    
-    // إذا كان هناك productId في الرابط (تخصيص زبون)
-    if (productId) {
-        setTimeout(function() {
-            loadProductForCustomization(productId);
-        }, 500);
-    }
-    
-    var editTemplateId = localStorage.getItem('tithkari_edit_template_id');
-    if (editTemplateId) {
-        setTimeout(function() {
-            loadTemplateForEdit(editTemplateId);
-            localStorage.removeItem('tithkari_edit_template_id');
-        }, 600);
-    }
-});
-
-// ============================================
-// تحميل بيانات المنتج
-// ============================================
-function loadProductData() {
-    try {
-        var data = JSON.parse(localStorage.getItem('tithkari_design_data') || '{}');
-        if (data.productImage) {
-            document.getElementById('referenceImage').src = data.productImage;
-            
-            if (data.templateImage) {
-                document.getElementById('baseImage').src = data.templateImage;
-            } else {
-                document.getElementById('baseImage').src = data.productImage;
-            }
-            
-            document.getElementById('productNameDisplay').textContent = data.productName || 'درع مخصص';
-            currentProductId = data.productId || null;
-        }
-    } catch (error) {
-        console.error('❌ خطأ في تحميل بيانات المنتج:', error);
-    }
+function getActiveLayer() {
+    return layers.find(l => l.id === activeLayerId) || null;
 }
 
-// ============================================
-// تحميل بيانات قالب
-// ============================================
-function loadTemplateData(templateData) {
-    layers.forEach(function(l) { 
-        if (l.element && l.element.parentNode) {
-            l.element.remove(); 
-        }
-    });
-    layers = [];
-    layerCounter = 0;
-    
-    if (templateData.baseImage) {
-        document.getElementById('baseImage').src = templateData.baseImage;
-    }
-    if (templateData.referenceImage) {
-        document.getElementById('referenceImage').src = templateData.referenceImage;
-    }
-    
-    if (templateData.templateId) {
-        currentTemplateId = templateData.templateId;
-    }
-    
-    if (templateData.layers && templateData.layers.length > 0) {
-        templateData.layers.forEach(function(layerData) {
-            if (layerData.type === 'text') {
-                var layer = addTextLayer(
-                    layerData.text || 'نص',
-                    layerData.top || '20%',
-                    layerData.left || '10%',
-                    layerData.width || '80%',
-                    layerData.height || '40px'
-                );
-                
-                if (layerData.style) {
-                    var content = layer.element.querySelector('.text-content');
-                    if (content) {
-                        content.style.fontSize = layerData.style.fontSize || '18px';
-                        content.style.fontFamily = layerData.style.fontFamily || 'Cairo, sans-serif';
-                        content.style.color = layerData.style.color || '#d4af37';
-                        content.style.backgroundColor = layerData.style.backgroundColor || 'rgba(0,0,0,0.7)';
-                        content.style.fontWeight = layerData.style.fontWeight || '700';
-                        content.style.textAlign = layerData.style.textAlign || 'center';
-                    }
-                }
-            } else if (layerData.type === 'image') {
-                if (layerData.isEmpty) {
-                    // طبقة صورة فارغة
-                    addEmptyImageLayer(
-                        layerData.top || '30%',
-                        layerData.left || '30%',
-                        layerData.width || '120px',
-                        layerData.height || '120px'
-                    );
-                } else if (layerData.src) {
-                    // طبقة صورة مع صورة
-                    addImageLayer(
-                        layerData.src,
-                        layerData.top || '30%',
-                        layerData.left || '30%',
-                        layerData.width || '120px',
-                        layerData.height || '120px'
-                    );
-                }
-            }
-        });
-    }
-    
-    if (templateData.name) {
-        document.getElementById('productNameDisplay').textContent = templateData.name;
-    }
-    
-    updateLayerCount();
-    saveState();
+function rgbToHex(rgb) {
+    if (!rgb || rgb === 'transparent') return '#000000';
+    const match = rgb.match(/\d+/g);
+    if (!match) return '#000000';
+    return '#' + match.slice(0, 3).map(c => {
+        const hex = parseInt(c).toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+    }).join('');
 }
+window.rgbToHex = rgbToHex;
 
 // ============================================
-// تحميل المنتجات لربط القالب
+// دوال إدارة الطبقات المحسنة
 // ============================================
-async function loadProductsForLinking() {
-    try {
-        // جلب المنتجات من Supabase
-        var { data: products, error } = await supabase
-            .from('products')
-            .select('id, name, image_url, template_image, template_data')
-            .eq('status', 'active')
-            .order('created_at', { ascending: false });
-        
-        // إضافة منتجات localStorage أيضاً
-        var localProducts = JSON.parse(localStorage.getItem('tithkari_custom_products') || '[]');
-        var allProducts = [];
-        
-        if (!error && products) {
-            allProducts = [...products, ...localProducts];
-        } else {
-            allProducts = [...localProducts];
-        }
-        
-        var select = document.getElementById('productLinkSelect');
-        if (select) {
-            select.innerHTML = '<option value="">-- غير مرتبط بمنتج --</option>';
-            allProducts.forEach(function(p) {
-                var selected = (currentProductId === p.id) ? 'selected' : '';
-                var isFromSupabase = p.image_url ? ' (من المتجر)' : '';
-                select.innerHTML += '<option value="' + p.id + '" ' + selected + '>' + p.name + isFromSupabase + '</option>';
-            });
-        }
-    } catch (error) {
-        console.log('⚠️ لا يمكن تحميل المنتجات:', error);
-    }
+function updateLayerCount() { 
+    const count = document.getElementById('layerCount');
+    if (count) count.textContent = layers.length + ' طبقة'; 
 }
 
-// ============================================
-// إعداد مستمعات السحب (محسنة للجوال)
-// ============================================
-function setupDragListeners() {
-    // للماوس
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
-    
-    // للجوال - استخدام { passive: false } للسماح بـ preventDefault
-    document.addEventListener('touchmove', onTouchMove, { passive: false });
-    document.addEventListener('touchend', onTouchEnd, { passive: false });
-    document.addEventListener('touchcancel', onTouchEnd, { passive: false });
-}
-
-function onMouseMove(e) {
-    handleDrag(e.clientX, e.clientY);
-}
-
-function onTouchMove(e) {
-    e.preventDefault();
-    var touch = e.touches[0];
-    if (touch) {
-        handleDrag(touch.clientX, touch.clientY);
-    }
-}
-
-function handleDrag(clientX, clientY) {
-    // ===== السحب =====
-    if (isDragging && activeLayerId) {
-        var layerData = getActiveLayer();
-        if (!layerData) return;
-        
-        var frame = document.getElementById('canvasFrame');
-        var rect = frame.getBoundingClientRect();
-        var layer = layerData.element;
-        
-        var parentWidth = rect.width;
-        var parentHeight = rect.height;
-        
-        var layerWidth = parseFloat(layer.style.width) || 20;
-        var layerHeight = parseFloat(layer.style.height) || 20;
-        
-        var newLeft = ((clientX - rect.left - dragStartX) / parentWidth) * 100;
-        var newTop = ((clientY - rect.top - dragStartY) / parentHeight) * 100;
-        
-        newLeft = Math.max(0, Math.min(100 - layerWidth, newLeft));
-        newTop = Math.max(0, Math.min(100 - layerHeight, newTop));
-        
-        layer.style.left = newLeft + '%';
-        layer.style.top = newTop + '%';
-        layerData.left = layer.style.left;
-        layerData.top = layer.style.top;
-    }
-    
-    // ===== التحجيم =====
-    if (isResizing && activeResizeLayer) {
-        var frame = document.getElementById('canvasFrame');
-        var rect = frame.getBoundingClientRect();
-        var layer = activeResizeLayer;
-        var layerData = layers.find(function(l) { return l.element === layer; });
-        if (!layerData) return;
-        
-        var newWidth = dragStartWidth + (clientX - dragStartX);
-        var newHeight = dragStartHeight + (clientY - dragStartY);
-        
-        newWidth = Math.max(30, newWidth);
-        newHeight = Math.max(30, newHeight);
-        
-        var maxWidth = rect.width * 0.9;
-        var maxHeight = rect.height * 0.9;
-        newWidth = Math.min(maxWidth, newWidth);
-        newHeight = Math.min(maxHeight, newHeight);
-        
-        var pctWidth = (newWidth / rect.width) * 100;
-        var pctHeight = (newHeight / rect.height) * 100;
-        
-        layer.style.width = Math.min(90, pctWidth) + '%';
-        layer.style.height = Math.min(90, pctHeight) + '%';
-        layerData.width = layer.style.width;
-        layerData.height = layer.style.height;
-    }
-}
-
-function onMouseUp(e) {
-    if (isDragging || isResizing) {
-        isDragging = false;
-        isResizing = false;
-        activeResizeLayer = null;
-        saveState();
-    }
-}
-
-function onTouchEnd(e) {
-    if (isDragging || isResizing) {
-        isDragging = false;
-        isResizing = false;
-        activeResizeLayer = null;
-        saveState();
-    }
-}
-
-// ============================================
-// تحميل القوالب (محسّن مع Supabase)
-// ============================================
-async function loadTemplates() {
-    // 1. تحميل من Supabase
-    var supabaseTemplates = await loadTemplatesFromSupabase();
-    
-    // 2. تحميل من localStorage (قوالب مخصصة)
-    var localTemplates = JSON.parse(localStorage.getItem('tithkari_design_templates') || '[]');
-    
-    // 3. دمج القوالب
-    var allTemplates = [...supabaseTemplates];
-    
-    // إضافة القوالب المحلية التي ليست في Supabase
-    localTemplates.forEach(function(local) {
-        var exists = allTemplates.some(function(t) { return t.id === local.id; });
-        if (!exists) {
-            allTemplates.push(local);
-        }
-    });
-    
-    // 4. إذا لم تكن هناك قوالب، إضافة القوالب الافتراضية
-    if (allTemplates.length === 0) {
-        allTemplates = defaultTemplates.map(function(t) {
-            return { id: t.id, name: t.name, image: t.image, status: 'active', isCustom: false };
-        });
-        localStorage.setItem('tithkari_design_templates', JSON.stringify(allTemplates));
-    }
-    
-    renderTemplates(allTemplates);
-}
-
-// ============================================
-// تحميل القوالب من Supabase
-// ============================================
-async function loadTemplatesFromSupabase() {
-    try {
-        var { data, error } = await supabase
-            .from('templates')
-            .select('*')
-            .eq('status', 'active')
-            .order('created_at', { ascending: false });
-        
-        if (error) {
-            console.log('⚠️ لا يمكن تحميل القوالب من Supabase:', error);
-            return [];
-        }
-        return data || [];
-    } catch (error) {
-        console.error('❌ خطأ في تحميل القوالب من Supabase:', error);
-        return [];
-    }
-}
-
-function renderTemplates(templates) {
-    var grid = document.getElementById('templatesGrid');
-    if (!grid) return;
-    
-    var activeTemplates = templates.filter(function(t) { return t.status !== 'inactive'; });
-    
-    if (activeTemplates.length === 0) {
-        grid.innerHTML = '<p style="color:#9ca3af; font-size:11px; grid-column:1/-1; text-align:center;">لا توجد قوالب نشطة</p>';
+function updateLayersList() {
+    const container = document.getElementById('layersList');
+    if (!container) return;
+    if (layers.length === 0) {
+        container.innerHTML = '<p style="color:var(--studio-muted);font-size:9px;">لا توجد طبقات</p>';
         return;
     }
-    
-    grid.innerHTML = '';
-    activeTemplates.forEach(function(t) {
-        var activeClass = (t.id === currentTemplate) ? 'active' : '';
-        var customIcon = t.isCustom ? '<span style="color:#8B5CF6;font-size:8px;">✏️</span>' : '';
-        // استخدام onerror لتحميل صورة بديلة في حالة فشل التحميل
-        var imgSrc = t.image || 'https://i.ibb.co/vxn3p7C7/Gemini-Generated-Image-g2xtelg2xtelg2xt.png';
-        grid.innerHTML += `
-            <div class="template-thumb ${activeClass}" onclick="selectTemplate('${t.id}')">
-                <img src="${imgSrc}" alt="${t.name}" onerror="this.src='https://i.ibb.co/vxn3p7C7/Gemini-Generated-Image-g2xtelg2xtelg2xt.png'">
-                <span>${t.name}</span>
-                ${customIcon}
-            </div>
+    container.innerHTML = '';
+    layers.forEach(layer => {
+        const item = document.createElement('div');
+        item.className = 'layer-item' + (layer.id === activeLayerId ? ' active' : '');
+        item.innerHTML = `
+            <span>${layer.type === 'text' ? '✍️' : '🖼️'} ${layer.type === 'text' ? (layer.content || '').substring(0, 12) : 'صورة'}</span>
+            <span class="layer-type ${layer.type}">${layer.type === 'text' ? 'نص' : 'صورة'}</span>
+            <span class="layer-delete" onclick="event.stopPropagation();deleteLayer(${layer.id})"><i class="fas fa-times"></i></span>
         `;
+        item.onclick = () => selectLayer(layer.id);
+        container.appendChild(item);
     });
 }
 
-function selectTemplate(id) {
-    currentTemplate = id;
-    var templates = JSON.parse(localStorage.getItem('tithkari_design_templates') || '[]');
-    var template = templates.find(function(t) { return t.id === id; });
+function renderLayersOptimized() {
+    if (animationFrame) cancelAnimationFrame(animationFrame);
+    animationFrame = requestAnimationFrame(() => {
+        renderLayers();
+        animationFrame = null;
+    });
+}
+
+function updateAll() { 
+    updateLayerCount(); 
+    updateLayersList(); 
+    renderLayersOptimized(); 
+}
+
+// ============================================
+// دوال الطبقات الأساسية المحسنة
+// ============================================
+function renderLayers() {
+    const surface = getLayersSurface();
+    if (!surface) return;
+    surface.innerHTML = '';
     
-    if (template) {
-        if (template.isCustom && template.layers) {
-            loadTemplateData(template);
-            showToast('✅ تم تحميل القالب المخصص: ' + template.name);
+    layers.forEach(layer => {
+        const el = document.createElement('div');
+        el.className = 'layer' + (layer.id === activeLayerId ? ' focused' : '');
+        el.dataset.id = layer.id;
+        el.style.left = (layer.x || 20) + '%';
+        el.style.top = (layer.y || 20) + '%';
+        el.style.width = (layer.width || 30) + '%';
+        el.style.height = (layer.height || 15) + '%';
+        el.style.transform = `rotate(${layer.rotation || 0}deg)`;
+        el.style.zIndex = layer.zIndex || 10;
+        el.style.touchAction = 'none';
+        el.style.position = 'absolute';
+        el.style.cursor = 'grab';
+        el.style.border = '2px solid transparent';
+        el.style.padding = '2px';
+        el.style.transition = 'box-shadow 0.3s ease';
+        el.style.opacity = layer.opacity !== undefined ? layer.opacity : 1;
+
+        layer.element = el;
+
+        if (layer.type === 'text') {
+            const textDiv = document.createElement('div');
+            textDiv.className = 'text-content';
+            textDiv.textContent = layer.content || 'نص';
+            textDiv.style.fontFamily = layer.fontFamily || 'Cairo';
+            textDiv.style.fontSize = (layer.fontSize || 18) + 'px';
+            textDiv.style.color = layer.color || '#d4af37';
+            if (layer.bgEnabled !== false) {
+                textDiv.style.backgroundColor = layer.bgColor || '#000000';
+                textDiv.style.padding = '4px 8px';
+                textDiv.style.borderRadius = '4px';
+            } else {
+                textDiv.style.backgroundColor = 'transparent';
+            }
+            textDiv.style.width = '100%';
+            textDiv.style.height = '100%';
+            textDiv.style.display = 'flex';
+            textDiv.style.alignItems = 'center';
+            textDiv.style.justifyContent = 'center';
+            textDiv.style.textAlign = 'center';
+            textDiv.style.cursor = 'text';
+            textDiv.style.userSelect = 'text';
+            textDiv.style.minHeight = '20px';
+            textDiv.style.minWidth = '20px';
+            textDiv.style.wordBreak = 'break-word';
+            textDiv.style.whiteSpace = 'pre-wrap';
+            textDiv.style.pointerEvents = 'auto';
+            
+            textDiv.addEventListener('dblclick', function(e) {
+                e.stopPropagation();
+                startEditingText(this);
+            });
+            
+            let pressTimer = null;
+            textDiv.addEventListener('touchstart', function(e) {
+                pressTimer = setTimeout(function() {
+                    e.preventDefault();
+                    startEditingText(textDiv);
+                }, 600);
+            }, { passive: true });
+            textDiv.addEventListener('touchend', function() {
+                clearTimeout(pressTimer);
+            }, { passive: true });
+            textDiv.addEventListener('touchmove', function() {
+                clearTimeout(pressTimer);
+            }, { passive: true });
+            
+            textDiv.contentEditable = false;
+            el.appendChild(textDiv);
+            layer.contentElement = textDiv;
+            
         } else {
-            document.getElementById('baseImage').src = template.image;
-            showToast('✅ تم تغيير القالب: ' + template.name);
+            const placeholder = document.createElement('div');
+            placeholder.className = 'image-placeholder';
+            placeholder.style.cssText = 'width:100%; height:100%; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:6px; cursor:pointer; transition:0.3s; touch-action:manipulation; position:relative;';
+            
+            if (layer.imageData) {
+                placeholder.style.border = 'none';
+                placeholder.style.background = 'transparent';
+                const img = document.createElement('img');
+                img.src = layer.imageData;
+                img.style.cssText = 'width:100%; height:100%; object-fit:contain; pointer-events:none;';
+                placeholder.appendChild(img);
+            } else {
+                placeholder.style.border = '2px dashed rgba(212,175,55,0.3)';
+                placeholder.style.background = 'rgba(212,175,55,0.03)';
+                placeholder.innerHTML = `
+                    <div style="text-align:center; color:#9ca3af; font-size:10px; padding:6px; pointer-events:none;">
+                        <i class="fas fa-image" style="font-size:20px; display:block; margin-bottom:4px;"></i>
+                        انقر لرفع صورة
+                    </div>
+                `;
+            }
+            
+            placeholder.addEventListener('click', function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                triggerImageUploadForLayer(layer.id);
+            });
+            
+            el.appendChild(placeholder);
+            layer.placeholder = placeholder;
         }
+
+        ['se', 'e', 's'].forEach(dir => {
+            const handle = document.createElement('div');
+            handle.className = `resize-handle resize-${dir}`;
+            handle.dataset.dir = dir;
+            handle.style.touchAction = 'none';
+            handle.style.pointerEvents = 'auto';
+            handle.style.zIndex = '30';
+            handle.style.position = 'absolute';
+            handle.style.width = '12px';
+            handle.style.height = '12px';
+            handle.style.background = 'var(--studio-gold)';
+            handle.style.border = '2px solid #fff';
+            handle.style.borderRadius = '50%';
+            handle.style.boxShadow = '0 0 10px rgba(212,175,55,0.3)';
+            handle.style.transition = 'transform 0.3s ease';
+            
+            if (dir === 'se') {
+                handle.style.right = '-6px';
+                handle.style.bottom = '-6px';
+                handle.style.cursor = 'se-resize';
+            } else if (dir === 'e') {
+                handle.style.right = '-6px';
+                handle.style.top = '50%';
+                handle.style.transform = 'translateY(-50%)';
+                handle.style.cursor = 'ew-resize';
+            } else if (dir === 's') {
+                handle.style.bottom = '-6px';
+                handle.style.left = '50%';
+                handle.style.transform = 'translateX(-50%)';
+                handle.style.cursor = 'ns-resize';
+            }
+            
+            handle.addEventListener('mouseenter', function() {
+                this.style.transform = this.style.transform.includes('scale') ? this.style.transform : this.style.transform + ' scale(1.3)';
+            });
+            handle.addEventListener('mouseleave', function() {
+                this.style.transform = this.style.transform.replace(' scale(1.3)', '');
+            });
+            
+            handle.addEventListener('mousedown', function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                startResize(e, layer.id, dir);
+            });
+            
+            handle.addEventListener('touchstart', function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                startResize(e, layer.id, dir);
+            }, { passive: false });
+            
+            el.appendChild(handle);
+        });
+
+        el.addEventListener('mousedown', function(e) {
+            if (e.target.closest('.text-content') || e.target.closest('.image-placeholder')) {
+                return;
+            }
+            if (e.target.classList.contains('resize-handle')) return;
+            e.preventDefault();
+            startDrag(e, layer.id);
+        });
         
-        renderTemplates(templates);
+        el.addEventListener('touchstart', function(e) {
+            if (e.target.closest('.text-content') || e.target.closest('.image-placeholder')) {
+                return;
+            }
+            if (e.target.classList.contains('resize-handle')) return;
+            e.preventDefault();
+            startDrag(e, layer.id);
+        }, { passive: false });
+
+        surface.appendChild(el);
+    });
+}
+window.renderLayers = renderLayers;
+
+// ============================================
+// دوال السحب والتحجيم المحسنة
+// ============================================
+function startDrag(e, layerId) {
+    if (isEditing) return;
+    
+    const layer = layers.find(l => l.id === layerId);
+    if (!layer) return;
+    
+    const frame = document.getElementById('canvasFrame');
+    const rect = frame.getBoundingClientRect();
+    
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    
+    const offsetXPercent = ((clientX - rect.left) / rect.width) * 100 - layer.x;
+    const offsetYPercent = ((clientY - rect.top) / rect.height) * 100 - layer.y;
+    
+    isDragging = true;
+    selectLayer(layerId);
+    
+    if (layer.element) {
+        layer.element.style.cursor = 'grabbing';
+    }
+    
+    function onMove(ev) {
+        if (!isDragging) return;
+        const moveX = ev.touches ? ev.touches[0].clientX : ev.clientX;
+        const moveY = ev.touches ? ev.touches[0].clientY : ev.clientY;
+        
+        let newX = ((moveX - rect.left) / rect.width) * 100 - offsetXPercent;
+        let newY = ((moveY - rect.top) / rect.height) * 100 - offsetYPercent;
+        
+        newX = Math.min(100 - layer.width, Math.max(0, newX));
+        newY = Math.min(100 - layer.height, Math.max(0, newY));
+        
+        layer.x = newX;
+        layer.y = newY;
+        
+        if (layer.element) {
+            layer.element.style.left = newX + '%';
+            layer.element.style.top = newY + '%';
+        }
+    }
+    
+    function onUp() {
+        isDragging = false;
+        if (layer.element) {
+            layer.element.style.cursor = 'grab';
+        }
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', onUp);
         saveState();
     }
-}
-
-// ============================================
-// دالة لإضافة نص افتراضي (أول طبقة)
-// ============================================
-function addDefaultTextLayer() {
-    var defaultText = 'المناسبة أو الرتبة';
-    var layer = addTextLayer(defaultText, '5%', '5%', '90%', '35px');
     
-    var content = layer.element.querySelector('.text-content');
-    if (content) {
-        content.style.fontSize = '22px';
-        content.style.color = '#d4af37';
-        content.style.backgroundColor = 'rgba(0,0,0,0.6)';
-        content.style.fontFamily = 'Cairo, sans-serif';
-        content.style.fontWeight = '800';
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchmove', onMove, { passive: true });
+    document.addEventListener('touchend', onUp, { passive: true });
+}
+window.startDrag = startDrag;
+
+function startResize(e, layerId, dir) {
+    if (isEditing) return;
+    e.stopPropagation();
+    e.preventDefault();
+    
+    const layer = layers.find(l => l.id === layerId);
+    if (!layer) return;
+    
+    const frame = document.getElementById('canvasFrame');
+    const rect = frame.getBoundingClientRect();
+    
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    
+    resizeData = {
+        layerId: layerId,
+        dir: dir,
+        startX: clientX,
+        startY: clientY,
+        startWidth: layer.width,
+        startHeight: layer.height,
+        startLeft: layer.x,
+        startTop: layer.y,
+        rectWidth: rect.width,
+        rectHeight: rect.height
+    };
+    
+    isResizing = true;
+    selectLayer(layerId);
+    
+    function onMove(ev) {
+        if (!isResizing || !resizeData) return;
+        const moveX = ev.touches ? ev.touches[0].clientX : ev.clientX;
+        const moveY = ev.touches ? ev.touches[0].clientY : ev.clientY;
+        
+        const dx = ((moveX - resizeData.startX) / resizeData.rectWidth) * 100;
+        const dy = ((moveY - resizeData.startY) / resizeData.rectHeight) * 100;
+        
+        const layerRef = layers.find(l => l.id === resizeData.layerId);
+        if (!layerRef) return;
+        
+        let newWidth = resizeData.startWidth;
+        let newHeight = resizeData.startHeight;
+        
+        if (dir === 'se') {
+            newWidth = Math.min(80, Math.max(5, resizeData.startWidth + dx));
+            newHeight = Math.min(80, Math.max(5, resizeData.startHeight + dy));
+        } else if (dir === 'e') {
+            newWidth = Math.min(80, Math.max(5, resizeData.startWidth + dx));
+        } else if (dir === 's') {
+            newHeight = Math.min(80, Math.max(5, resizeData.startHeight + dy));
+        }
+        
+        layerRef.width = newWidth;
+        layerRef.height = newHeight;
+        
+        if (layerRef.element) {
+            layerRef.element.style.width = newWidth + '%';
+            layerRef.element.style.height = newHeight + '%';
+        }
     }
     
-    return layer;
+    function onUp() {
+        isResizing = false;
+        resizeData = null;
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', onUp);
+        saveState();
+    }
+    
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchmove', onMove, { passive: true });
+    document.addEventListener('touchend', onUp, { passive: true });
 }
+window.startResize = startResize;
 
 // ============================================
-// إضافة طبقات - مع دعم السحب والتحجيم
+// دوال تحسينات جديدة
 // ============================================
-function addTextLayer(text, top, left, width, height) {
-    text = text || 'نص جديد';
-    top = top || '20%';
-    left = left || '10%';
-    width = width || '80%';
-    height = height || '40px';
+
+function duplicateLayer() {
+    if (activeLayerId === null) {
+        showToast('⚠️ اختر طبقة أولاً', 'warning');
+        return;
+    }
+    const original = layers.find(l => l.id === activeLayerId);
+    if (!original) return;
     
-    var surface = document.getElementById('layersSurface');
-    var id = 'layer_' + (++layerCounter);
-
-    var layer = document.createElement('div');
-    layer.id = id;
-    layer.className = 'layer';
-    layer.style.cssText = 'top:' + top + '; left:' + left + '; width:' + width + '; height:' + height + '; z-index:' + (10 + layerCounter) + '; touch-action:none;';
-
-    var content = document.createElement('div');
-    content.className = 'text-content';
-    content.style.cssText = 'width:100%; height:100%; display:flex; align-items:center; justify-content:center; text-align:center; padding:4px; font-weight:700; font-size:18px; color:#d4af37; background:rgba(0,0,0,0.7); border-radius:4px; font-family:Cairo, sans-serif; white-space:pre-wrap; word-break:break-word; cursor:text; min-height:20px; min-width:20px; touch-action:none;';
-    content.textContent = text;
-
-    // التعديل المباشر بالضغط المزدوج
-    content.addEventListener('dblclick', function(e) {
-        e.stopPropagation();
-        startEditing(this);
-    });
-
-    // الضغط المطول للجوال
-    var pressTimer = null;
-    content.addEventListener('touchstart', function(e) {
-        pressTimer = setTimeout(function() {
-            e.preventDefault();
-            startEditing(content);
-        }, 500);
-    }, { passive: true });
-    content.addEventListener('touchend', function() {
-        clearTimeout(pressTimer);
-    }, { passive: true });
-    content.addEventListener('touchmove', function() {
-        clearTimeout(pressTimer);
-    }, { passive: true });
-
-    // مقابض التحجيم
-    var handles = ['se', 'e', 's'];
-    handles.forEach(function(h) {
-        var handle = document.createElement('div');
-        handle.className = 'resize-handle resize-' + h;
-        handle.style.touchAction = 'none';
-        handle.style.pointerEvents = 'auto';
-        handle.style.zIndex = '30';
-        
-        handle.addEventListener('mousedown', function(e) { 
-            e.stopPropagation(); 
-            e.preventDefault();
-            startResize(e, layer, h); 
-        });
-        
-        handle.addEventListener('touchstart', function(e) { 
-            e.stopPropagation(); 
-            e.preventDefault(); 
-            startResize(e, layer, h); 
-        }, { passive: false });
-        
-        layer.appendChild(handle);
-    });
-
-    layer.appendChild(content);
-    
-    // أحداث السحب للطبقة
-    layer.addEventListener('mousedown', function(e) { 
-        if (!e.target.classList.contains('resize-handle')) {
-            e.preventDefault();
-            startDrag(e, layer); 
-        }
-    });
-    
-    layer.addEventListener('touchstart', function(e) { 
-        if (!e.target.classList.contains('resize-handle')) {
-            e.preventDefault();
-            startDrag(e, layer); 
-        }
-    }, { passive: false });
-
-    surface.appendChild(layer);
-
-    var layerData = {
-        id: id,
-        type: 'text',
-        element: layer,
-        content: content,
-        text: text,
-        top: top,
-        left: left,
-        width: width,
-        height: height
+    const copy = {
+        ...original,
+        id: nextId++,
+        x: (original.x || 20) + 5,
+        y: (original.y || 20) + 5,
+        content: original.content ? original.content + ' (نسخة)' : 'نص',
+        element: null,
+        contentElement: null,
+        placeholder: null
     };
-
-    layers.push(layerData);
-    selectLayer(id);
-    updateLayerCount();
+    
+    layers.push(copy);
+    activeLayerId = copy.id;
+    updateAll();
     saveState();
-    return layerData;
+    showToast('✅ تم نسخ الطبقة', 'success');
 }
+window.duplicateLayer = duplicateLayer;
 
-// ============================================
-// إضافة مربع صورة فارغ مع رفع مباشر
-// ============================================
-function addEmptyImageLayer(top, left, width, height) {
-    top = top || '30%';
-    left = left || '30%';
-    width = width || '120px';
-    height = height || '120px';
+function bringToFront() {
+    if (activeLayerId === null) {
+        showToast('⚠️ اختر طبقة أولاً', 'warning');
+        return;
+    }
+    const layer = layers.find(l => l.id === activeLayerId);
+    if (!layer) return;
     
-    var surface = document.getElementById('layersSurface');
-    var id = 'layer_' + (++layerCounter);
-
-    var layer = document.createElement('div');
-    layer.id = id;
-    layer.className = 'layer';
-    layer.style.cssText = 'top:' + top + '; left:' + left + '; width:' + width + '; height:' + height + '; z-index:' + (10 + layerCounter) + '; touch-action:none;';
-
-    var placeholder = document.createElement('div');
-    placeholder.className = 'image-placeholder';
-    placeholder.style.cssText = 'width:100%; height:100%; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:6px; touch-action:none; cursor:pointer; border:2px dashed rgba(212,175,55,0.3); background:rgba(212,175,55,0.03);';
-    placeholder.innerHTML = '<div style="text-align:center; color:#9ca3af; font-size:12px; padding:6px; touch-action:none;"><i class="fas fa-image" style="font-size:24px; display:block; margin-bottom:4px;"></i>انقر لرفع صورة</div>';
-    
-    // رفع الصورة عند النقر
-    placeholder.onclick = function(e) {
-        e.stopPropagation();
-        triggerImageUploadForLayer(id);
-    };
-
-    // مقابض التحجيم
-    var handles = ['se', 'e', 's'];
-    handles.forEach(function(h) {
-        var handle = document.createElement('div');
-        handle.className = 'resize-handle resize-' + h;
-        handle.style.touchAction = 'none';
-        handle.style.pointerEvents = 'auto';
-        handle.style.zIndex = '30';
-        
-        handle.addEventListener('mousedown', function(e) { 
-            e.stopPropagation(); 
-            e.preventDefault();
-            startResize(e, layer, h); 
-        });
-        
-        handle.addEventListener('touchstart', function(e) { 
-            e.stopPropagation(); 
-            e.preventDefault(); 
-            startResize(e, layer, h); 
-        }, { passive: false });
-        
-        layer.appendChild(handle);
-    });
-
-    layer.appendChild(placeholder);
-    
-    layer.addEventListener('mousedown', function(e) { 
-        if (!e.target.closest('.image-placeholder') && !e.target.classList.contains('resize-handle')) {
-            e.preventDefault();
-            startDrag(e, layer); 
-        }
-    });
-    
-    layer.addEventListener('touchstart', function(e) { 
-        if (!e.target.closest('.image-placeholder') && !e.target.classList.contains('resize-handle')) {
-            e.preventDefault();
-            startDrag(e, layer); 
-        }
-    }, { passive: false });
-
-    surface.appendChild(layer);
-
-    var layerData = {
-        id: id,
-        type: 'image',
-        element: layer,
-        placeholder: placeholder,
-        src: null,
-        top: top,
-        left: left,
-        width: width,
-        height: height,
-        isEmpty: true
-    };
-
-    layers.push(layerData);
-    selectLayer(id);
-    updateLayerCount();
+    const maxZIndex = Math.max(...layers.map(l => l.zIndex || 0));
+    layer.zIndex = maxZIndex + 1;
+    updateAll();
     saveState();
-    return layerData;
+    showToast('✅ تم نقل الطبقة للأمام', 'success');
 }
+window.bringToFront = bringToFront;
 
-// ============================================
-// رفع الصورة لطبقة محددة
-// ============================================
-function triggerImageUploadForLayer(layerId) {
-    var input = document.getElementById('imageUploader');
-    if (!input) return;
+function sendToBack() {
+    if (activeLayerId === null) {
+        showToast('⚠️ اختر طبقة أولاً', 'warning');
+        return;
+    }
+    const layer = layers.find(l => l.id === activeLayerId);
+    if (!layer) return;
     
-    // حفظ معرف الطبقة لاستخدامه بعد الرفع
-    input.dataset.targetLayer = layerId;
-    input.click();
+    const minZIndex = Math.min(...layers.map(l => l.zIndex || 0));
+    layer.zIndex = minZIndex - 1;
+    updateAll();
+    saveState();
+    showToast('✅ تم نقل الطبقة للخلف', 'success');
 }
+window.sendToBack = sendToBack;
 
-// ============================================
-// بدء التعديل المباشر للنص
-// ============================================
-function startEditing(contentElement) {
+function bringForward() {
+    if (activeLayerId === null) {
+        showToast('⚠️ اختر طبقة أولاً', 'warning');
+        return;
+    }
+    const layer = layers.find(l => l.id === activeLayerId);
+    if (!layer) return;
+    
+    const currentZ = layer.zIndex || 0;
+    const nextZ = currentZ + 1;
+    
+    const conflict = layers.find(l => l.id !== activeLayerId && (l.zIndex || 0) === nextZ);
+    if (conflict) {
+        conflict.zIndex = currentZ;
+    }
+    layer.zIndex = nextZ;
+    updateAll();
+    saveState();
+    showToast('✅ تم نقل الطبقة خطوة للأمام', 'success');
+}
+window.bringForward = bringForward;
+
+function sendBackward() {
+    if (activeLayerId === null) {
+        showToast('⚠️ اختر طبقة أولاً', 'warning');
+        return;
+    }
+    const layer = layers.find(l => l.id === activeLayerId);
+    if (!layer) return;
+    
+    const currentZ = layer.zIndex || 0;
+    const prevZ = currentZ - 1;
+    
+    const conflict = layers.find(l => l.id !== activeLayerId && (l.zIndex || 0) === prevZ);
+    if (conflict) {
+        conflict.zIndex = currentZ;
+    }
+    layer.zIndex = prevZ;
+    updateAll();
+    saveState();
+    showToast('✅ تم نقل الطبقة خطوة للخلف', 'success');
+}
+window.sendBackward = sendBackward;
+
+function updateLayerOpacity() {
+    if (activeLayerId === null) {
+        showToast('⚠️ اختر طبقة أولاً', 'warning');
+        return;
+    }
+    const layer = layers.find(l => l.id === activeLayerId);
+    if (!layer) return;
+    
+    const opacityInput = document.getElementById('layerOpacity');
+    const opacityDisplay = document.getElementById('opacityDisplay');
+    if (!opacityInput) return;
+    
+    const value = parseInt(opacityInput.value);
+    
+    if (opacityDisplay) opacityDisplay.textContent = value + '%';
+    
+    const opacity = value / 100;
+    if (layer.element) {
+        layer.element.style.opacity = opacity;
+    }
+    layer.opacity = opacity;
+    saveState();
+}
+window.updateLayerOpacity = updateLayerOpacity;
+
+function enable3DPreview() {
+    const frame = document.getElementById('canvasFrame');
+    if (frame) {
+        const currentTransform = frame.style.transform || '';
+        if (currentTransform.includes('perspective') && !currentTransform.includes('0deg')) {
+            frame.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg)';
+            showToast('✅ تم إلغاء المعاينة ثلاثية الأبعاد', 'info');
+        } else {
+            frame.style.transform = 'perspective(1000px) rotateY(-15deg) rotateX(5deg)';
+            showToast('✅ تم تفعيل المعاينة ثلاثية الأبعاد', 'success');
+        }
+    }
+}
+window.enable3DPreview = enable3DPreview;
+
+function setTextColor(color) {
+    const colorInput = document.getElementById('textColor');
+    if (colorInput) {
+        colorInput.value = color;
+        updateActiveText();
+        
+        document.querySelectorAll('.color-btn').forEach(btn => {
+            const bgColor = btn.style.background || btn.style.backgroundColor;
+            btn.classList.toggle('active', bgColor === color);
+        });
+    }
+}
+window.setTextColor = setTextColor;
+
+function startEditingText(contentElement) {
     if (isEditing) return;
     isEditing = true;
     
-    var layer = contentElement.closest('.layer');
-    var layerData = layers.find(function(l) { return l.element === layer; });
+    const layer = contentElement.closest('.layer');
+    const layerData = layers.find(l => l.element === layer);
     if (!layerData) return;
     
     contentElement.classList.add('editing');
     contentElement.contentEditable = true;
     contentElement.focus();
     
-    var range = document.createRange();
+    const range = document.createRange();
     range.selectNodeContents(contentElement);
-    var sel = window.getSelection();
+    const sel = window.getSelection();
     sel.removeAllRanges();
     sel.addRange(range);
     
-    var finishEditing = function() {
+    const finishEditing = function() {
         contentElement.classList.remove('editing');
         contentElement.contentEditable = false;
         isEditing = false;
-        layerData.text = contentElement.textContent;
-        document.getElementById('textContent').value = contentElement.textContent;
+        
+        const newText = contentElement.textContent.trim() || 'نص';
+        layerData.content = newText;
+        layerData.text = newText;
+        document.getElementById('textContent').value = newText;
+        
+        if (activeLayerId === layerData.id) {
+            loadLayerControls(layerData.id);
+        }
+        
         saveState();
         contentElement.removeEventListener('blur', finishEditing);
         contentElement.removeEventListener('keydown', onKeyDown);
+        showToast('✅ تم تحديث النص', 'success');
     };
     
-    var onKeyDown = function(e) {
+    const onKeyDown = function(e) {
         if (e.key === 'Escape') {
-            contentElement.textContent = layerData.text || 'نص';
+            contentElement.textContent = layerData.content || 'نص';
             contentElement.blur();
         }
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -824,1801 +664,612 @@ function startEditing(contentElement) {
     contentElement.addEventListener('blur', finishEditing);
     contentElement.addEventListener('keydown', onKeyDown);
 }
+window.startEditingText = startEditingText;
 
-// ============================================
-// بدء السحب (محسن للجوال)
-// ============================================
-function startDrag(e, layer) {
-    if (isEditing) return;
-    if (e.target.classList.contains('resize-handle')) return;
-    
-    e.preventDefault();
-    selectLayer(layer.id);
-    
-    var frame = document.getElementById('canvasFrame');
-    var rect = frame.getBoundingClientRect();
-    var layerRect = layer.getBoundingClientRect();
-    
-    var clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    var clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    
-    dragStartX = clientX - layerRect.left;
-    dragStartY = clientY - layerRect.top;
-    
-    isDragging = true;
-    saveState();
-}
-
-// ============================================
-// بدء التحجيم (محسن للجوال)
-// ============================================
-function startResize(e, layer, handle) {
-    if (isEditing) return;
-    e.stopPropagation();
-    e.preventDefault();
-    
-    selectLayer(layer.id);
-    activeResizeLayer = layer;
-    currentHandle = handle;
-    isResizing = true;
-    
-    var frame = document.getElementById('canvasFrame');
-    var rect = frame.getBoundingClientRect();
-    var layerRect = layer.getBoundingClientRect();
-    
-    var clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    var clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    
-    dragStartX = clientX;
-    dragStartY = clientY;
-    dragStartWidth = layerRect.width;
-    dragStartHeight = layerRect.height;
-    
-    saveState();
-}
-
-// ============================================
-// إضافة طبقة صورة
-// ============================================
-function addImageLayer(src, top, left, width, height) {
-    src = src || '';
-    top = top || '30%';
-    left = left || '30%';
-    width = width || '120px';
-    height = height || '120px';
-    
-    var surface = document.getElementById('layersSurface');
-    var id = 'layer_' + (++layerCounter);
-
-    var layer = document.createElement('div');
-    layer.id = id;
-    layer.className = 'layer';
-    layer.style.cssText = 'top:' + top + '; left:' + left + '; width:' + width + '; height:' + height + '; z-index:' + (10 + layerCounter) + '; touch-action:none;';
-
-    var placeholder = document.createElement('div');
-    placeholder.className = 'image-placeholder';
-    placeholder.style.cssText = 'width:100%; height:100%; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:6px; touch-action:none;';
-
-    if (src) {
-        var img = document.createElement('img');
-        img.src = src;
-        img.style.cssText = 'width:100%; height:100%; object-fit:contain;';
-        placeholder.appendChild(img);
-    } else {
-        placeholder.innerHTML = '<div style="text-align:center; color:#9ca3af; font-size:10px; padding:6px; touch-action:none;"><i class="fas fa-image" style="font-size:18px; display:block; margin-bottom:2px;"></i>انقر لرفع صورة</div>';
-        placeholder.onclick = function() { triggerImageUpload(); };
+function triggerImageUploadForLayer(layerId) {
+    const layerData = layers.find(l => l.id === layerId);
+    if (!layerData || layerData.type !== 'image') {
+        showToast('⚠️ هذه الطبقة ليست صورة', 'error');
+        return;
     }
-
-    var handles = ['se', 'e', 's'];
-    handles.forEach(function(h) {
-        var handle = document.createElement('div');
-        handle.className = 'resize-handle resize-' + h;
-        handle.style.touchAction = 'none';
-        handle.style.pointerEvents = 'auto';
-        handle.style.zIndex = '30';
-        
-        handle.addEventListener('mousedown', function(e) { 
-            e.stopPropagation(); 
-            e.preventDefault();
-            startResize(e, layer, h); 
-        });
-        
-        handle.addEventListener('touchstart', function(e) { 
-            e.stopPropagation(); 
-            e.preventDefault(); 
-            startResize(e, layer, h); 
-        }, { passive: false });
-        
-        layer.appendChild(handle);
-    });
-
-    layer.appendChild(placeholder);
     
-    layer.addEventListener('mousedown', function(e) { 
-        if (!e.target.classList.contains('resize-handle')) {
-            e.preventDefault();
-            startDrag(e, layer); 
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.style.display = 'none';
+    document.body.appendChild(input);
+    
+    input.onchange = function(event) {
+        const file = event.target.files[0];
+        if (!file) {
+            document.body.removeChild(input);
+            return;
         }
-    });
-    
-    layer.addEventListener('touchstart', function(e) { 
-        if (!e.target.classList.contains('resize-handle')) {
-            e.preventDefault();
-            startDrag(e, layer); 
-        }
-    }, { passive: false });
-
-    surface.appendChild(layer);
-
-    var layerData = {
-        id: id,
-        type: 'image',
-        element: layer,
-        placeholder: placeholder,
-        src: src || null,
-        top: top,
-        left: left,
-        width: width,
-        height: height,
-        isEmpty: false
-    };
-
-    layers.push(layerData);
-    selectLayer(id);
-    updateLayerCount();
-    saveState();
-    return layerData;
-}
-
-// ============================================
-// رفع الصور
-// ============================================
-function triggerImageUpload() {
-    document.getElementById('imageUploader').click();
-}
-
-function handleImageUpload(event) {
-    var file = event.target.files[0];
-    if (!file) return;
-    
-    var targetLayerId = event.target.dataset.targetLayer || null;
-    var reader = new FileReader();
-    
-    reader.onload = function(e) {
-        var img = new Image();
-        img.onload = function() {
-            // إذا كانت هناك طبقة مستهدفة (صورة فارغة)
-            if (targetLayerId) {
-                var layerData = layers.find(function(l) { return l.id === targetLayerId; });
-                if (layerData && layerData.type === 'image') {
-                    var placeholder = layerData.placeholder;
-                    if (placeholder) {
-                        // إزالة المحتوى السابق وإضافة الصورة
-                        placeholder.innerHTML = '';
-                        var imgEl = document.createElement('img');
-                        imgEl.src = e.target.result;
-                        imgEl.style.cssText = 'width:100%; height:100%; object-fit:contain;';
-                        placeholder.appendChild(imgEl);
-                        placeholder.style.border = 'none';
-                        placeholder.style.background = 'transparent';
-                        layerData.src = e.target.result;
-                        layerData.isEmpty = false;
-                        showToast('✅ تم رفع الصورة', 'success');
-                        saveState();
-                    }
-                }
-            } else {
-                // الوضع العادي - إضافة طبقة صورة جديدة
-                addImageLayer(e.target.result);
-                showToast('✅ تم رفع الصورة', 'success');
-            }
+        
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            layerData.imageData = ev.target.result;
+            layerData.isEmpty = false;
+            renderLayersOptimized();
+            showToast('✅ تم رفع الصورة بنجاح', 'success');
+            saveState();
+            document.body.removeChild(input);
         };
-        img.src = e.target.result;
+        reader.readAsDataURL(file);
+        document.body.removeChild(input);
+    };
+    
+    input.click();
+}
+window.triggerImageUploadForLayer = triggerImageUploadForLayer;
+
+function enableAutoSave() {
+    if (autoSaveTimer) clearInterval(autoSaveTimer);
+    autoSaveTimer = setInterval(() => {
+        if (layers.length > 0 && currentTemplateId && isAdminUser) {
+            updateAndSaveTemplate();
+            console.log('💾 Auto-save performed');
+        }
+    }, 30000);
+}
+window.enableAutoSave = enableAutoSave;
+
+function disableAutoSave() {
+    if (autoSaveTimer) {
+        clearInterval(autoSaveTimer);
+        autoSaveTimer = null;
+    }
+}
+window.disableAutoSave = disableAutoSave;
+
+function restoreSession() {
+    try {
+        const saved = localStorage.getItem('tithkari_design_session');
+        if (saved) {
+            const data = JSON.parse(saved);
+            if (data.layers && data.layers.length > 0) {
+                layers = data.layers;
+                currentTemplateId = data.templateId;
+                updateAll();
+                showToast('🔄 تم استعادة الجلسة السابقة', 'info');
+                return true;
+            }
+        }
+    } catch (e) {
+        console.warn('⚠️ لا يمكن استعادة الجلسة:', e);
+    }
+    return false;
+}
+window.restoreSession = restoreSession;
+
+function saveSession() {
+    try {
+        const data = {
+            layers: layers.map(l => ({ ...l })),
+            templateId: currentTemplateId,
+            timestamp: Date.now()
+        };
+        localStorage.setItem('tithkari_design_session', JSON.stringify(data));
+    } catch (e) {
+        console.warn('⚠️ لا يمكن حفظ الجلسة:', e);
+    }
+}
+window.saveSession = saveSession;
+
+// ============================================
+// دوال الطبقات الأساسية
+// ============================================
+function addDefaultTextLayer() {
+    const layer = {
+        id: nextId++,
+        type: 'text',
+        content: 'المناسبة أو الرتبة',
+        x: 25,
+        y: 10,
+        width: 50,
+        height: 18,
+        rotation: 0,
+        zIndex: 1,
+        fontFamily: 'Cairo',
+        fontSize: 22,
+        color: '#d4af37',
+        bgColor: '#000000',
+        bgEnabled: true,
+        opacity: 1
+    };
+    layers.push(layer);
+    return layer;
+}
+window.addDefaultTextLayer = addDefaultTextLayer;
+
+function selectLayer(id) {
+    if (activeLayerId === id) { 
+        activeLayerId = null; 
+        updateAll(); 
+        return; 
+    }
+    activeLayerId = id;
+    updateAll();
+    loadLayerControls(id);
+}
+window.selectLayer = selectLayer;
+
+function loadLayerControls(id) {
+    const layer = layers.find(l => l.id === id);
+    if (!layer || layer.type !== 'text') return;
+    
+    const textContent = document.getElementById('textContent');
+    const fontFamily = document.getElementById('fontFamily');
+    const fontSize = document.getElementById('fontSize');
+    const fontSizeDisplay = document.getElementById('fontSizeDisplay');
+    const textColor = document.getElementById('textColor');
+    const textBgColor = document.getElementById('textBgColor');
+    const textBgToggle = document.getElementById('textBgToggle');
+    
+    if (textContent) textContent.value = layer.content || '';
+    if (fontFamily) fontFamily.value = layer.fontFamily || 'Cairo';
+    if (fontSize) {
+        fontSize.value = layer.fontSize || 18;
+        if (fontSizeDisplay) fontSizeDisplay.textContent = layer.fontSize || 18;
+    }
+    if (textColor) textColor.value = layer.color || '#d4af37';
+    if (textBgColor) textBgColor.value = layer.bgColor || '#000000';
+    if (textBgToggle) textBgToggle.checked = layer.bgEnabled !== false;
+}
+
+function deselectLayer(e) { 
+    if (e && e.target === e.currentTarget) { 
+        activeLayerId = null; 
+        updateAll(); 
+    } 
+}
+window.deselectLayer = deselectLayer;
+
+function deleteLayer(id) { 
+    layers = layers.filter(l => l.id !== id); 
+    if (activeLayerId === id) activeLayerId = null; 
+    updateAll(); 
+    showToast('تم حذف الطبقة', 'warning'); 
+}
+window.deleteLayer = deleteLayer;
+
+function addTextLayer() {
+    const layer = { 
+        id: nextId++, 
+        type: 'text', 
+        content: 'نص جديد', 
+        x: 20 + Math.random() * 30, 
+        y: 20 + Math.random() * 30, 
+        width: 30, 
+        height: 15, 
+        rotation: 0, 
+        zIndex: layers.length + 1, 
+        fontFamily: 'Cairo', 
+        fontSize: 18, 
+        color: '#d4af37', 
+        bgColor: '#000000', 
+        bgEnabled: true,
+        opacity: 1
+    };
+    layers.push(layer);
+    activeLayerId = layer.id;
+    updateAll();
+    loadLayerControls(layer.id);
+    saveState();
+    showToast('✅ تم إضافة طبقة نص - اسحب لتغيير المكان', 'success');
+    return layer;
+}
+window.addTextLayer = addTextLayer;
+
+function triggerImageUpload() { 
+    const uploader = document.getElementById('imageUploader');
+    if (uploader) uploader.click(); 
+}
+window.triggerImageUpload = triggerImageUpload;
+
+function handleImageUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        const layer = { 
+            id: nextId++, 
+            type: 'image', 
+            imageData: ev.target.result, 
+            x: 20 + Math.random() * 30, 
+            y: 20 + Math.random() * 30, 
+            width: 30, 
+            height: 30, 
+            rotation: 0, 
+            zIndex: layers.length + 1,
+            opacity: 1
+        };
+        layers.push(layer);
+        activeLayerId = layer.id;
+        updateAll();
+        saveState();
+        showToast('✅ تم إضافة طبقة صورة - اسحب لتغيير المكان', 'success');
     };
     reader.readAsDataURL(file);
-    event.target.value = '';
-    event.target.dataset.targetLayer = '';
+    e.target.value = '';
 }
+window.handleImageUpload = handleImageUpload;
 
-// ============================================
-// اختيار الطبقة
-// ============================================
-function selectLayer(id) {
-    document.querySelectorAll('.layer').forEach(function(l) { l.classList.remove('focused'); });
-
-    var layerData = layers.find(function(l) { return l.id === id; });
-    if (!layerData) return;
-
-    activeLayerId = id;
-    layerData.element.classList.add('focused');
-
-    var textControls = document.getElementById('textControls');
-    if (layerData.type === 'text') {
-        textControls.style.display = 'block';
-        document.getElementById('textContent').value = layerData.text || '';
-        var content = layerData.element.querySelector('.text-content');
-        if (content) {
-            document.getElementById('fontSize').value = parseFloat(content.style.fontSize) || 18;
-            document.getElementById('fontSizeDisplay').textContent = document.getElementById('fontSize').value;
-            document.getElementById('textColor').value = rgbToHex(content.style.color) || '#d4af37';
-            document.getElementById('textBgColor').value = rgbToHex(content.style.backgroundColor) || '#000000';
-            document.getElementById('textBgToggle').checked = content.style.backgroundColor !== 'transparent';
-        }
-    } else {
-        textControls.style.display = 'none';
-    }
-    
-    updateLayersList();
+function addEmptyImageLayer() {
+    const layer = { 
+        id: nextId++, 
+        type: 'image', 
+        imageData: null, 
+        x: 20 + Math.random() * 30, 
+        y: 20 + Math.random() * 30, 
+        width: 30, 
+        height: 30, 
+        rotation: 0, 
+        zIndex: layers.length + 1,
+        opacity: 1
+    };
+    layers.push(layer);
+    activeLayerId = layer.id;
+    updateAll();
+    saveState();
+    showToast('✅ تم إضافة طبقة صورة فارغة - اسحب لتغيير المكان، انقر لرفع صورة', 'success');
+    return layer;
 }
+window.addEmptyImageLayer = addEmptyImageLayer;
 
-function deselectLayer(e) {
-    if (isEditing) return;
-    if (e.target.id === 'canvasFrame' || e.target.closest('.base-layer')) {
-        document.querySelectorAll('.layer').forEach(function(l) { l.classList.remove('focused'); });
-        activeLayerId = null;
-        document.getElementById('textControls').style.display = 'none';
-        updateLayersList();
-    }
-}
-
-function getActiveLayer() {
-    return layers.find(function(l) { return l.id === activeLayerId; }) || null;
-}
-
-// ============================================
-// تحديث النص
-// ============================================
 function updateActiveText() {
-    var layerData = getActiveLayer();
-    if (!layerData || layerData.type !== 'text') return;
-
-    var content = layerData.element.querySelector('.text-content');
-    if (!content) return;
-
-    var text = document.getElementById('textContent').value;
-    var fontSize = document.getElementById('fontSize').value;
-    var fontFamily = document.getElementById('fontFamily').value;
-    var color = document.getElementById('textColor').value;
-    var bgColor = document.getElementById('textBgColor').value;
-    var bgToggle = document.getElementById('textBgToggle').checked;
-
-    content.textContent = text;
-    content.style.fontSize = fontSize + 'px';
-    content.style.fontFamily = fontFamily + ', sans-serif';
-    content.style.color = color;
-    content.style.backgroundColor = bgToggle ? bgColor : 'transparent';
-
-    layerData.text = text;
-    document.getElementById('fontSizeDisplay').textContent = fontSize;
-    saveState();
-}
-
-// ============================================
-// تحويل 3D
-// ============================================
-function updateTransform() {
-    var layerData = getActiveLayer();
-    if (!layerData) return;
-
-    var tiltX = document.getElementById('tiltX').value;
-    var tiltY = document.getElementById('tiltY').value;
-    var rotateZ = document.getElementById('rotateZ').value;
-
-    layerData.element.style.transform = 'perspective(600px) rotateX(' + tiltX + 'deg) rotateY(' + tiltY + 'deg) rotateZ(' + rotateZ + 'deg)';
-    saveState();
-}
-
-function resetTransform() {
-    document.getElementById('tiltX').value = 0;
-    document.getElementById('tiltY').value = 0;
-    document.getElementById('rotateZ').value = 0;
-    updateTransform();
-}
-
-// ============================================
-// حذف الطبقات
-// ============================================
-function deleteActiveLayer() {
-    var layerData = getActiveLayer();
-    if (!layerData) {
-        showToast('⚠️ اختر طبقة أولاً', 'error');
-        return;
+    if (activeLayerId === null) { 
+        showToast('اختر طبقة نص أولاً', 'error'); 
+        return; 
     }
-
-    if (!confirm('هل أنت متأكد من حذف هذه الطبقة؟')) return;
-
-    layerData.element.remove();
-    layers = layers.filter(function(l) { return l.id !== layerData.id; });
-    activeLayerId = null;
-    document.getElementById('textControls').style.display = 'none';
-    updateLayerCount();
-    updateLayersList();
-    saveState();
-    showToast('🗑️ تم حذف الطبقة');
-}
-
-function clearAllLayers() {
-    if (layers.length === 0) {
-        showToast('⚠️ لا توجد طبقات لحذفها', 'error');
-        return;
-    }
-
-    if (!confirm('هل أنت متأكد من مسح جميع الطبقات؟')) return;
-
-    layers.forEach(function(l) { l.element.remove(); });
-    layers = [];
-    activeLayerId = null;
-    document.getElementById('textControls').style.display = 'none';
-    updateLayerCount();
-    updateLayersList();
-    saveState();
-    showToast('🗑️ تم مسح جميع الطبقات');
-}
-
-// ============================================
-// تحديث عدد الطبقات وقائمة الطبقات
-// ============================================
-function updateLayerCount() {
-    document.getElementById('layerCount').textContent = layers.length + ' طبقة';
-    updateLayersList();
-}
-
-function updateLayersList() {
-    var container = document.getElementById('layersList');
-    if (!container) return;
-    
-    if (layers.length === 0) {
-        container.innerHTML = '<p style="color:var(--studio-muted);font-size:9px;">لا توجد طبقات</p>';
-        return;
+    const layer = layers.find(l => l.id === activeLayerId);
+    if (!layer || layer.type !== 'text') { 
+        showToast('الطبقة المحددة ليست نصية', 'error'); 
+        return; 
     }
     
-    container.innerHTML = '';
-    layers.forEach(function(l) {
-        var activeClass = (l.id === activeLayerId) ? 'active' : '';
-        var typeIcon = (l.type === 'text') ? '📝' : '🖼️';
-        var typeColor = (l.type === 'text') ? '#d4af37' : '#3b82f6';
-        var textDisplay = (l.type === 'text') ? (l.text || 'نص').substring(0, 15) : 'صورة';
-        container.innerHTML += `
-            <div class="layer-item ${activeClass}" onclick="selectLayer('${l.id}')">
-                <span>
-                    <span style="color:${typeColor}">${typeIcon}</span>
-                    ${textDisplay}
-                    ${l.id === activeLayerId ? ' 👈' : ''}
-                </span>
-                <span class="layer-delete" onclick="event.stopPropagation(); deleteLayer('${l.id}')">
-                    <i class="fas fa-times"></i>
-                </span>
-            </div>
-        `;
-    });
-}
-
-function deleteLayer(layerId) {
-    var layerData = layers.find(function(l) { return l.id === layerId; });
-    if (!layerData) return;
+    const textContent = document.getElementById('textContent');
+    const fontFamily = document.getElementById('fontFamily');
+    const fontSize = document.getElementById('fontSize');
+    const fontSizeDisplay = document.getElementById('fontSizeDisplay');
+    const textColor = document.getElementById('textColor');
+    const textBgColor = document.getElementById('textBgColor');
+    const textBgToggle = document.getElementById('textBgToggle');
     
-    layerData.element.remove();
-    layers = layers.filter(function(l) { return l.id !== layerId; });
-    if (activeLayerId === layerId) activeLayerId = null;
-    updateLayerCount();
-    updateLayersList();
+    if (textContent) layer.content = textContent.value;
+    if (fontFamily) layer.fontFamily = fontFamily.value;
+    if (fontSize) {
+        layer.fontSize = parseInt(fontSize.value);
+        if (fontSizeDisplay) fontSizeDisplay.textContent = layer.fontSize;
+    }
+    if (textColor) layer.color = textColor.value;
+    if (textBgColor) layer.bgColor = textBgColor.value;
+    if (textBgToggle) layer.bgEnabled = textBgToggle.checked;
+    
+    renderLayersOptimized();
     saveState();
-    showToast('🗑️ تم حذف الطبقة');
 }
+window.updateActiveText = updateActiveText;
 
 // ============================================
-// Undo/Redo
+// دوال التراجع والتقدم المحسنة
 // ============================================
 function saveState() {
-    var state = {
-        layers: layers.map(function(l) {
-            var data = {
-                id: l.id,
-                type: l.type,
-                html: l.element.outerHTML,
-                top: l.top,
-                left: l.left,
-                width: l.width,
-                height: l.height,
-                text: l.text || null,
-                src: l.src || null,
-                isEmpty: l.isEmpty || false
-            };
-            if (l.type === 'text') {
-                var content = l.element.querySelector('.text-content');
-                if (content) {
-                    data.style = {
-                        fontSize: content.style.fontSize,
-                        fontFamily: content.style.fontFamily,
-                        color: content.style.color,
-                        backgroundColor: content.style.backgroundColor
-                    };
-                }
-            }
-            return data;
-        }),
-        activeId: activeLayerId,
-        baseImage: document.getElementById('baseImage').src,
-        referenceImage: document.getElementById('referenceImage').src,
-        templateId: currentTemplateId
+    const state = {
+        layers: layers.map(l => ({ 
+            ...l, 
+            element: null, 
+            contentElement: null, 
+            placeholder: null 
+        })),
+        activeId: activeLayerId
     };
-    undoStack.push(JSON.stringify(state));
-    if (undoStack.length > 50) undoStack.shift();
-    redoStack = [];
+    history.push(JSON.stringify(state));
+    if (history.length > 50) history.shift();
+    historyIndex = history.length - 1;
+    saveSession();
 }
-
-function restoreState(stateJson) {
-    var state = JSON.parse(stateJson);
-
-    layers.forEach(function(l) { 
-        if (l.element && l.element.parentNode) {
-            l.element.remove(); 
-        }
-    });
-    layers = [];
-
-    if (state.baseImage) {
-        document.getElementById('baseImage').src = state.baseImage;
-    }
-    if (state.referenceImage) {
-        document.getElementById('referenceImage').src = state.referenceImage;
-    }
-
-    state.layers.forEach(function(layerData) {
-        var surface = document.getElementById('layersSurface');
-        var tempDiv = document.createElement('div');
-        tempDiv.innerHTML = layerData.html;
-        var element = tempDiv.firstElementChild;
-        surface.appendChild(element);
-
-        var newLayer = {
-            id: layerData.id,
-            type: layerData.type,
-            element: element,
-            top: layerData.top,
-            left: layerData.left,
-            width: layerData.width,
-            height: layerData.height,
-            text: layerData.text || null,
-            src: layerData.src || null,
-            isEmpty: layerData.isEmpty || false
-        };
-
-        if (layerData.type === 'text') {
-            newLayer.content = element.querySelector('.text-content');
-            if (newLayer.content) {
-                newLayer.content.addEventListener('dblclick', function(e) {
-                    e.stopPropagation();
-                    startEditing(this);
-                });
-            }
-        } else if (layerData.type === 'image') {
-            newLayer.placeholder = element.querySelector('.image-placeholder');
-        }
-
-        element.addEventListener('mousedown', function(e) { 
-            if (!e.target.classList.contains('resize-handle')) {
-                e.preventDefault();
-                startDrag(e, element); 
-            }
-        });
-        
-        element.addEventListener('touchstart', function(e) { 
-            if (!e.target.classList.contains('resize-handle')) {
-                e.preventDefault();
-                startDrag(e, element); 
-            }
-        }, { passive: false });
-        
-        element.querySelectorAll('.resize-handle').forEach(function(h) {
-            var handleClass = [...h.classList].find(function(c) { return c.startsWith('resize-'); });
-            if (handleClass) {
-                var handleType = handleClass.replace('resize-', '');
-                h.addEventListener('mousedown', function(e) { 
-                    e.stopPropagation(); 
-                    e.preventDefault();
-                    startResize(e, element, handleType); 
-                });
-                h.addEventListener('touchstart', function(e) { 
-                    e.stopPropagation(); 
-                    e.preventDefault(); 
-                    startResize(e, element, handleType); 
-                }, { passive: false });
-            }
-        });
-
-        layers.push(newLayer);
-    });
-
-    if (state.activeId) {
-        var found = layers.find(function(l) { return l.id === state.activeId; });
-        if (found) selectLayer(found.id);
-    }
-    updateLayerCount();
-    updateLayersList();
-}
+window.saveState = saveState;
 
 function undoAction() {
-    if (undoStack.length <= 1) {
-        showToast('⚠️ لا يوجد تراجع', 'error');
-        return;
+    if (historyIndex <= 0) { 
+        showToast('⚠️ لا يوجد تراجع', 'warning'); 
+        return; 
     }
-    redoStack.push(undoStack.pop());
-    restoreState(undoStack[undoStack.length - 1]);
-    showToast('↩️ تراجع');
+    historyIndex--;
+    restoreState(history[historyIndex]);
+    showToast('↩️ تراجع', 'info');
 }
+window.undoAction = undoAction;
 
 function redoAction() {
-    if (redoStack.length === 0) {
-        showToast('⚠️ لا يوجد تقدم', 'error');
-        return;
+    if (historyIndex >= history.length - 1) { 
+        showToast('⚠️ لا يوجد تقدم', 'warning'); 
+        return; 
     }
-    var state = redoStack.pop();
-    undoStack.push(state);
-    restoreState(state);
-    showToast('↪️ تقدم');
+    historyIndex++;
+    restoreState(history[historyIndex]);
+    showToast('↪️ تقدم', 'info');
 }
+window.redoAction = redoAction;
+
+function restoreState(stateJson) {
+    const state = JSON.parse(stateJson);
+    layers = state.layers.map(l => ({ ...l }));
+    activeLayerId = state.activeId;
+    updateAll();
+}
+window.restoreState = restoreState;
 
 // ============================================
-// 🔐 نظام إدارة القوالب المتقدم
+// دوال التحويل
 // ============================================
-
-// ===== التحقق من صلاحيات الإدارة (محسّن نهائياً) =====
-function isAdmin() {
-    // 1. التحقق من وجود جلسة في localStorage
-    var session = localStorage.getItem('session');
-    var userStr = localStorage.getItem('user');
-    
-    console.log('🔍 فحص صلاحيات الإدارة...');
-    console.log('📌 session موجود؟', !!session);
-    
-    // 2. إذا لم توجد جلسة، المستخدم ليس مسؤولاً
-    if (!session) {
-        console.log('❌ لا توجد جلسة نشطة');
-        return false;
-    }
-    
-    // 3. محاولة تحليل بيانات المستخدم
-    try {
-        var user = JSON.parse(userStr || '{}');
-        var email = user?.email || '';
-        var isAdminEmail = email === 'admin@tithkari.com';
-        var isAdminRole = user?.role === 'admin';
-        var isAdminFlag = localStorage.getItem('is_admin') === 'true';
-        
-        // 4. النتيجة النهائية
-        var result = isAdminEmail || isAdminRole || isAdminFlag;
-        
-        console.log('🔐 نتيجة التحقق:', {
-            email: email,
-            isAdminEmail: isAdminEmail,
-            isAdminRole: isAdminRole,
-            isAdminFlag: isAdminFlag,
-            result: result
-        });
-        
-        // 5. إظهار/إخفاء أدوات الإدارة في الواجهة
-        var adminControls = document.querySelectorAll('.admin-controls');
-        adminControls.forEach(function(el) {
-            if (result) {
-                el.classList.add('show');
-                el.style.display = 'block';
-            } else {
-                el.classList.remove('show');
-                el.style.display = 'none';
-            }
-        });
-        
-        // 6. إظهار/إخفاء تبويب الإدارة
-        var adminTab = document.getElementById('adminDesignTab');
-        if (adminTab) {
-            adminTab.style.display = result ? 'inline-block' : 'none';
-        }
-        
-        // 7. إظهار/إخفاء أزرار الإدارة
-        var adminActionBtns = document.querySelectorAll('.admin-action-btn');
-        adminActionBtns.forEach(function(el) {
-            el.style.display = result ? 'block' : 'none';
-        });
-        
-        // 8. إظهار/إخفاء زر حفظ القالب
-        var saveTemplateBtn = document.getElementById('saveTemplateBtn');
-        if (saveTemplateBtn) {
-            saveTemplateBtn.style.display = result ? 'inline-flex' : 'none';
-        }
-        
-        return result;
-        
-    } catch (error) {
-        console.error('❌ خطأ في التحقق من صلاحيات الإدارة:', error);
-        return false;
+function updateTransform() {
+    const tiltX = document.getElementById('tiltX');
+    const tiltY = document.getElementById('tiltY');
+    const rotateZ = document.getElementById('rotateZ');
+    const canvasFrame = document.getElementById('canvasFrame');
+    if (tiltX && tiltY && rotateZ && canvasFrame) {
+        const x = tiltX.value, y = tiltY.value, z = rotateZ.value;
+        canvasFrame.style.transform = `perspective(800px) rotateX(${x}deg) rotateY(${y}deg) rotateZ(${z}deg)`;
     }
 }
+window.updateTransform = updateTransform;
 
-// ===== دالة لتسجيل الدخول كمسؤول (للتطوير) =====
-function forceAdminLogin() {
-    var fakeUser = {
-        email: 'admin@tithkari.com',
-        role: 'admin'
-    };
-    localStorage.setItem('session', JSON.stringify({ 
-        access_token: 'fake_token_' + Date.now(),
-        expires_at: Date.now() + 3600000
-    }));
-    localStorage.setItem('user', JSON.stringify(fakeUser));
-    localStorage.setItem('is_admin', 'true');
-    
-    console.log('✅ تم تسجيل الدخول كمسؤول مؤقتاً');
-    showToast('✅ تم تسجيل الدخول كمسؤول مؤقتاً', 'success');
-    
-    // تحديث الواجهة
-    setTimeout(function() {
-        window.location.reload();
-    }, 500);
+function resetTransform() {
+    const tiltX = document.getElementById('tiltX');
+    const tiltY = document.getElementById('tiltY');
+    const rotateZ = document.getElementById('rotateZ');
+    const canvasFrame = document.getElementById('canvasFrame');
+    if (tiltX) tiltX.value = 0;
+    if (tiltY) tiltY.value = 0;
+    if (rotateZ) rotateZ.value = 0;
+    if (canvasFrame) canvasFrame.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg) rotateZ(0deg)';
+    showToast('تم تصفير التحويل', 'success');
 }
-
-// ===== دالة لتسجيل الخروج =====
-function forceAdminLogout() {
-    localStorage.removeItem('session');
-    localStorage.removeItem('user');
-    localStorage.removeItem('is_admin');
-    
-    console.log('✅ تم تسجيل الخروج');
-    showToast('✅ تم تسجيل الخروج', 'success');
-    
-    setTimeout(function() {
-        window.location.reload();
-    }, 500);
-}
-
-// ===== حفظ القالب في Supabase =====
-async function saveTemplateToSupabase(templateData) {
-    try {
-        var { data: existing, error: findError } = await supabase
-            .from('templates')
-            .select('id')
-            .eq('name', templateData.name)
-            .single();
-        
-        if (findError && findError.code !== 'PGRST116') {
-            // PGRST116 تعني عدم وجود نتائج
-            console.warn('⚠️ خطأ في البحث عن القالب:', findError);
-        }
-        
-        if (existing) {
-            var { error } = await supabase
-                .from('templates')
-                .update({
-                    name: templateData.name,
-                    image: templateData.baseImage,
-                    reference_image: templateData.referenceImage || templateData.baseImage,
-                    layers: templateData.layers,
-                    linked_product_id: templateData.linkedProductId || null,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', existing.id);
-            
-            if (error) {
-                console.warn('⚠️ خطأ في تحديث القالب:', error);
-                return { success: false, error: error.message };
-            }
-            return { success: true, id: existing.id, action: 'updated' };
-        } else {
-            var { data, error } = await supabase
-                .from('templates')
-                .insert({
-                    name: templateData.name,
-                    image: templateData.baseImage,
-                    reference_image: templateData.referenceImage || templateData.baseImage,
-                    layers: templateData.layers,
-                    linked_product_id: templateData.linkedProductId || null,
-                    status: 'active',
-                    created_at: new Date().toISOString()
-                })
-                .select()
-                .single();
-            
-            if (error) {
-                console.warn('⚠️ خطأ في إضافة القالب:', error);
-                return { success: false, error: error.message };
-            }
-            return { success: true, id: data.id, action: 'created' };
-        }
-    } catch (error) {
-        console.error('❌ خطأ في حفظ القالب في Supabase:', error);
-        // حفظ في localStorage كنسخة احتياطية
-        return saveTemplateToLocalStorage(templateData);
-    }
-}
-
-// ===== حفظ القالب في localStorage (حل بديل) =====
-function saveTemplateToLocalStorage(templateData) {
-    var templates = JSON.parse(localStorage.getItem('tithkari_design_templates') || '[]');
-    var newTemplate = {
-        id: 'local_' + Date.now(),
-        ...templateData,
-        isLocal: true,
-        savedAt: new Date().toISOString()
-    };
-    templates.push(newTemplate);
-    localStorage.setItem('tithkari_design_templates', JSON.stringify(templates));
-    console.log('✅ تم حفظ القالب في localStorage:', newTemplate.id);
-    return { success: true, id: newTemplate.id, action: 'saved_locally' };
-}
-
-// ===== حفظ القالب (محسّن مع Supabase) =====
-async function saveCurrentTemplate() {
-    if (layers.length === 0) {
-        showToast('⚠️ لا توجد طبقات لحفظها، أضف طبقات أولاً', 'error');
-        return;
-    }
-
-    if (!isAdmin()) {
-        showToast('⚠️ فقط المسؤول يمكنه حفظ القوالب', 'error');
-        return;
-    }
-
-    var layersData = collectLayersData();
-    
-    var templateName = prompt('🏷️ أدخل اسم القالب:', 'قالب مخصص ' + new Date().toLocaleDateString('ar-SA'));
-    if (!templateName) {
-        showToast('⚠️ تم إلغاء الحفظ', 'warning');
-        return;
-    }
-    
-    var productLink = document.getElementById('productLinkSelect');
-    var linkedProductId = productLink?.value || null;
-    var linkedProductName = productLink?.options[productLink.selectedIndex]?.text || '';
-    
-    var templateData = {
-        name: templateName,
-        baseImage: document.getElementById('baseImage').src,
-        referenceImage: document.getElementById('referenceImage').src,
-        layers: layersData,
-        linkedProductId: linkedProductId,
-        linkedProductName: linkedProductName,
-        isCustom: true,
-        status: 'active',
-        createdAt: new Date().toISOString(),
-        version: '2.0'
-    };
-    
-    var result = await saveTemplateToSupabase(templateData);
-    
-    if (result.success) {
-        showToast('✅ تم حفظ القالب "' + templateName + '" بنجاح!', 'success');
-        loadTemplates();
-        showExportOptions(templateData);
-        
-        if (linkedProductId) {
-            await linkTemplateToProduct(result.id, linkedProductId);
-        }
-    } else {
-        // حفظ في localStorage كحل بديل
-        var localResult = saveTemplateToLocalStorage(templateData);
-        showToast('✅ تم حفظ القالب محلياً "' + templateName + '"', 'success');
-        loadTemplates();
-        showExportOptions(templateData);
-    }
-}
-
-// ===== تحديث القالب الحالي =====
-async function updateCurrentTemplate() {
-    if (!currentTemplateId) {
-        showToast('⚠️ اختر قالباً أولاً للتحديث', 'warning');
-        return;
-    }
-    
-    if (!isAdmin()) {
-        showToast('⚠️ فقط المسؤول يمكنه تحديث القوالب', 'error');
-        return;
-    }
-    
-    if (layers.length === 0) {
-        showToast('⚠️ لا توجد طبقات للتحديث', 'error');
-        return;
-    }
-    
-    var confirmUpdate = confirm('⚠️ هل أنت متأكد من تحديث القالب "' + 
-        (document.getElementById('productNameDisplay').textContent || 'غير مسمى') + '"؟');
-    
-    if (!confirmUpdate) return;
-    
-    var layersData = collectLayersData();
-    
-    var templateData = {
-        name: document.getElementById('productNameDisplay').textContent || 'قالب محدث',
-        baseImage: document.getElementById('baseImage').src,
-        referenceImage: document.getElementById('referenceImage').src,
-        layers: layersData,
-        linkedProductId: currentProductId || null,
-        updatedAt: new Date().toISOString()
-    };
-    
-    try {
-        var { error } = await supabase
-            .from('templates')
-            .update({
-                name: templateData.name,
-                image: templateData.baseImage,
-                reference_image: templateData.referenceImage,
-                layers: templateData.layers,
-                linked_product_id: templateData.linkedProductId,
-                updated_at: templateData.updatedAt
-            })
-            .eq('id', currentTemplateId);
-        
-        if (error) {
-            // تحديث في localStorage
-            var templates = JSON.parse(localStorage.getItem('tithkari_design_templates') || '[]');
-            var index = templates.findIndex(function(t) { return t.id === currentTemplateId; });
-            if (index !== -1) {
-                templates[index] = { ...templates[index], ...templateData };
-                localStorage.setItem('tithkari_design_templates', JSON.stringify(templates));
-            }
-            showToast('✅ تم تحديث القالب محلياً', 'success');
-        } else {
-            showToast('✅ تم تحديث القالب بنجاح!', 'success');
-        }
-        loadTemplates();
-        
-    } catch (error) {
-        console.error('❌ خطأ في تحديث القالب:', error);
-        showToast('❌ حدث خطأ في تحديث القالب', 'error');
-    }
-}
-
-// ===== حذف القالب =====
-async function deleteCurrentTemplate() {
-    if (!currentTemplateId) {
-        showToast('⚠️ اختر قالباً للحذف', 'warning');
-        return;
-    }
-    
-    if (!isAdmin()) {
-        showToast('⚠️ فقط المسؤول يمكنه حذف القوالب', 'error');
-        return;
-    }
-    
-    var confirmDelete = confirm('⚠️ هل أنت متأكد من حذف هذا القالب؟ لا يمكن التراجع!');
-    if (!confirmDelete) return;
-    
-    try {
-        // محاولة حذف من Supabase
-        var { error } = await supabase
-            .from('templates')
-            .update({ status: 'inactive' })
-            .eq('id', currentTemplateId);
-        
-        if (error) {
-            console.warn('⚠️ لا يمكن حذف من Supabase، حذف من localStorage');
-        }
-        
-        // حذف من localStorage
-        var templates = JSON.parse(localStorage.getItem('tithkari_design_templates') || '[]');
-        templates = templates.filter(function(t) { return t.id !== currentTemplateId; });
-        localStorage.setItem('tithkari_design_templates', JSON.stringify(templates));
-        
-        showToast('✅ تم حذف القالب بنجاح', 'success');
-        currentTemplateId = null;
-        loadTemplates();
-        document.getElementById('baseImage').src = defaultTemplates[0].image;
-        
-    } catch (error) {
-        console.error('❌ خطأ في حذف القالب:', error);
-        showToast('❌ حدث خطأ في حذف القالب', 'error');
-    }
-}
-
-// ===== ربط القالب بالمنتج =====
-async function linkTemplateToProduct(templateId, productId) {
-    if (!templateId || !productId) {
-        showToast('⚠️ يجب تحديد القالب والمنتج', 'warning');
-        return;
-    }
-    
-    try {
-        var { error } = await supabase
-            .from('products')
-            .update({
-                template_id: templateId,
-                template_data: await getTemplateData(templateId)
-            })
-            .eq('id', productId);
-        
-        if (error) {
-            console.warn('⚠️ لا يمكن ربط القالب في Supabase:', error);
-            // حفظ في localStorage
-            var customProducts = JSON.parse(localStorage.getItem('tithkari_custom_products') || '[]');
-            var index = customProducts.findIndex(function(p) { return p.id == productId; });
-            if (index !== -1) {
-                customProducts[index].template_id = templateId;
-                localStorage.setItem('tithkari_custom_products', JSON.stringify(customProducts));
-            }
-            showToast('✅ تم ربط القالب محلياً', 'success');
-        } else {
-            showToast('✅ تم ربط القالب بالمنتج بنجاح', 'success');
-        }
-    } catch (error) {
-        console.error('❌ خطأ في ربط القالب:', error);
-        showToast('❌ حدث خطأ في ربط القالب بالمنتج', 'error');
-    }
-}
-
-// ===== ربط القالب بالمنتج (دالة عامة للاستخدام من HTML) =====
-async function syncTemplateToProduct() {
-    if (!currentTemplateId) {
-        showToast('⚠️ اختر قالباً أولاً', 'warning');
-        return;
-    }
-    
-    var productLink = document.getElementById('productLinkSelect');
-    var productId = productLink?.value || null;
-    
-    if (!productId) {
-        showToast('⚠️ اختر منتجاً للربط', 'warning');
-        return;
-    }
-    
-    await linkTemplateToProduct(currentTemplateId, productId);
-}
-
-// ===== الحصول على بيانات القالب =====
-async function getTemplateData(templateId) {
-    try {
-        var { data, error } = await supabase
-            .from('templates')
-            .select('*')
-            .eq('id', templateId)
-            .single();
-        
-        if (error) {
-            // البحث في localStorage
-            var templates = JSON.parse(localStorage.getItem('tithkari_design_templates') || '[]');
-            var localTemplate = templates.find(function(t) { return t.id === templateId; });
-            if (localTemplate) return localTemplate;
-            return null;
-        }
-        return data;
-    } catch (error) {
-        console.error('❌ خطأ في جلب بيانات القالب:', error);
-        return null;
-    }
-}
-
-// ===== تحميل قالب المنتج المخصص =====
-async function loadProductTemplate(productId) {
-    try {
-        // جلب المنتج مع بيانات القالب
-        var { data: product, error } = await supabase
-            .from('products')
-            .select('*, templates(*)')
-            .eq('id', productId)
-            .single();
-        
-        if (error) {
-            console.warn('⚠️ لا يمكن تحميل قالب المنتج:', error);
-            // البحث في localStorage
-            var templates = JSON.parse(localStorage.getItem('tithkari_design_templates') || '[]');
-            var localTemplate = templates.find(function(t) { return t.linkedProductId == productId; });
-            if (localTemplate) {
-                loadTemplateData(localTemplate);
-                currentTemplateId = localTemplate.id;
-                showToast('✅ تم تحميل قالب المنتج من localStorage', 'success');
-                return localTemplate;
-            }
-            return null;
-        }
-        
-        if (product?.templates) {
-            loadTemplateData(product.templates);
-            currentTemplateId = product.templates.id;
-            showToast('✅ تم تحميل قالب المنتج المخصص', 'success');
-        } else if (product?.template_data) {
-            loadTemplateData(product.template_data);
-            showToast('✅ تم تحميل قالب المنتج', 'success');
-        }
-        
-        return product;
-    } catch (error) {
-        console.error('❌ خطأ في تحميل قالب المنتج:', error);
-        return null;
-    }
-}
+window.resetTransform = resetTransform;
 
 // ============================================
-// 👤 نظام تخصيص الزبائن
+// دوال العبارات
 // ============================================
-
-// ===== تحميل القالب للتخصيص (للزبائن) =====
-function loadTemplateForCustomer(templateData) {
-    loadTemplateData(templateData);
-    
-    // إخفاء أدوات الإدارة
-    var adminControls = document.querySelectorAll('.admin-controls');
-    adminControls.forEach(function(el) {
-        el.classList.remove('show');
-        el.style.display = 'none';
-    });
-    
-    // إخفاء أزرار الإدارة
-    var adminActionBtns = document.querySelectorAll('.admin-action-btn');
-    adminActionBtns.forEach(function(el) {
-        el.style.display = 'none';
-    });
-    
-    // إخفاء زر حفظ القالب
-    var saveTemplateBtn = document.getElementById('saveTemplateBtn');
-    if (saveTemplateBtn) {
-        saveTemplateBtn.style.display = 'none';
-    }
-    
-    // إخفاء تبويب الإدارة
-    var adminTab = document.getElementById('adminDesignTab');
-    if (adminTab) {
-        adminTab.style.display = 'none';
-    }
-    
-    showToast('✅ تم تحميل القالب للتخصيص', 'success');
-}
-
-// ===== التقاط صورة التصميم =====
-function captureDesignImage() {
-    return new Promise(function(resolve, reject) {
-        try {
-            var frame = document.getElementById('canvasFrame');
-            var rect = frame.getBoundingClientRect();
-            
-            var canvas = document.createElement('canvas');
-            canvas.width = 800;
-            canvas.height = 1000;
-            var ctx = canvas.getContext('2d');
-            
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            var bgImg = document.getElementById('baseImage');
-            var bg = new Image();
-            bg.crossOrigin = 'anonymous';
-            bg.src = bgImg.src;
-            bg.onload = function() {
-                ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
-                
-                var rendered = 0;
-                var total = layers.length;
-                
-                if (total === 0) {
-                    resolve(canvas.toDataURL('image/png', 0.95));
-                    return;
-                }
-                
-                layers.forEach(function(layer) {
-                    var layerRect = layer.element.getBoundingClientRect();
-                    var x = ((layerRect.left - rect.left) / rect.width) * canvas.width;
-                    var y = ((layerRect.top - rect.top) / rect.height) * canvas.height;
-                    var w = (layerRect.width / rect.width) * canvas.width;
-                    var h = (layerRect.height / rect.height) * canvas.height;
-                    
-                    if (layer.type === 'text') {
-                        var content = layer.element.querySelector('.text-content');
-                        if (content) {
-                            var style = window.getComputedStyle(content);
-                            var fontSize = parseFloat(style.fontSize) * (canvas.width / rect.width);
-                            ctx.save();
-                            ctx.font = 'bold ' + fontSize + 'px ' + (style.fontFamily || 'Cairo');
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'middle';
-                            
-                            if (style.backgroundColor && style.backgroundColor !== 'transparent') {
-                                ctx.fillStyle = style.backgroundColor;
-                                var lines = content.textContent.split('\n');
-                                var lineHeight = fontSize * 1.4;
-                                var totalHeight = lines.length * lineHeight;
-                                var textWidth = ctx.measureText(content.textContent).width;
-                                var padding = fontSize * 0.5;
-                                ctx.fillRect(x - textWidth/2 - padding, y - totalHeight/2 - padding, 
-                                           textWidth + padding*2, totalHeight + padding*2);
-                            }
-                            
-                            ctx.fillStyle = style.color || '#d4af37';
-                            var lines = content.textContent.split('\n');
-                            lines.forEach(function(line, i) {
-                                ctx.fillText(line, x + w/2, y + h/2 + (i - (lines.length-1)/2) * fontSize * 1.4);
-                            });
-                            ctx.restore();
-                        }
-                        rendered++;
-                        if (rendered === total) {
-                            resolve(canvas.toDataURL('image/png', 0.95));
-                        }
-                    } else if (layer.type === 'image') {
-                        var img = layer.element.querySelector('img');
-                        if (img) {
-                            var imgObj = new Image();
-                            imgObj.crossOrigin = 'anonymous';
-                            imgObj.src = img.src;
-                            imgObj.onload = function() {
-                                ctx.drawImage(imgObj, x, y, w, h);
-                                rendered++;
-                                if (rendered === total) {
-                                    resolve(canvas.toDataURL('image/png', 0.95));
-                                }
-                            };
-                            imgObj.onerror = function() {
-                                rendered++;
-                                if (rendered === total) {
-                                    resolve(canvas.toDataURL('image/png', 0.95));
-                                }
-                            };
-                        } else {
-                            rendered++;
-                            if (rendered === total) {
-                                resolve(canvas.toDataURL('image/png', 0.95));
-                            }
-                        }
-                    } else {
-                        rendered++;
-                        if (rendered === total) {
-                            resolve(canvas.toDataURL('image/png', 0.95));
-                        }
-                    }
-                });
-            };
-            bg.onerror = function() {
-                reject(new Error('خطأ في تحميل الصورة'));
-            };
-        } catch (error) {
-            reject(error);
-        }
-    });
-}
-
-// ===== حفظ التخصيص مع الطلب =====
-async function saveCustomizationWithOrder(orderData) {
-    try {
-        var designImage = await captureDesignImage();
-        
-        var { data, error } = await supabase
-            .from('customizations')
-            .insert({
-                order_id: orderData.id,
-                product_id: orderData.product_id,
-                template_id: currentTemplateId,
-                design_image: designImage,
-                layers_data: collectLayersData(),
-                customization_data: {
-                    name: document.getElementById('productNameDisplay').textContent,
-                    layers: layers.map(function(l) {
-                        return {
-                            type: l.type,
-                            text: l.text || null,
-                            src: l.src || null,
-                            top: l.top,
-                            left: l.left,
-                            width: l.width,
-                            height: l.height,
-                            style: l.type === 'text' ? {
-                                fontSize: l.element.querySelector('.text-content')?.style?.fontSize || '18px',
-                                color: l.element.querySelector('.text-content')?.style?.color || '#d4af37',
-                                fontFamily: l.element.querySelector('.text-content')?.style?.fontFamily || 'Cairo'
-                            } : null
-                        };
-                    })
-                },
-                created_at: new Date().toISOString()
-            });
-        
-        if (error) {
-            console.warn('⚠️ لا يمكن حفظ التخصيص في Supabase، حفظ في localStorage');
-            saveCustomizationToLocalStorage(orderData, designImage);
-            return { success: true, data: { id: 'local_' + Date.now() } };
-        }
-        
-        console.log('✅ تم حفظ التخصيص مع الطلب');
-        return { success: true, data: data };
-        
-    } catch (error) {
-        console.error('❌ خطأ في حفظ التخصيص:', error);
-        return { success: false, error: error.message };
-    }
-}
-
-// ===== حفظ التخصيص في localStorage =====
-function saveCustomizationToLocalStorage(orderData, designImage) {
-    var customizations = JSON.parse(localStorage.getItem('tithkari_customizations') || '[]');
-    customizations.push({
-        id: 'local_' + Date.now(),
-        ...orderData,
-        design_image: designImage,
-        saved_at: new Date().toISOString()
-    });
-    localStorage.setItem('tithkari_customizations', JSON.stringify(customizations));
-    console.log('✅ تم حفظ التخصيص في localStorage');
-}
-
-// ===== تحميل المنتج للتخصيص (للزبائن) =====
-async function loadProductForCustomization(productId) {
-    try {
-        showToast('⏳ جاري تحميل المنتج للتخصيص...', 'info');
-        
-        var { data: product, error } = await supabase
-            .from('products')
-            .select('*, templates(*)')
-            .eq('id', productId)
-            .single();
-        
-        if (error) {
-            console.error('❌ خطأ في جلب المنتج:', error);
-            // محاولة من localStorage
-            var localProducts = JSON.parse(localStorage.getItem('tithkari_custom_products') || '[]');
-            var localProduct = localProducts.find(function(p) { return p.id == productId; });
-            if (localProduct) {
-                product = localProduct;
-            } else {
-                showToast('⚠️ المنتج غير موجود', 'error');
-                return;
-            }
-        }
-        
-        if (!product) {
-            showToast('⚠️ المنتج غير موجود', 'error');
-            return;
-        }
-        
-        document.getElementById('productNameDisplay').textContent = product.name || 'درع مخصص';
-        
-        if (product.image_url) {
-            document.getElementById('referenceImage').src = product.image_url;
-        }
-        
-        if (product.templates) {
-            loadTemplateForCustomer(product.templates);
-            currentTemplateId = product.templates.id;
-            showToast('✅ تم تحميل قالب "' + product.name + '" للتخصيص', 'success');
-        } else if (product.template_data) {
-            loadTemplateForCustomer(product.template_data);
-            showToast('✅ تم تحميل قالب "' + product.name + '" للتخصيص', 'success');
-        } else if (product.template_image) {
-            document.getElementById('baseImage').src = product.template_image;
-            showToast('✅ تم تحميل صورة القالب للتخصيص', 'success');
-        } else {
-            document.getElementById('baseImage').src = product.image_url;
-            showToast('✅ تم تحميل المنتج للتخصيص', 'success');
-        }
-        
-        currentProductId = product.id;
-        
-    } catch (error) {
-        console.error('❌ خطأ في تحميل المنتج للتخصيص:', error);
-        showToast('❌ حدث خطأ في تحميل المنتج', 'error');
-    }
-}
-
-// ===== إتمام الطلب مع حفظ التخصيص (محسّن) =====
-async function completeOrderWithCustomization() {
-    var loading = document.getElementById('loadingOverlay');
-    if (loading) loading.classList.add('active');
-    
-    try {
-        // التحقق من وجود طبقات
-        if (layers.length === 0) {
-            showToast('⚠️ لا توجد طبقات لحفظها، أضف طبقات أولاً', 'error');
-            if (loading) loading.classList.remove('active');
-            return;
-        }
-        
-        // التقاط صورة التصميم
-        var designImage = await captureDesignImage();
-        
-        // جمع بيانات الطلب
-        var orderData = {
-            product_id: currentProductId || 'unknown',
-            template_id: currentTemplateId || null,
-            design_image: designImage,
-            layers_data: collectLayersData(),
-            customer_name: document.getElementById('customerName')?.value || 'زبون',
-            customer_phone: document.getElementById('customerPhone')?.value || '',
-            customer_email: document.getElementById('customerEmail')?.value || '',
-            customization_notes: document.getElementById('customizationNotes')?.value || '',
-            status: 'pending',
-            created_at: new Date().toISOString()
-        };
-        
-        // محاولة حفظ في Supabase
-        try {
-            var { data, error } = await supabase
-                .from('custom_orders')
-                .insert(orderData)
-                .select()
-                .single();
-            
-            if (error) {
-                // إذا كان الجدول غير موجود، حفظ في localStorage كحل بديل
-                if (error.code === '42P01' || error.code === '400' || error.code === '404') {
-                    console.log('⚠️ جدول custom_orders غير موجود، حفظ في localStorage');
-                    saveOrderToLocalStorage(orderData);
-                    showToast('✅ تم حفظ الطلب محلياً (سيتم المزامنة لاحقاً)', 'success');
-                    setTimeout(function() {
-                        window.location.href = 'thank-you.html?order=' + Date.now();
-                    }, 1500);
-                    return;
-                }
-                throw error;
-            }
-            
-            showToast('✅ تم إتمام الطلب بنجاح! رقم الطلب: ' + (data?.id || 'تم الإرسال'), 'success');
-            
-            setTimeout(function() {
-                window.location.href = 'thank-you.html?order=' + (data?.id || Date.now());
-            }, 1500);
-            
-        } catch (error) {
-            // حفظ في localStorage كحل بديل
-            console.warn('⚠️ حفظ في localStorage بدلاً من Supabase');
-            saveOrderToLocalStorage(orderData);
-            showToast('✅ تم حفظ الطلب محلياً', 'success');
-            setTimeout(function() {
-                window.location.href = 'thank-you.html?order=' + Date.now();
-            }, 1500);
-        }
-        
-    } catch (error) {
-        console.error('❌ خطأ في إتمام الطلب:', error);
-        showToast('❌ حدث خطأ في إتمام الطلب: ' + error.message, 'error');
-    } finally {
-        if (loading) loading.classList.remove('active');
-    }
-}
-
-// ===== حفظ الطلب في localStorage (حل بديل) =====
-function saveOrderToLocalStorage(orderData) {
-    var orders = JSON.parse(localStorage.getItem('tithkari_orders') || '[]');
-    var newOrder = {
-        id: 'order_' + Date.now(),
-        ...orderData,
-        order_number: 'ORD-' + Date.now().toString().slice(-6),
-        saved_at: new Date().toISOString()
-    };
-    orders.push(newOrder);
-    localStorage.setItem('tithkari_orders', JSON.stringify(orders));
-    console.log('✅ تم حفظ الطلب في localStorage:', newOrder.id);
-}
-
-// ============================================
-// 🆕 دوال العبارات الجاهزة المخصصة
-// ============================================
-
-function loadCustomQuotes() {
-    var quotes = JSON.parse(localStorage.getItem('tithkari_custom_quotes') || '[]');
-    var container = document.getElementById('customQuotesList');
-    if (!container) return;
-    
-    container.innerHTML = '';
-    quotes.forEach(function(q, index) {
-        var wrapper = document.createElement('span');
-        wrapper.className = 'quote-item';
-        
-        var btn = document.createElement('button');
-        btn.className = 'btn-sm btn-dark';
-        btn.textContent = '✏️ ' + q.substring(0, 20) + (q.length > 20 ? '...' : '');
-        btn.title = q;
-        btn.onclick = function() { applyQuote(q); };
-        wrapper.appendChild(btn);
-        
-        var delBtn = document.createElement('button');
-        delBtn.className = 'btn-sm danger';
-        delBtn.textContent = '✕';
-        delBtn.onclick = function(e) {
-            e.stopPropagation();
-            removeCustomQuote(index);
-        };
-        wrapper.appendChild(delBtn);
-        
-        container.appendChild(wrapper);
-    });
-}
-
-function addCustomQuote() {
-    var input = document.getElementById('customQuoteInput');
-    if (!input) return;
-    var text = input.value.trim();
-    if (!text) {
-        showToast('⚠️ الرجاء كتابة عبارة', 'warning');
-        return;
-    }
-    
-    var quotes = JSON.parse(localStorage.getItem('tithkari_custom_quotes') || '[]');
-    quotes.push(text);
-    localStorage.setItem('tithkari_custom_quotes', JSON.stringify(quotes));
-    input.value = '';
-    loadCustomQuotes();
-    showToast('✅ تم إضافة العبارة', 'success');
-}
-
-function removeCustomQuote(index) {
-    var quotes = JSON.parse(localStorage.getItem('tithkari_custom_quotes') || '[]');
-    quotes.splice(index, 1);
-    localStorage.setItem('tithkari_custom_quotes', JSON.stringify(quotes));
-    loadCustomQuotes();
-    showToast('🗑️ تم حذف العبارة', 'info');
-}
-
-// ===== دالة لتطبيق عبارة على النص المحدد =====
 function applyQuote(text) {
-    var activeLayer = getActiveLayer();
-    if (activeLayer && activeLayer.type === 'text') {
-        var content = activeLayer.element.querySelector('.text-content');
-        if (content) {
-            content.textContent = text;
-            document.getElementById('textContent').value = text;
-            saveState();
-            showToast('✅ تم تطبيق العبارة', 'success');
-        }
-    } else {
-        addTextLayer(text, '50%', '10%', '80%', '30%');
-        showToast('✅ تم إضافة العبارة', 'success');
+    if (activeLayerId === null) { 
+        showToast('اختر طبقة نص أولاً', 'error'); 
+        return; 
     }
-}
-
-function applyPresetQuote(value) {
-    if (!value) return;
-    applyQuote(value);
-}
-
-// ============================================
-// 🛠️ [مُصلح] حفظ القالب (نسخة احتياطية)
-// ============================================
-function saveCurrentTemplateBackup() {
-    if (layers.length === 0) {
-        showToast('⚠️ لا توجد طبقات لحفظها، أضف طبقات أولاً', 'error');
-        return;
+    const layer = layers.find(l => l.id === activeLayerId);
+    if (!layer || layer.type !== 'text') { 
+        showToast('الطبقة المحددة ليست نصية', 'error'); 
+        return; 
     }
-
-    var layersData = collectLayersData();
-    
-    var templateName = prompt('🏷️ أدخل اسم القالب:', 'قالب مخصص ' + new Date().toLocaleDateString('ar-SA'));
-    if (!templateName) {
-        showToast('⚠️ تم إلغاء الحفظ', 'warning');
-        return;
-    }
-    
-    var productLink = document.getElementById('productLinkSelect');
-    var linkedProductId = null;
-    var linkedProductName = '';
-    
-    if (productLink) {
-        linkedProductId = productLink.value || null;
-        linkedProductName = productLink.options[productLink.selectedIndex]?.text || '';
-    }
-    
-    var templateData = {
-        id: 'template_' + Date.now(),
-        name: templateName,
-        baseImage: document.getElementById('baseImage').src,
-        referenceImage: document.getElementById('referenceImage').src,
-        layers: layersData,
-        linkedProductId: linkedProductId,
-        linkedProductName: linkedProductName,
-        isCustom: true,
-        status: 'active',
-        createdAt: new Date().toISOString(),
-        version: '2.0'
-    };
-    
-    var templates = JSON.parse(localStorage.getItem('tithkari_design_templates') || '[]');
-    templates.push(templateData);
-    localStorage.setItem('tithkari_design_templates', JSON.stringify(templates));
-    
-    showToast('✅ تم حفظ القالب "' + templateName + '" بنجاح!', 'success');
-    loadTemplates();
-    showExportOptions(templateData);
-    
-    if (linkedProductId) {
-        saveToLinkedProduct(templateData, linkedProductId);
-    }
-    
+    layer.content = text;
+    const textContent = document.getElementById('textContent');
+    if (textContent) textContent.value = text;
+    renderLayersOptimized();
     saveState();
+    showToast('تم تطبيق العبارة', 'success');
 }
+window.applyQuote = applyQuote;
 
 // ============================================
-// حفظ في المنتج المرتبط (نسخة احتياطية)
+// ==== دوال التصدير المحسنة (إصلاح نهائي) ====
 // ============================================
-function saveToLinkedProduct(templateData, productId) {
-    var customProducts = JSON.parse(localStorage.getItem('tithkari_custom_products') || '[]');
-    
-    var productIndex = customProducts.findIndex(function(p) { return p.id === productId; });
-    
-    var productData = {
-        id: productId,
-        name: templateData.name,
-        price: 199,
-        description: 'درع مخصص - ' + templateData.name,
-        image_url: templateData.baseImage,
-        template_image: templateData.baseImage,
-        template_data: templateData,
-        category: 'مخصص',
-        stock: 99,
-        isCustomTemplate: true,
-        updatedAt: new Date().toISOString()
-    };
-    
-    if (productIndex !== -1) {
-        customProducts[productIndex] = { ...customProducts[productIndex], ...productData };
-    } else {
-        customProducts.push(productData);
-    }
-    
-    localStorage.setItem('tithkari_custom_products', JSON.stringify(customProducts));
-    console.log('✅ تم حفظ القالب في المنتج المرتبط:', productId);
-}
 
-// ============================================
-// 🛠️ [مُحسَّن] تحميل قالب للتعديل
-// ============================================
-function loadTemplateForEdit(templateId) {
-    if (!templateId) {
-        showToast('⚠️ معرف القالب غير موجود', 'error');
-        return;
-    }
+/**
+ * تصدير التصميم كصورة PNG بجودة عالية
+ * مع الحفاظ على جميع التعديلات والتنسيقات - إصلاح نهائي
+ */
+function exportDesignPNG() {
+    showToast('⏳ جاري التقاط الصورة...', 'info');
     
-    var templates = JSON.parse(localStorage.getItem('tithkari_design_templates') || '[]');
-    var template = templates.find(function(t) { return t.id === templateId; });
+    const frame = document.getElementById('canvasFrame');
+    const rect = frame.getBoundingClientRect();
     
-    if (!template) {
-        showToast('⚠️ القالب غير موجود', 'error');
-        return;
-    }
+    // نسبة التكبير للحصول على جودة عالية
+    const scale = 3;
     
-    loadTemplateData(template);
-    currentTemplateId = templateId;
-    document.getElementById('productNameDisplay').textContent = template.name;
+    const canvas = document.createElement('canvas');
+    const targetWidth = rect.width * scale;
+    const targetHeight = rect.height * scale;
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+    const ctx = canvas.getContext('2d');
     
-    showToast('✅ تم تحميل القالب للتعديل: ' + template.name);
-    saveState();
-}
-
-// ============================================
-// عرض خيارات التصدير
-// ============================================
-function showExportOptions(templateData) {
-    var canvas = document.createElement('canvas');
-    canvas.width = 400;
-    canvas.height = 500;
-    var ctx = canvas.getContext('2d');
-    
-    var bgImg = document.getElementById('baseImage');
-    var bg = new Image();
-    bg.crossOrigin = 'anonymous';
-    bg.src = bgImg.src;
-    bg.onload = function() {
-        ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
-        
-        var rect = document.getElementById('canvasFrame').getBoundingClientRect();
-        layers.forEach(function(layer) {
-            var layerRect = layer.element.getBoundingClientRect();
-            var x = ((layerRect.left - rect.left) / rect.width) * canvas.width;
-            var y = ((layerRect.top - rect.top) / rect.height) * canvas.height;
-            var w = (layerRect.width / rect.width) * canvas.width;
-            var h = (layerRect.height / rect.height) * canvas.height;
-            
-            if (layer.type === 'text') {
-                var content = layer.element.querySelector('.text-content');
-                if (content) {
-                    var style = window.getComputedStyle(content);
-                    var fontSize = parseFloat(style.fontSize) * (canvas.width / rect.width);
-                    ctx.save();
-                    ctx.font = 'bold ' + fontSize + 'px ' + (style.fontFamily || 'Cairo');
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillStyle = style.color || '#d4af37';
-                    
-                    if (style.backgroundColor && style.backgroundColor !== 'transparent') {
-                        ctx.fillStyle = style.backgroundColor;
-                        var lines = content.textContent.split('\n');
-                        var lineHeight = fontSize * 1.4;
-                        var totalHeight = lines.length * lineHeight;
-                        var textWidth = ctx.measureText(content.textContent).width;
-                        var padding = fontSize * 0.5;
-                        ctx.fillRect(x - textWidth/2 - padding, y - totalHeight/2 - padding, textWidth + padding*2, totalHeight + padding*2);
-                        ctx.fillStyle = style.color || '#d4af37';
-                    }
-                    
-                    var lines = content.textContent.split('\n');
-                    lines.forEach(function(line, i) {
-                        ctx.fillText(line, x + w/2, y + h/2 + (i - (lines.length-1)/2) * fontSize * 1.4);
-                    });
-                    ctx.restore();
-                }
-            } else if (layer.type === 'image') {
-                var img = layer.element.querySelector('img');
-                if (img) {
-                    var imgObj = new Image();
-                    imgObj.crossOrigin = 'anonymous';
-                    imgObj.src = img.src;
-                    imgObj.onload = function() {
-                        ctx.drawImage(imgObj, x, y, w, h);
-                    };
-                }
-            }
-        });
-        
-        setTimeout(function() {
-            var imageData = canvas.toDataURL('image/png', 0.9);
-            showExportModal(imageData, templateData);
-        }, 300);
-    };
-}
-
-function showExportModal(imageData, templateData) {
-    var modal = document.createElement('div');
-    modal.id = 'exportModal';
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;justify-content:center;align-items:center;padding:20px;backdrop-filter:blur(5px);';
-    
-    modal.innerHTML = `
-        <div style="background:#1A1A2E;border-radius:16px;max-width:500px;width:100%;padding:30px;border:1px solid rgba(255,215,0,0.15);max-height:90vh;overflow-y:auto;">
-            <div style="text-align:center;">
-                <h3 style="color: #d4af37; margin-bottom:10px;">✅ تم حفظ القالب!</h3>
-                <img src="${imageData}" style="max-width:180px; border-radius:8px; margin-bottom:15px; border:1px solid rgba(255,215,0,0.2);" />
-                <p style="color: #f5f0eb; font-size:14px; margin-bottom:5px;">${templateData.name}</p>
-                ${templateData.linkedProductName ? '<p style="color: #8a8a9b; font-size:12px;">🔗 مرتبط بـ: ' + templateData.linkedProductName + '</p>' : ''}
-                
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                    <button onclick="loadTemplateForEdit('${templateData.id}')" 
-                            style="background: #8B5CF6; color:white; border:none; padding:12px; border-radius:8px; font-weight:700; cursor:pointer; font-size:15px; width:100%;">
-                        <i class="fas fa-edit"></i> تعديل القالب
-                    </button>
-                    <button onclick="downloadTemplateImage()" 
-                            style="background: #d4af37; color:#000; border:none; padding:12px; border-radius:8px; font-weight:700; cursor:pointer; font-size:15px; width:100%;">
-                        <i class="fas fa-download"></i> تحميل الصورة PNG
-                    </button>
-                    <button onclick="sendViaWhatsApp()" 
-                            style="background: #25D366; color:white; border:none; padding:12px; border-radius:8px; font-weight:700; cursor:pointer; font-size:15px; width:100%;">
-                        <i class="fab fa-whatsapp"></i> إتمام الطلب عبر واتساب
-                    </button>
-                    <button onclick="closeExportModal()" 
-                            style="background: transparent; color: #8a8a9b; border:1px solid #444; padding:10px; border-radius:8px; cursor:pointer; width:100%;">
-                        إغلاق
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    window._exportImageData = imageData;
-    window._exportTemplateData = templateData;
-}
-
-// ============================================
-// تحميل الصورة
-// ============================================
-function downloadTemplateImage() {
-    if (window._exportImageData) {
-        var link = document.createElement('a');
-        link.download = 'قالب_' + Date.now() + '.png';
-        link.href = window._exportImageData;
-        link.click();
-        showToast('✅ تم تحميل الصورة', 'success');
-    }
-}
-
-// ============================================
-// إتمام الطلب عبر واتساب
-// ============================================
-function sendViaWhatsApp() {
-    var whatsappNumber = localStorage.getItem('tithkari_whatsapp_link') || '966500000000';
-    whatsappNumber = whatsappNumber.replace('https://wa.me/', '').replace(/[^0-9]/g, '');
-    
-    var templateName = window._exportTemplateData?.name || document.getElementById('productNameDisplay').textContent || 'درع مخصص';
-    
-    var message = encodeURIComponent(
-        '🛡️ طلب تصميم درع مخصص\n\n' +
-        '📝 اسم التصميم: ' + templateName + '\n' +
-        '📅 التاريخ: ' + new Date().toLocaleDateString('ar-SA') + '\n\n' +
-        '🔗 تم تصميم هذا الدرع باستخدام Tithkari Studio\n' +
-        '📸 الصورة مرفقة في المحادثة'
-    );
-    
-    window.open('https://wa.me/' + whatsappNumber + '?text=' + message, '_blank');
-    showToast('✅ تم فتح واتساب', 'success');
-}
-
-// ============================================
-// إغلاق نافذة التصدير
-// ============================================
-function closeExportModal() {
-    var modal = document.getElementById('exportModal');
-    if (modal) modal.remove();
-    window._exportImageData = null;
-    window._exportTemplateData = null;
-}
-
-// ============================================
-// تصدير التصميم (PNG)
-// ============================================
-function exportDesign() {
-    showToast('⏳ جاري تحضير الصورة...', 'info');
-    
-    var frame = document.getElementById('canvasFrame');
-    var rect = frame.getBoundingClientRect();
-
-    var canvas = document.createElement('canvas');
-    canvas.width = 1200;
-    canvas.height = 1500;
-    var ctx = canvas.getContext('2d');
-
+    // خلفية بيضاء
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    var bgImg = document.getElementById('baseImage');
-    var bg = new Image();
+    
+    // رسم الصورة الأساسية (الخلفية)
+    const bgImg = document.getElementById('baseImage');
+    const bg = new Image();
     bg.crossOrigin = 'anonymous';
     bg.src = bgImg.src;
+    
     bg.onload = function() {
+        // رسم الخلفية بحجم مناسب
         ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
-
-        var renderedCount = 0;
-        var totalLayers = layers.length;
-
-        if (totalLayers === 0) {
+        drawAllLayers();
+    };
+    
+    bg.onerror = function() {
+        console.warn('⚠️ خطأ في تحميل الصورة الأساسية، استخدام الصورة الحالية');
+        const imgElement = document.getElementById('baseImage');
+        if (imgElement && imgElement.complete && imgElement.naturalWidth > 0) {
+            ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
+            drawAllLayers();
+        } else {
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            drawAllLayers();
+        }
+    };
+    
+    function drawAllLayers() {
+        if (layers.length === 0) {
             finishExport(canvas);
             return;
         }
-
-        layers.forEach(function(layer) {
-            var layerRect = layer.element.getBoundingClientRect();
-            var x = ((layerRect.left - rect.left) / rect.width) * canvas.width;
-            var y = ((layerRect.top - rect.top) / rect.height) * canvas.height;
-            var w = (layerRect.width / rect.width) * canvas.width;
-            var h = (layerRect.height / rect.height) * canvas.height;
-
+        
+        // ترتيب الطبقات حسب z-index
+        const sortedLayers = [...layers].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
+        let renderedCount = 0;
+        const totalLayers = sortedLayers.length;
+        
+        sortedLayers.forEach(function(layer) {
+            // الحصول على عنصر الطبقة
+            const layerEl = layer.element;
+            if (!layerEl) {
+                renderedCount++;
+                if (renderedCount === totalLayers) finishExport(canvas);
+                return;
+            }
+            
+            // حساب موقع وحجم الطبقة بالنسبة للإطار
+            const layerRect = layerEl.getBoundingClientRect();
+            
+            // حساب الإحداثيات بالنسبة للإطار
+            const x = ((layerRect.left - rect.left) / rect.width) * canvas.width;
+            const y = ((layerRect.top - rect.top) / rect.height) * canvas.height;
+            const w = (layerRect.width / rect.width) * canvas.width;
+            const h = (layerRect.height / rect.height) * canvas.height;
+            
+            // تطبيق الشفافية
+            ctx.globalAlpha = layer.opacity || 1;
+            
             if (layer.type === 'text') {
-                var content = layer.element.querySelector('.text-content');
-                if (content) {
-                    var style = window.getComputedStyle(content);
-                    var fontSize = parseFloat(style.fontSize) * (canvas.width / rect.width);
+                const contentEl = layer.contentElement || layerEl.querySelector('.text-content');
+                if (contentEl) {
+                    // الحصول على الخصائص المحسوبة من العنصر الفعلي
+                    const style = window.getComputedStyle(contentEl);
+                    
+                    // الحصول على خصائص النص من العنصر الفعلي
+                    const fontSize = parseFloat(style.fontSize) * scale;
+                    const fontFamily = style.fontFamily || 'Cairo, sans-serif';
+                    const fontWeight = style.fontWeight || '700';
+                    const color = style.color || '#d4af37';
+                    const textAlign = style.textAlign || 'center';
+                    const bgColor = style.backgroundColor;
+                    const hasBg = bgColor && bgColor !== 'transparent' && bgColor !== 'rgba(0, 0, 0, 0)';
+                    const padding = style.padding || '4px 8px';
+                    const text = contentEl.textContent || '';
+                    const lines = text.split('\n');
+                    
+                    // حساب أبعاد النص
                     ctx.save();
-                    ctx.font = 'bold ' + fontSize + 'px ' + (style.fontFamily || 'Cairo');
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillStyle = style.color || '#d4af37';
-
-                    if (style.backgroundColor && style.backgroundColor !== 'transparent') {
-                        ctx.fillStyle = style.backgroundColor;
-                        var lines = content.textContent.split('\n');
-                        var lineHeight = fontSize * 1.4;
-                        var totalHeight = lines.length * lineHeight;
-                        var textWidth = ctx.measureText(content.textContent).width;
-                        var padding = fontSize * 0.5;
-                        ctx.fillRect(x - textWidth/2 - padding, y - totalHeight/2 - padding, textWidth + padding*2, totalHeight + padding*2);
-                        ctx.fillStyle = style.color || '#d4af37';
-                    }
-
-                    var lines = content.textContent.split('\n');
-                    lines.forEach(function(line, i) {
-                        ctx.fillText(line, x + w/2, y + h/2 + (i - (lines.length-1)/2) * fontSize * 1.4);
+                    
+                    // تعيين الخط لحساب الأبعاد
+                    ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+                    
+                    // حساب عرض كل سطر
+                    const lineWidths = lines.map(line => {
+                        return ctx.measureText(line).width || fontSize * 0.5;
                     });
+                    const maxLineWidth = Math.max(...lineWidths);
+                    
+                    // حساب ارتفاع النص الكلي
+                    const lineHeight = fontSize * 1.4;
+                    const totalTextHeight = lines.length * lineHeight;
+                    
+                    // حساب الهوامش الداخلية من العنصر الفعلي
+                    const paddingValues = padding.split(' ');
+                    let paddingX = fontSize * 0.4;
+                    let paddingY = fontSize * 0.3;
+                    
+                    if (paddingValues.length >= 2) {
+                        paddingY = parseFloat(paddingValues[0]) * scale || paddingY;
+                        paddingX = parseFloat(paddingValues[1]) * scale || paddingX;
+                    }
+                    
+                    // حساب أبعاد الخلفية
+                    const bgWidth = maxLineWidth + paddingX * 2;
+                    const bgHeight = totalTextHeight + paddingY * 2;
+                    
+                    // حساب موقع الخلفية (مركزية داخل مربع الطبقة)
+                    const bgX = x + (w - bgWidth) / 2;
+                    const bgY = y + (h - bgHeight) / 2;
+                    
+                    // تطبيق التدوير
+                    if (layer.rotation) {
+                        const centerX = x + w/2;
+                        const centerY = y + h/2;
+                        ctx.translate(centerX, centerY);
+                        ctx.rotate((layer.rotation || 0) * Math.PI / 180);
+                        ctx.translate(-centerX, -centerY);
+                    }
+                    
+                    // رسم خلفية النص
+                    if (hasBg) {
+                        ctx.fillStyle = bgColor;
+                        // رسم مستطيل الخلفية
+                        ctx.fillRect(bgX, bgY, bgWidth, bgHeight);
+                    }
+                    
+                    // رسم النص
+                    ctx.shadowColor = 'rgba(0,0,0,0.3)';
+                    ctx.shadowBlur = 8;
+                    ctx.fillStyle = color;
+                    ctx.textAlign = textAlign;
+                    ctx.textBaseline = 'middle';
+                    ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+                    
+                    // رسم كل سطر على حدة مع محاذاة مركزية
+                    const startX = x + w / 2;
+                    const startY = y + (h - totalTextHeight) / 2 + lineHeight / 2;
+                    
+                    lines.forEach(function(line, i) {
+                        ctx.fillText(line, startX, startY + i * lineHeight);
+                    });
+                    
                     ctx.restore();
                 }
                 renderedCount++;
                 if (renderedCount === totalLayers) finishExport(canvas);
+                
             } else if (layer.type === 'image') {
-                var img = layer.element.querySelector('img');
-                if (img) {
-                    var imgObj = new Image();
+                const imgElement = layerEl.querySelector('img');
+                if (imgElement && imgElement.src) {
+                    const imgObj = new Image();
                     imgObj.crossOrigin = 'anonymous';
-                    imgObj.src = img.src;
+                    imgObj.src = imgElement.src;
+                    
                     imgObj.onload = function() {
-                        ctx.drawImage(imgObj, x, y, w, h);
+                        // رسم الصورة مع الحفاظ على النسبة
+                        const aspectRatio = imgObj.naturalWidth / imgObj.naturalHeight;
+                        let drawW = w;
+                        let drawH = h;
+                        
+                        if (w / h > aspectRatio) {
+                            drawW = h * aspectRatio;
+                        } else {
+                            drawH = w / aspectRatio;
+                        }
+                        
+                        const offsetX = (w - drawW) / 2;
+                        const offsetY = (h - drawH) / 2;
+                        
+                        ctx.drawImage(imgObj, x + offsetX, y + offsetY, drawW, drawH);
+                        
                         renderedCount++;
                         if (renderedCount === totalLayers) finishExport(canvas);
                     };
+                    
                     imgObj.onerror = function() {
+                        ctx.fillStyle = 'rgba(200,200,200,0.3)';
+                        ctx.fillRect(x, y, w, h);
+                        ctx.strokeStyle = 'rgba(200,200,200,0.5)';
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(x, y, w, h);
                         renderedCount++;
                         if (renderedCount === totalLayers) finishExport(canvas);
                     };
                 } else {
+                    ctx.fillStyle = 'rgba(200,200,200,0.1)';
+                    ctx.fillRect(x, y, w, h);
+                    ctx.strokeStyle = 'rgba(200,200,200,0.3)';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([5, 5]);
+                    ctx.strokeRect(x, y, w, h);
+                    ctx.setLineDash([]);
                     renderedCount++;
                     if (renderedCount === totalLayers) finishExport(canvas);
                 }
@@ -2627,647 +1278,638 @@ function exportDesign() {
                 if (renderedCount === totalLayers) finishExport(canvas);
             }
         });
-    };
-    bg.onerror = function() {
-        showToast('⚠️ خطأ في تحميل الصورة، حاول مرة أخرى', 'error');
-    };
-
+    }
+    
     function finishExport(canvas) {
-        var link = document.createElement('a');
-        link.download = 'درع_مخصص_' + Date.now() + '.png';
+        const link = document.createElement('a');
+        const name = document.getElementById('productNameDisplay').textContent || 'درع_مخصص';
+        const cleanName = name.replace(/\s/g, '_').replace(/[^a-zA-Z0-9_\u0600-\u06FF]/g, '');
+        link.download = cleanName + '_' + Date.now() + '.png';
         link.href = canvas.toDataURL('image/png', 1.0);
         link.click();
         showToast('✅ تم تصدير التصميم بنجاح!', 'success');
     }
 }
+window.exportDesignPNG = exportDesignPNG;
 
-// ============================================
-// إضافة التصميم للسلة
-// ============================================
-function addDesignToCart() {
-    showToast('⏳ جاري إضافة التصميم للسلة...', 'info');
+/**
+ * التقاط صورة التصميم (للاستخدام الداخلي) - نسخة محسنة نهائياً
+ */
+function captureDesignImage() {
+    return new Promise(function(resolve, reject) {
+        try {
+            const frame = document.getElementById('canvasFrame');
+            const rect = frame.getBoundingClientRect();
+            
+            const scale = 2;
+            const canvas = document.createElement('canvas');
+            canvas.width = rect.width * scale;
+            canvas.height = rect.height * scale;
+            const ctx = canvas.getContext('2d');
+            
+            // خلفية بيضاء
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const bgImg = document.getElementById('baseImage');
+            const bg = new Image();
+            bg.crossOrigin = 'anonymous';
+            bg.src = bgImg.src;
+            
+            bg.onload = function() {
+                ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
+                drawLayersForCapture();
+            };
+            
+            bg.onerror = function() {
+                console.warn('⚠️ خطأ في تحميل الصورة الأساسية');
+                drawLayersForCapture();
+            };
+            
+            function drawLayersForCapture() {
+                if (layers.length === 0) {
+                    resolve(canvas.toDataURL('image/png', 0.95));
+                    return;
+                }
+                
+                const sortedLayers = [...layers].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
+                let rendered = 0;
+                const total = sortedLayers.length;
+                
+                sortedLayers.forEach(function(layer) {
+                    const layerEl = layer.element;
+                    if (!layerEl) {
+                        rendered++;
+                        if (rendered === total) {
+                            ctx.globalAlpha = 1;
+                            resolve(canvas.toDataURL('image/png', 0.95));
+                        }
+                        return;
+                    }
+                    
+                    const layerRect = layerEl.getBoundingClientRect();
+                    const x = ((layerRect.left - rect.left) / rect.width) * canvas.width;
+                    const y = ((layerRect.top - rect.top) / rect.height) * canvas.height;
+                    const w = (layerRect.width / rect.width) * canvas.width;
+                    const h = (layerRect.height / rect.height) * canvas.height;
+                    
+                    ctx.globalAlpha = layer.opacity || 1;
+                    
+                    if (layer.type === 'text') {
+                        const contentEl = layer.contentElement || layerEl.querySelector('.text-content');
+                        if (contentEl) {
+                            const style = window.getComputedStyle(contentEl);
+                            
+                            const fontSize = parseFloat(style.fontSize) * scale;
+                            const fontFamily = style.fontFamily || 'Cairo, sans-serif';
+                            const fontWeight = style.fontWeight || '700';
+                            const color = style.color || '#d4af37';
+                            const textAlign = style.textAlign || 'center';
+                            const bgColor = style.backgroundColor;
+                            const hasBg = bgColor && bgColor !== 'transparent' && bgColor !== 'rgba(0, 0, 0, 0)';
+                            const padding = style.padding || '4px 8px';
+                            const text = contentEl.textContent || '';
+                            const lines = text.split('\n');
+                            
+                            ctx.save();
+                            
+                            ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+                            
+                            const lineWidths = lines.map(line => {
+                                return ctx.measureText(line).width || fontSize * 0.5;
+                            });
+                            const maxLineWidth = Math.max(...lineWidths);
+                            
+                            const lineHeight = fontSize * 1.4;
+                            const totalTextHeight = lines.length * lineHeight;
+                            
+                            const paddingValues = padding.split(' ');
+                            let paddingX = fontSize * 0.4;
+                            let paddingY = fontSize * 0.3;
+                            
+                            if (paddingValues.length >= 2) {
+                                paddingY = parseFloat(paddingValues[0]) * scale || paddingY;
+                                paddingX = parseFloat(paddingValues[1]) * scale || paddingX;
+                            }
+                            
+                            const bgWidth = maxLineWidth + paddingX * 2;
+                            const bgHeight = totalTextHeight + paddingY * 2;
+                            
+                            const bgX = x + (w - bgWidth) / 2;
+                            const bgY = y + (h - bgHeight) / 2;
+                            
+                            if (layer.rotation) {
+                                const centerX = x + w/2;
+                                const centerY = y + h/2;
+                                ctx.translate(centerX, centerY);
+                                ctx.rotate((layer.rotation || 0) * Math.PI / 180);
+                                ctx.translate(-centerX, -centerY);
+                            }
+                            
+                            if (hasBg) {
+                                ctx.fillStyle = bgColor;
+                                ctx.fillRect(bgX, bgY, bgWidth, bgHeight);
+                            }
+                            
+                            ctx.shadowColor = 'rgba(0,0,0,0.3)';
+                            ctx.shadowBlur = 8;
+                            ctx.fillStyle = color;
+                            ctx.textAlign = textAlign;
+                            ctx.textBaseline = 'middle';
+                            ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+                            
+                            const startX = x + w / 2;
+                            const startY = y + (h - totalTextHeight) / 2 + lineHeight / 2;
+                            
+                            lines.forEach(function(line, i) {
+                                ctx.fillText(line, startX, startY + i * lineHeight);
+                            });
+                            
+                            ctx.restore();
+                        }
+                        rendered++;
+                        if (rendered === total) {
+                            ctx.globalAlpha = 1;
+                            resolve(canvas.toDataURL('image/png', 0.95));
+                        }
+                        
+                    } else if (layer.type === 'image') {
+                        const imgElement = layerEl.querySelector('img');
+                        if (imgElement && imgElement.src) {
+                            const imgObj = new Image();
+                            imgObj.crossOrigin = 'anonymous';
+                            imgObj.src = imgElement.src;
+                            
+                            imgObj.onload = function() {
+                                const aspectRatio = imgObj.naturalWidth / imgObj.naturalHeight;
+                                let drawW = w;
+                                let drawH = h;
+                                
+                                if (w / h > aspectRatio) {
+                                    drawW = h * aspectRatio;
+                                } else {
+                                    drawH = w / aspectRatio;
+                                }
+                                
+                                const offsetX = (w - drawW) / 2;
+                                const offsetY = (h - drawH) / 2;
+                                
+                                ctx.drawImage(imgObj, x + offsetX, y + offsetY, drawW, drawH);
+                                
+                                rendered++;
+                                if (rendered === total) {
+                                    ctx.globalAlpha = 1;
+                                    resolve(canvas.toDataURL('image/png', 0.95));
+                                }
+                            };
+                            
+                            imgObj.onerror = function() {
+                                rendered++;
+                                if (rendered === total) {
+                                    ctx.globalAlpha = 1;
+                                    resolve(canvas.toDataURL('image/png', 0.95));
+                                }
+                            };
+                        } else {
+                            rendered++;
+                            if (rendered === total) {
+                                ctx.globalAlpha = 1;
+                                resolve(canvas.toDataURL('image/png', 0.95));
+                            }
+                        }
+                    } else {
+                        rendered++;
+                        if (rendered === total) {
+                            ctx.globalAlpha = 1;
+                            resolve(canvas.toDataURL('image/png', 0.95));
+                        }
+                    }
+                });
+            }
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+window.captureDesignImage = captureDesignImage;
+
+/**
+ * معاينة التصدير قبل الحفظ
+ */
+function previewExport() {
+    showToast('⏳ جاري تحضير المعاينة...', 'info');
     
-    var frame = document.getElementById('canvasFrame');
-    var rect = frame.getBoundingClientRect();
-
-    var canvas = document.createElement('canvas');
-    canvas.width = 400;
-    canvas.height = 500;
-    var ctx = canvas.getContext('2d');
-
+    const frame = document.getElementById('canvasFrame');
+    const rect = frame.getBoundingClientRect();
+    
+    const scale = 1.5;
+    const canvas = document.createElement('canvas');
+    canvas.width = rect.width * scale;
+    canvas.height = rect.height * scale;
+    const ctx = canvas.getContext('2d');
+    
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    var bgImg = document.getElementById('baseImage');
-    var bg = new Image();
+    
+    const bgImg = document.getElementById('baseImage');
+    const bg = new Image();
     bg.crossOrigin = 'anonymous';
     bg.src = bgImg.src;
+    
     bg.onload = function() {
         ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
-
-        var renderedCount = 0;
-        var totalLayers = layers.length;
-
-        if (totalLayers === 0) {
-            finishAddToCart(canvas);
-            return;
-        }
-
-        layers.forEach(function(layer) {
-            var layerRect = layer.element.getBoundingClientRect();
-            var x = ((layerRect.left - rect.left) / rect.width) * canvas.width;
-            var y = ((layerRect.top - rect.top) / rect.height) * canvas.height;
-            var w = (layerRect.width / rect.width) * canvas.width;
-            var h = (layerRect.height / rect.height) * canvas.height;
-
+        drawPreviewLayers();
+    };
+    
+    bg.onerror = function() {
+        drawPreviewLayers();
+    };
+    
+    function drawPreviewLayers() {
+        const sortedLayers = [...layers].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
+        
+        sortedLayers.forEach(function(layer) {
+            const layerEl = layer.element;
+            if (!layerEl) return;
+            
+            const layerRect = layerEl.getBoundingClientRect();
+            const x = ((layerRect.left - rect.left) / rect.width) * canvas.width;
+            const y = ((layerRect.top - rect.top) / rect.height) * canvas.height;
+            const w = (layerRect.width / rect.width) * canvas.width;
+            const h = (layerRect.height / rect.height) * canvas.height;
+            
+            ctx.globalAlpha = layer.opacity || 1;
+            
             if (layer.type === 'text') {
-                var content = layer.element.querySelector('.text-content');
-                if (content) {
-                    var style = window.getComputedStyle(content);
-                    var fontSize = parseFloat(style.fontSize) * (canvas.width / rect.width);
+                const contentEl = layer.contentElement || layerEl.querySelector('.text-content');
+                if (contentEl) {
+                    const style = window.getComputedStyle(contentEl);
+                    const fontSize = parseFloat(style.fontSize) * scale;
+                    const fontFamily = style.fontFamily || 'Cairo, sans-serif';
+                    const fontWeight = style.fontWeight || '700';
+                    const color = style.color || '#d4af37';
+                    const textAlign = style.textAlign || 'center';
+                    const bgColor = style.backgroundColor;
+                    const hasBg = bgColor && bgColor !== 'transparent' && bgColor !== 'rgba(0, 0, 0, 0)';
+                    const padding = style.padding || '4px 8px';
+                    const text = contentEl.textContent || '';
+                    const lines = text.split('\n');
+                    
                     ctx.save();
-                    ctx.font = 'bold ' + fontSize + 'px ' + (style.fontFamily || 'Cairo');
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillStyle = style.color || '#d4af37';
-
-                    if (style.backgroundColor && style.backgroundColor !== 'transparent') {
-                        ctx.fillStyle = style.backgroundColor;
-                        var lines = content.textContent.split('\n');
-                        var lineHeight = fontSize * 1.4;
-                        var totalHeight = lines.length * lineHeight;
-                        var textWidth = ctx.measureText(content.textContent).width;
-                        var padding = fontSize * 0.5;
-                        ctx.fillRect(x - textWidth/2 - padding, y - totalHeight/2 - padding, textWidth + padding*2, totalHeight + padding*2);
-                        ctx.fillStyle = style.color || '#d4af37';
-                    }
-
-                    var lines = content.textContent.split('\n');
-                    lines.forEach(function(line, i) {
-                        ctx.fillText(line, x + w/2, y + h/2 + (i - (lines.length-1)/2) * fontSize * 1.4);
+                    
+                    ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+                    
+                    const lineWidths = lines.map(line => {
+                        return ctx.measureText(line).width || fontSize * 0.5;
                     });
+                    const maxLineWidth = Math.max(...lineWidths);
+                    
+                    const lineHeight = fontSize * 1.4;
+                    const totalTextHeight = lines.length * lineHeight;
+                    
+                    const paddingValues = padding.split(' ');
+                    let paddingX = fontSize * 0.4;
+                    let paddingY = fontSize * 0.3;
+                    
+                    if (paddingValues.length >= 2) {
+                        paddingY = parseFloat(paddingValues[0]) * scale || paddingY;
+                        paddingX = parseFloat(paddingValues[1]) * scale || paddingX;
+                    }
+                    
+                    const bgWidth = maxLineWidth + paddingX * 2;
+                    const bgHeight = totalTextHeight + paddingY * 2;
+                    
+                    const bgX = x + (w - bgWidth) / 2;
+                    const bgY = y + (h - bgHeight) / 2;
+                    
+                    if (layer.rotation) {
+                        const centerX = x + w/2;
+                        const centerY = y + h/2;
+                        ctx.translate(centerX, centerY);
+                        ctx.rotate((layer.rotation || 0) * Math.PI / 180);
+                        ctx.translate(-centerX, -centerY);
+                    }
+                    
+                    if (hasBg) {
+                        ctx.fillStyle = bgColor;
+                        ctx.fillRect(bgX, bgY, bgWidth, bgHeight);
+                    }
+                    
+                    ctx.shadowColor = 'rgba(0,0,0,0.3)';
+                    ctx.shadowBlur = 8;
+                    ctx.fillStyle = color;
+                    ctx.textAlign = textAlign;
+                    ctx.textBaseline = 'middle';
+                    ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+                    
+                    const startX = x + w / 2;
+                    const startY = y + (h - totalTextHeight) / 2 + lineHeight / 2;
+                    
+                    lines.forEach(function(line, i) {
+                        ctx.fillText(line, startX, startY + i * lineHeight);
+                    });
+                    
                     ctx.restore();
                 }
-                renderedCount++;
-                if (renderedCount === totalLayers) finishAddToCart(canvas);
             } else if (layer.type === 'image') {
-                var img = layer.element.querySelector('img');
-                if (img) {
-                    var imgObj = new Image();
+                const imgElement = layerEl.querySelector('img');
+                if (imgElement && imgElement.src) {
+                    const imgObj = new Image();
                     imgObj.crossOrigin = 'anonymous';
-                    imgObj.src = img.src;
+                    imgObj.src = imgElement.src;
+                    
                     imgObj.onload = function() {
-                        ctx.drawImage(imgObj, x, y, w, h);
-                        renderedCount++;
-                        if (renderedCount === totalLayers) finishAddToCart(canvas);
+                        const aspectRatio = imgObj.naturalWidth / imgObj.naturalHeight;
+                        let drawW = w;
+                        let drawH = h;
+                        
+                        if (w / h > aspectRatio) {
+                            drawW = h * aspectRatio;
+                        } else {
+                            drawH = w / aspectRatio;
+                        }
+                        
+                        const offsetX = (w - drawW) / 2;
+                        const offsetY = (h - drawH) / 2;
+                        
+                        ctx.drawImage(imgObj, x + offsetX, y + offsetY, drawW, drawH);
                     };
+                    
                     imgObj.onerror = function() {
-                        renderedCount++;
-                        if (renderedCount === totalLayers) finishAddToCart(canvas);
+                        ctx.fillStyle = 'rgba(200,200,200,0.3)';
+                        ctx.fillRect(x, y, w, h);
+                        ctx.strokeStyle = 'rgba(200,200,200,0.5)';
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(x, y, w, h);
                     };
-                } else {
-                    renderedCount++;
-                    if (renderedCount === totalLayers) finishAddToCart(canvas);
                 }
-            } else {
-                renderedCount++;
-                if (renderedCount === totalLayers) finishAddToCart(canvas);
             }
         });
-    };
-    bg.onerror = function() {
-        showToast('⚠️ خطأ في تحميل الصورة', 'error');
-    };
-
-    function finishAddToCart(canvas) {
-        var imageData = canvas.toDataURL('image/png', 0.9);
         
-        var designData = {
-            name: document.getElementById('productNameDisplay').textContent || 'درع مخصص 🛡️',
-            price: 199,
-            description: 'درع مصمم حسب الطلب',
-            image: imageData,
-            isCustom: true,
-            timestamp: Date.now()
-        };
-
-        var savedDesigns = JSON.parse(localStorage.getItem('tithkari_custom_designs') || '[]');
-        savedDesigns.push(designData);
-        localStorage.setItem('tithkari_custom_designs', JSON.stringify(savedDesigns));
-
-        var cart = JSON.parse(localStorage.getItem('tithkari_cart') || '[]');
-        cart.push({
-            id: 'custom_' + Date.now(),
-            name: designData.name,
-            price: designData.price,
-            image: imageData,
-            quantity: 1,
-            isCustom: true,
-            designData: designData
-        });
-        localStorage.setItem('tithkari_cart', JSON.stringify(cart));
-
-        var count = cart.reduce(function(sum, item) { return sum + item.quantity; }, 0);
-        var countEl = document.getElementById('cartCount');
-        if (countEl) countEl.textContent = count;
-
-        showToast('✅ تم إضافة التصميم للسلة! 🛒', 'success');
-        
-        setTimeout(function() {
-            if (confirm('✅ تم إضافة التصميم للسلة! هل تريد الذهاب إلى المتجر الآن؟')) {
-                window.location.href = 'index.html';
-            }
-        }, 500);
-    }
-}
-
-// ============================================
-// ربط المنتج بالقالب (من Supabase مباشرة)
-// ============================================
-async function loadProductWithTemplate(productId) {
-    try {
-        console.log('🔍 جاري البحث عن المنتج:', productId);
-        showToast('⏳ جاري تحميل المنتج...', 'info');
-        
-        var { data: product, error } = await supabase
-            .from('products')
-            .select('*')
-            .eq('id', productId)
-            .single();
-        
-        if (error) {
-            console.error('❌ خطأ في جلب المنتج:', error);
-            var localProducts = JSON.parse(localStorage.getItem('tithkari_custom_products') || '[]');
-            product = localProducts.find(function(p) { return p.id == productId; });
-            
-            if (!product) {
-                showToast('⚠️ المنتج غير موجود', 'error');
-                return;
-            }
-        }
-        
-        if (!product) {
-            showToast('⚠️ المنتج غير موجود', 'error');
-            return;
-        }
-        
-        console.log('✅ تم العثور على المنتج:', product.name);
-        loadProductDataToStudio(product);
-        
-    } catch (error) {
-        console.error('❌ خطأ في تحميل المنتج مع القالب:', error);
-        showToast('❌ خطأ في تحميل المنتج', 'error');
-    }
-}
-
-// ============================================
-// 🛠️ [مُحسَّن] تحميل بيانات المنتج إلى الاستوديو
-// ============================================
-function loadProductDataToStudio(product) {
-    if (!product) {
-        showToast('⚠️ المنتج غير موجود', 'error');
-        return;
-    }
-    
-    console.log('📦 تحميل المنتج:', product.name);
-    
-    document.getElementById('productNameDisplay').textContent = product.name || 'درع مخصص';
-    
-    if (product.image_url) {
-        document.getElementById('referenceImage').src = product.image_url;
-        console.log('✅ تم تحميل الصورة المرجعية');
-    }
-    
-    var hasTemplateData = product.template_data && typeof product.template_data === 'object' && Object.keys(product.template_data).length > 0;
-    
-    if (hasTemplateData) {
-        loadTemplateData(product.template_data);
-        currentTemplateId = product.template_data.id || null;
-        showToast('✅ تم تحميل القالب المرتبط بالمنتج: ' + product.name);
-        console.log('✅ تم تحميل بيانات القالب الكاملة');
-    } else if (product.template_image) {
-        document.getElementById('baseImage').src = product.template_image;
-        showToast('✅ تم تحميل صورة القالب للمنتج: ' + product.name);
-        console.log('✅ تم تحميل صورة القالب');
-    } else {
-        document.getElementById('baseImage').src = product.image_url;
-        showToast('✅ تم تحميل المنتج: ' + product.name);
-        console.log('✅ استخدام صورة المنتج كقالب');
-    }
-    
-    currentProductId = product.id;
-    loadProductsForLinking();
-    
-    var designData = {
-        productImage: product.image_url,
-        productName: product.name,
-        productId: product.id,
-        templateImage: product.template_image || product.image_url,
-        timestamp: Date.now()
-    };
-    localStorage.setItem('tithkari_design_data', JSON.stringify(designData));
-    
-    console.log('✅ تم تحميل المنتج بنجاح');
-}
-
-// ============================================
-// دوال مساعدة
-// ============================================
-function rgbToHex(rgb) {
-    if (!rgb || rgb === 'transparent') return '#000000';
-    var match = rgb.match(/\d+/g);
-    if (!match) return '#000000';
-    return '#' + match.slice(0, 3).map(function(c) {
-        var hex = parseInt(c).toString(16);
-        return hex.length === 1 ? '0' + hex : hex;
-    }).join('');
-}
-
-function showToast(message, type) {
-    type = type || 'success';
-    var existing = document.querySelector('.toast-notification');
-    if (existing) existing.remove();
-
-    var toast = document.createElement('div');
-    toast.className = 'toast-notification ' + type;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-
-    setTimeout(function() {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(30px)';
-        toast.style.transition = 'all 0.4s ease';
-        setTimeout(function() { toast.remove(); }, 400);
-    }, 3000);
-}
-
-// ============================================
-// جعل الدوال العامة
-// ============================================
-window.addTextLayer = addTextLayer;
-window.addEmptyImageLayer = addEmptyImageLayer;
-window.triggerImageUpload = triggerImageUpload;
-window.triggerImageUploadForLayer = triggerImageUploadForLayer;
-window.handleImageUpload = handleImageUpload;
-window.updateActiveText = updateActiveText;
-window.updateTransform = updateTransform;
-window.resetTransform = resetTransform;
-window.applyPresetQuote = applyPresetQuote;
-window.undoAction = undoAction;
-window.redoAction = redoAction;
-window.deleteActiveLayer = deleteActiveLayer;
-window.clearAllLayers = clearAllLayers;
-window.selectTemplate = selectTemplate;
-window.deselectLayer = deselectLayer;
-window.startEditing = startEditing;
-window.saveCurrentTemplate = saveCurrentTemplate;
-window.updateCurrentTemplate = updateCurrentTemplate;
-window.deleteCurrentTemplate = deleteCurrentTemplate;
-window.loadTemplateForEdit = loadTemplateForEdit;
-window.downloadTemplateImage = downloadTemplateImage;
-window.sendViaWhatsApp = sendViaWhatsApp;
-window.closeExportModal = closeExportModal;
-window.showExportOptions = showExportOptions;
-window.loadTemplateData = loadTemplateData;
-window.exportDesign = exportDesign;
-window.addDesignToCart = addDesignToCart;
-window.loadProductWithTemplate = loadProductWithTemplate;
-window.loadProductDataToStudio = loadProductDataToStudio;
-window.applyQuote = applyQuote;
-window.deleteLayer = deleteLayer;
-window.updateLayersList = updateLayersList;
-window.loadProductsForLinking = loadProductsForLinking;
-window.isAdmin = isAdmin;
-window.forceAdminLogin = forceAdminLogin;
-window.forceAdminLogout = forceAdminLogout;
-window.loadTemplatesFromSupabase = loadTemplatesFromSupabase;
-window.saveTemplateToSupabase = saveTemplateToSupabase;
-window.linkTemplateToProduct = linkTemplateToProduct;
-window.syncTemplateToProduct = syncTemplateToProduct;
-window.getTemplateData = getTemplateData;
-window.loadProductTemplate = loadProductTemplate;
-window.loadTemplateForCustomer = loadTemplateForCustomer;
-window.saveCustomizationWithOrder = saveCustomizationWithOrder;
-window.captureDesignImage = captureDesignImage;
-window.loadProductForCustomization = loadProductForCustomization;
-window.completeOrderWithCustomization = completeOrderWithCustomization;
-window.loadCustomQuotes = loadCustomQuotes;
-window.addCustomQuote = addCustomQuote;
-window.removeCustomQuote = removeCustomQuote;
-window.addDefaultTextLayer = addDefaultTextLayer;
-window.saveOrderToLocalStorage = saveOrderToLocalStorage;
-window.saveDesign = saveDesign;
-window.saveTemplateToLocalStorage = saveTemplateToLocalStorage;
-window.saveCustomizationToLocalStorage = saveCustomizationToLocalStorage;
-window.createTablesIfNotExist = createTablesIfNotExist;
-
-// ============================================
-// إضافات جديدة لـ Design Studio
-// ============================================
-
-// ===== متغيرات الصور المتعددة =====
-var uploadedDesignImages = [];
-
-// ============================================
-// 🆕 رفع الصور المتعددة
-// ============================================
-function handleDesignImagesUpload(event) {
-    const files = event.target.files;
-    const maxFiles = 5;
-    const container = document.getElementById('designImagesPreview');
-    
-    if (uploadedDesignImages.length + files.length > maxFiles) {
-        showToast('⚠️ يمكنك رفع ' + maxFiles + ' صور كحد أقصى', 'warning');
-        event.target.value = '';
-        return;
-    }
-    
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        if (!file.type.startsWith('image/')) {
-            showToast('⚠️ الرجاء رفع ملفات صور فقط', 'warning');
-            continue;
-        }
-        
-        uploadedDesignImages.push(file);
-        
-        const reader = new FileReader();
-        reader.onload = function(ev) {
-            const div = document.createElement('div');
-            div.className = 'image-item';
-            const idx = uploadedDesignImages.length - 1;
-            div.innerHTML = `
-                <img src="${ev.target.result}" alt="صورة الدرع" />
-                <button class="remove-btn" onclick="removeDesignImage(${idx})">×</button>
-            `;
-            container.appendChild(div);
-        };
-        reader.readAsDataURL(file);
-    }
-    
-    event.target.value = '';
-}
-window.handleDesignImagesUpload = handleDesignImagesUpload;
-
-function removeDesignImage(index) {
-    if (index >= 0 && index < uploadedDesignImages.length) {
-        uploadedDesignImages.splice(index, 1);
-        renderDesignImages();
-    }
-}
-window.removeDesignImage = removeDesignImage;
-
-function renderDesignImages() {
-    const container = document.getElementById('designImagesPreview');
-    if (!container) return;
-    container.innerHTML = '';
-    
-    uploadedDesignImages.forEach(function(file, index) {
-        const reader = new FileReader();
-        reader.onload = function(ev) {
-            const div = document.createElement('div');
-            div.className = 'image-item';
-            div.innerHTML = `
-                <img src="${ev.target.result}" alt="صورة الدرع" />
-                <button class="remove-btn" onclick="removeDesignImage(${index})">×</button>
-            `;
-            container.appendChild(div);
-        };
-        reader.readAsDataURL(file);
-    });
-}
-window.renderDesignImages = renderDesignImages;
-
-// ============================================
-// 🆕 رفع الصور إلى Supabase Storage
-// ============================================
-async function uploadDesignImagesToStorage(files) {
-    const urls = [];
-    const bucketName = 'design-images';
-    
-    try {
-        const { data: buckets } = await supabase.storage.listBuckets();
-        const bucketExists = buckets.some(function(b) { return b.name === bucketName; });
-        
-        if (!bucketExists) {
-            await supabase.storage.createBucket(bucketName, {
-                public: true,
-                allowedMimeTypes: ['image/png', 'image/jpeg', 'image/svg+xml'],
-                fileSizeLimit: 5242880
-            });
-        }
-    } catch (e) {
-        console.log('⚠️ Bucket may already exist or error:', e);
-    }
-    
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        try {
-            const fileName = 'design_' + Date.now() + '_' + Math.random().toString(36).substring(7) + '_' + file.name;
-            const filePath = fileName;
-            
-            const { data, error } = await supabase.storage
-                .from(bucketName)
-                .upload(filePath, file, {
-                    cacheControl: '3600',
-                    upsert: false
-                });
-            
-            if (error) {
-                console.warn('⚠️ لا يمكن رفع الملف:', error);
-                continue;
-            }
-            
-            const { data: urlData } = supabase.storage
-                .from(bucketName)
-                .getPublicUrl(filePath);
-            
-            urls.push(urlData.publicUrl);
-            
-        } catch (error) {
-            console.error('❌ خطأ في رفع الملف:', error);
-            showToast('⚠️ حدث خطأ في رفع الملف: ' + file.name, 'warning');
+        // عرض المعاينة في نافذة منبثقة
+        const previewWindow = window.open('', 'معاينة التصميم', 'width=400,height=500');
+        if (previewWindow) {
+            previewWindow.document.write(`
+                <html dir="rtl">
+                <head><title>معاينة التصميم</title>
+                <style>
+                    body { margin: 0; display: flex; justify-content: center; align-items: center; background: #0a0a12; min-height: 100vh; }
+                    img { max-width: 100%; max-height: 100vh; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+                </style>
+                </head>
+                <body>
+                    <img src="${canvas.toDataURL('image/png', 0.95)}" alt="معاينة التصميم" />
+                </body>
+                </html>
+            `);
+            previewWindow.document.close();
+            showToast('✅ تم فتح نافذة المعاينة', 'success');
+        } else {
+            showToast('⚠️ تم حظر النافذة المنبثقة، يرجى السماح بها', 'warning');
         }
     }
-    
-    return urls;
 }
-window.uploadDesignImagesToStorage = uploadDesignImagesToStorage;
+window.previewExport = previewExport;
 
 // ============================================
-// 🆕 حفظ التصميم مع الصور والعنوان الترويجي (محسّن)
-// ============================================
-async function saveDesign() {
-    const loading = document.getElementById('loadingOverlay');
-    if (loading) loading.classList.add('active');
-    
-    try {
-        const name = document.getElementById('designName')?.value || 'درع مخصص';
-        const description = document.getElementById('designDescription')?.value || '';
-        const price = parseFloat(document.getElementById('designPrice')?.value) || 199;
-        const promoText = document.getElementById('promoText')?.value || '';
-        const promoType = document.getElementById('promoType')?.value || 'custom';
-        
-        // جمع طبقات التصميم
-        const layersData = collectLayersData();
-        
-        // حفظ في localStorage كنسخة احتياطية
-        var designData = {
-            id: 'design_' + Date.now(),
-            name: name,
-            description: description,
-            price: price,
-            promo_text: promoText,
-            promo_type: promoType,
-            layers: layersData,
-            baseImage: document.getElementById('baseImage').src,
-            referenceImage: document.getElementById('referenceImage').src,
-            created_at: new Date().toISOString()
-        };
-        
-        // محاولة حفظ في Supabase
-        try {
-            const { data, error } = await supabase
-                .from('templates')
-                .insert({
-                    name: name,
-                    description: description,
-                    price: price,
-                    image_url: document.getElementById('baseImage').src,
-                    promo_text: promoText,
-                    promo_type: promoType,
-                    layers: layersData,
-                    status: 'active',
-                    created_at: new Date().toISOString()
-                })
-                .select()
-                .single();
-            
-            if (error) {
-                // إذا كان الجدول غير موجود، حفظ في localStorage
-                if (error.code === '42P01' || error.code === '400' || error.code === '404') {
-                    console.log('⚠️ جدول templates غير موجود، حفظ في localStorage');
-                    saveDesignToLocalStorage(designData);
-                    showToast('✅ تم حفظ التصميم محلياً', 'success');
-                } else {
-                    throw error;
-                }
-            } else {
-                showToast('✅ تم حفظ التصميم بنجاح!', 'success');
-            }
-        } catch (error) {
-            // حفظ في localStorage كحل بديل
-            console.warn('⚠️ حفظ في localStorage بدلاً من Supabase');
-            saveDesignToLocalStorage(designData);
-            showToast('✅ تم حفظ التصميم محلياً', 'success');
-        }
-        
-        // إعادة تعيين النموذج
-        uploadedDesignImages = [];
-        renderDesignImages();
-        document.getElementById('designImages').value = '';
-        
-    } catch (error) {
-        console.error('❌ خطأ في حفظ التصميم:', error);
-        showToast('❌ حدث خطأ في حفظ التصميم: ' + error.message, 'error');
-    } finally {
-        if (loading) loading.classList.remove('active');
-    }
-}
-window.saveDesign = saveDesign;
-
-// ===== حفظ التصميم في localStorage (حل بديل) =====
-function saveDesignToLocalStorage(designData) {
-    var designs = JSON.parse(localStorage.getItem('tithkari_designs') || '[]');
-    designs.push(designData);
-    localStorage.setItem('tithkari_designs', JSON.stringify(designs));
-    console.log('✅ تم حفظ التصميم في localStorage:', designData.id);
-}
-window.saveDesignToLocalStorage = saveDesignToLocalStorage;
-
-// ============================================
-// 🆕 جمع بيانات الطبقات
-// ============================================
-function collectLayersData() {
-    var layersData = [];
-    
-    layers.forEach(function(layer) {
-        var data = {
-            type: layer.type,
-            top: layer.top,
-            left: layer.left,
-            width: layer.width,
-            height: layer.height
-        };
-        
-        if (layer.type === 'text') {
-            var content = layer.element.querySelector('.text-content');
-            data.text = layer.text || (content ? content.textContent : '');
-            if (content) {
-                data.style = {
-                    fontSize: content.style.fontSize || '18px',
-                    fontFamily: content.style.fontFamily || 'Cairo',
-                    color: content.style.color || '#d4af37',
-                    backgroundColor: content.style.backgroundColor || 'rgba(0,0,0,0.7)',
-                    fontWeight: content.style.fontWeight || '700',
-                    textAlign: content.style.textAlign || 'center'
-                };
-            }
-        } else if (layer.type === 'image') {
-            var img = layer.element.querySelector('img');
-            data.src = img ? img.src : (layer.src || '');
-            data.isEmpty = layer.isEmpty || false;
-        }
-        
-        layersData.push(data);
-    });
-    
-    return layersData;
-}
-window.collectLayersData = collectLayersData;
-
-// ============================================
-// 🆕 إتمام الطلب مباشرة من المصمم
+// دوال إتمام الطلب
 // ============================================
 async function checkoutDirectly() {
     const loading = document.getElementById('loadingOverlay');
     if (loading) loading.classList.add('active');
     
     try {
-        const name = document.getElementById('designName')?.value || 'درع مخصص';
-        const price = parseFloat(document.getElementById('designPrice')?.value) || 199;
-        const promoText = document.getElementById('promoText')?.value || '';
-        const promoType = document.getElementById('promoType')?.value || 'custom';
-        
-        let imageUrls = [];
-        if (uploadedDesignImages.length > 0) {
-            imageUrls = await uploadDesignImagesToStorage(uploadedDesignImages);
+        if (layers.length === 0) {
+            showToast('⚠️ لا توجد طبقات لحفظها، أضف طبقات أولاً', 'error');
+            if (loading) loading.classList.remove('active');
+            return;
         }
         
-        const designProduct = {
-            id: 'design_' + Date.now(),
-            name: name,
-            price: price,
-            description: 'درع مصمم حسب الطلب',
-            image_url: imageUrls[0] || 'https://i.ibb.co/vxn3p7C7/Gemini-Generated-Image-g2xtelg2xtelg2xt.png',
-            images: imageUrls,
-            promo_text: promoText,
-            promo_type: promoType,
-            stock: 99,
-            isCustom: true,
-            currency: 'SAR'
+        const designImage = await captureDesignImage();
+        const layersData = collectLayersData();
+        const productName = document.getElementById('productNameDisplay').textContent || 'درع مخصص';
+        const productPrice = parseFloat(document.getElementById('designPrice').value) || 199;
+        
+        const customizedProduct = {
+            id: currentProductId || 'custom_' + Date.now(),
+            name: productName,
+            price: productPrice,
+            description: document.getElementById('designDescription').value || 'درع مخصص حسب الطلب',
+            image_url: designImage,
+            template_id: currentTemplateId,
+            isCustomized: true,
+            customizationData: {
+                layers: layersData,
+                baseImage: document.getElementById('baseImage').src,
+                referenceImage: document.getElementById('referenceImage').src,
+                templateId: currentTemplateId,
+                productId: currentProductId
+            },
+            quantity: 1,
+            status: 'active'
         };
         
-        var cart = JSON.parse(localStorage.getItem('tithkari_cart') || '[]');
-        cart.push({ ...designProduct, quantity: 1 });
+        console.log('📦 المنتج المخصص:', customizedProduct);
+        
+        let cart = JSON.parse(localStorage.getItem('tithkari_cart') || '[]');
+        cart.push(customizedProduct);
         localStorage.setItem('tithkari_cart', JSON.stringify(cart));
+        
+        const designData = {
+            id: 'design_' + Date.now(),
+            customerName: 'زبون',
+            date: new Date().toISOString(),
+            layers: layers.map(l => ({ ...l })),
+            baseImage: document.getElementById('baseImage').src,
+            referenceImage: document.getElementById('referenceImage').src,
+            productName: productName,
+            productId: currentProductId,
+            designImage: designImage
+        };
+        
+        let designs = JSON.parse(localStorage.getItem('tithkari_customer_designs') || '[]');
+        designs.push(designData);
+        localStorage.setItem('tithkari_customer_designs', JSON.stringify(designs));
         
         showToast('✅ تم إضافة التصميم للسلة! جاري التوجيه...', 'success');
         
         setTimeout(function() {
-            window.location.href = 'checkout.html';
+            window.location.href = 'checkout.html?product=' + encodeURIComponent(JSON.stringify(customizedProduct));
         }, 1000);
         
+    } catch (error) {
+        console.error('❌ خطأ في إتمام الطلب:', error);
+        showToast('❌ حدث خطأ في إتمام الطلب: ' + error.message, 'error');
+    } finally {
+        if (loading) loading.classList.remove('active');
+    }
+}
+window.checkoutDirectly = checkoutDirectly;
+
+function addDesignToCart() {
+    showToast('🛒 تم إضافة التصميم إلى السلة', 'success');
+}
+window.addDesignToCart = addDesignToCart;
+
+// ============================================
+// دوال جمع بيانات الطبقات
+// ============================================
+function collectLayersData() {
+    return layers.map(l => ({
+        id: l.id,
+        type: l.type,
+        x: l.x,
+        y: l.y,
+        width: l.width,
+        height: l.height,
+        rotation: l.rotation || 0,
+        zIndex: l.zIndex || 1,
+        content: l.content || null,
+        fontFamily: l.fontFamily || 'Cairo',
+        fontSize: l.fontSize || 18,
+        color: l.color || '#d4af37',
+        bgColor: l.bgColor || '#000000',
+        bgEnabled: l.bgEnabled !== false,
+        imageData: l.imageData || null,
+        opacity: l.opacity || 1
+    }));
+}
+window.collectLayersData = collectLayersData;
+
+// ============================================
+// دوال القوالب المحسنة (مختصرة للحفاظ على المساحة)
+// ============================================
+async function updateAndSaveTemplate() {
+    if (!isAdminUser) {
+        showToast('⚠️ فقط المسؤول يمكنه تحديث القوالب', 'error');
+        return;
+    }
+    
+    if (layers.length === 0) {
+        showToast('⚠️ لا توجد طبقات لحفظها', 'error');
+        return;
+    }
+
+    const loading = document.getElementById('loadingOverlay');
+    if (loading) loading.classList.add('active');
+
+    try {
+        const productSelect = document.getElementById('productSelect');
+        const linkedProductId = productSelect ? productSelect.value : currentProductId;
+        
+        if (!linkedProductId) {
+            showToast('⚠️ يرجى اختيار منتج أولاً', 'warning');
+            if (loading) loading.classList.remove('active');
+            return;
+        }
+
+        const name = document.getElementById('designName').value.trim() || document.getElementById('productNameDisplay').textContent || 'قالب مخصص';
+        const layersData = collectLayersData();
+        
+        const templateData = {
+            name: name,
+            image_url: document.getElementById('baseImage').src,
+            base_image: document.getElementById('baseImage').src,
+            reference_image: document.getElementById('referenceImage').src,
+            layers: layersData,
+            linked_product_id: linkedProductId,
+            price: parseFloat(document.getElementById('designPrice').value) || 199,
+            promo_text: document.getElementById('promoText').value || '',
+            promo_type: document.getElementById('promoType').value || 'custom',
+            status: 'active',
+            is_custom: true,
+            version: '2.0',
+            updated_at: new Date().toISOString()
+        };
+
+        const desc = document.getElementById('designDescription').value || '';
+        if (desc) {
+            templateData.description = desc;
+        }
+
+        console.log('📦 حفظ/تحديث القالب:', templateData);
+
+        let result;
+        let isUpdate = false;
+
+        if (currentTemplateId) {
+            const { error } = await supabase
+                .from('templates')
+                .update(templateData)
+                .eq('id', currentTemplateId);
+
+            if (error) {
+                console.error('❌ خطأ في تحديث القالب:', error);
+                if (error.message && error.message.includes('description')) {
+                    delete templateData.description;
+                    const { error: error2 } = await supabase
+                        .from('templates')
+                        .update(templateData)
+                        .eq('id', currentTemplateId);
+                    if (error2) {
+                        throw new Error(error2.message);
+                    }
+                } else {
+                    throw new Error(error.message);
+                }
+            }
+            isUpdate = true;
+            result = { id: currentTemplateId };
+        } else {
+            const { data, error } = await supabase
+                .from('templates')
+                .insert(templateData)
+                .select()
+                .single();
+
+            if (error) {
+                console.error('❌ خطأ في حفظ القالب:', error);
+                if (error.message && error.message.includes('description')) {
+                    delete templateData.description;
+                    const { data: data2, error: error2 } = await supabase
+                        .from('templates')
+                        .insert(templateData)
+                        .select()
+                        .single();
+                    if (error2) {
+                        throw new Error(error2.message);
+                    }
+                    result = data2;
+                } else {
+                    throw new Error(error.message);
+                }
+            } else {
+                result = data;
+            }
+            currentTemplateId = result.id;
+        }
+
+        await linkTemplateToProduct(result.id, linkedProductId);
+
+        const { error: productError } = await supabase
+            .from('products')
+            .update({
+                template_id: result.id,
+                template_image: document.getElementById('baseImage').src,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', linkedProductId);
+
+        if (productError) {
+            console.warn('⚠️ تحديث المنتج:', productError);
+        }
+
+        await loadTemplates();
+        await loadProductsList();
+        
+        document.getElementById('productNameDisplay').textContent = name;
+        
+        showToast(`✅ ${isUpdate ? 'تم تحديث' : 'تم حفظ'} القالب "${name}" وربطه بالمنتج بنجاح!`, 'success');
+        
+        if (result.id) {
+            await loadTemplateForEdit(result.id);
+        }
+
     } catch (error) {
         console.error('❌ خطأ:', error);
         showToast('❌ حدث خطأ: ' + error.message, 'error');
@@ -3275,136 +1917,1097 @@ async function checkoutDirectly() {
         if (loading) loading.classList.remove('active');
     }
 }
-window.checkoutDirectly = checkoutDirectly;
+window.updateAndSaveTemplate = updateAndSaveTemplate;
 
-// ============================================
-// 🆕 تحميل تصميم موجود للتعديل
-// ============================================
-async function loadDesignForEdit(designId) {
+async function saveCurrentTemplate() {
+    await updateAndSaveTemplate();
+}
+window.saveCurrentTemplate = saveCurrentTemplate;
+
+async function deleteCurrentTemplate() {
+    if (!isAdminUser) {
+        showToast('⚠️ فقط المسؤول يمكنه حذف القوالب', 'error');
+        return;
+    }
+    
+    if (!currentTemplateId) {
+        showToast('⚠️ اختر قالباً للحذف', 'warning');
+        return;
+    }
+
+    if (!confirm('⚠️ هل أنت متأكد من حذف هذا القالب؟ لا يمكن التراجع!')) return;
+
+    const loading = document.getElementById('loadingOverlay');
+    if (loading) loading.classList.add('active');
+
+    try {
+        const { error } = await supabase
+            .from('templates')
+            .update({ status: 'inactive' })
+            .eq('id', currentTemplateId);
+
+        if (error) {
+            showToast('❌ خطأ في حذف القالب: ' + error.message, 'error');
+        } else {
+            showToast('✅ تم حذف القالب بنجاح', 'success');
+            currentTemplateId = null;
+            loadTemplates();
+            loadProductsList();
+        }
+    } catch (error) {
+        console.error('❌ خطأ:', error);
+        showToast('❌ حدث خطأ: ' + error.message, 'error');
+    } finally {
+        if (loading) loading.classList.remove('active');
+    }
+}
+window.deleteCurrentTemplate = deleteCurrentTemplate;
+
+async function loadTemplates() {
     try {
         const { data, error } = await supabase
             .from('templates')
             .select('*')
-            .eq('id', designId)
-            .single();
-        
+            .eq('status', 'active')
+            .order('created_at', { ascending: false });
+
         if (error) {
-            // البحث في localStorage
-            var designs = JSON.parse(localStorage.getItem('tithkari_designs') || '[]');
-            var localDesign = designs.find(function(d) { return d.id === designId; });
-            if (localDesign) {
-                loadDesignData(localDesign);
-                showToast('✅ تم تحميل التصميم من localStorage', 'success');
-                return;
-            }
-            throw error;
+            console.error('❌ خطأ في تحميل القوالب:', error);
+            return;
         }
-        
-        if (data) {
-            loadDesignData(data);
-            showToast('✅ تم تحميل التصميم: ' + data.name, 'success');
-        }
-        
+
+        renderTemplates(data || []);
+        console.log('✅ تم تحميل ' + (data ? data.length : 0) + ' قالب من Supabase');
     } catch (error) {
-        console.error('❌ خطأ في تحميل التصميم:', error);
-        showToast('❌ حدث خطأ في تحميل التصميم', 'error');
+        console.error('❌ خطأ:', error);
     }
 }
-window.loadDesignForEdit = loadDesignForEdit;
+window.loadTemplates = loadTemplates;
 
-function loadDesignData(data) {
-    if (document.getElementById('designName')) {
-        document.getElementById('designName').value = data.name || '';
-    }
-    if (document.getElementById('designDescription')) {
-        document.getElementById('designDescription').value = data.description || '';
-    }
-    if (document.getElementById('designPrice')) {
-        document.getElementById('designPrice').value = data.price || 199;
-    }
-    if (document.getElementById('promoText')) {
-        document.getElementById('promoText').value = data.promo_text || '';
-    }
-    if (document.getElementById('promoType')) {
-        document.getElementById('promoType').value = data.promo_type || 'custom';
+function renderTemplates(templates) {
+    const grid = document.getElementById('templatesGrid');
+    if (!grid) return;
+    
+    if (!templates || templates.length === 0) {
+        grid.innerHTML = '<p style="color:#9ca3af;font-size:9px;">لا توجد قوالب</p>';
+        return;
     }
     
-    if (data.images && data.images.length > 0) {
-        const container = document.getElementById('designImagesPreview');
-        if (container) {
-            container.innerHTML = '';
-            data.images.forEach(function(url, index) {
-                const div = document.createElement('div');
-                div.className = 'image-item';
-                div.innerHTML = `
-                    <img src="${url}" alt="صورة الدرع" />
-                    <button class="remove-btn" onclick="removeDesignImage(${index})">×</button>
-                `;
-                container.appendChild(div);
+    grid.innerHTML = '';
+    templates.forEach(t => {
+        const div = document.createElement('div');
+        div.className = 'template-thumb';
+        const imgSrc = t.image_url || t.base_image || t.image || 'https://i.ibb.co/vxn3p7C7/Gemini-Generated-Image-g2xtelg2xtelg2xt.png';
+        div.innerHTML = `<img src="${imgSrc}" alt="${t.name}"><span>${t.name}</span>`;
+        div.onclick = () => loadTemplateForEdit(t.id);
+        grid.appendChild(div);
+    });
+}
+window.renderTemplates = renderTemplates;
+
+async function loadTemplateForEdit(templateId) {
+    try {
+        const { data, error } = await supabase
+            .from('templates')
+            .select('*')
+            .eq('id', templateId)
+            .single();
+
+        if (error || !data) {
+            showToast('⚠️ القالب غير موجود', 'error');
+            return;
+        }
+
+        currentTemplateId = data.id;
+        isUsingProductImage = false;
+        
+        const imgSrc = data.image_url || data.base_image || data.image || 'https://i.ibb.co/vxn3p7C7/Gemini-Generated-Image-g2xtelg2xtelg2xt.png';
+        document.getElementById('baseImage').src = imgSrc;
+        document.getElementById('referenceImage').src = data.reference_image || data.referenceImage || imgSrc;
+        document.getElementById('productNameDisplay').textContent = data.name;
+        document.getElementById('designName').value = data.name || '';
+        document.getElementById('designDescription').value = data.description || '';
+        document.getElementById('designPrice').value = data.price || 199;
+        document.getElementById('promoText').value = data.promo_text || '';
+        document.getElementById('promoType').value = data.promo_type || 'custom';
+
+        layers = [];
+        activeLayerId = null;
+        nextId = 1;
+
+        if (data.layers && data.layers.length > 0) {
+            data.layers.forEach(layerData => {
+                if (layerData.type === 'text') {
+                    layers.push({
+                        id: nextId++,
+                        type: 'text',
+                        content: layerData.content || layerData.text || 'نص',
+                        x: layerData.x || 20,
+                        y: layerData.y || 30,
+                        width: layerData.width || 60,
+                        height: layerData.height || 15,
+                        rotation: layerData.rotation || 0,
+                        zIndex: layerData.zIndex || layers.length + 1,
+                        fontFamily: layerData.fontFamily || 'Cairo',
+                        fontSize: layerData.fontSize || 18,
+                        color: layerData.color || '#d4af37',
+                        bgColor: layerData.bgColor || '#000000',
+                        bgEnabled: layerData.bgEnabled !== false,
+                        opacity: layerData.opacity || 1
+                    });
+                } else if (layerData.type === 'image') {
+                    layers.push({
+                        id: nextId++,
+                        type: 'image',
+                        imageData: layerData.imageData || null,
+                        x: layerData.x || 20,
+                        y: layerData.y || 30,
+                        width: layerData.width || 30,
+                        height: layerData.height || 30,
+                        rotation: layerData.rotation || 0,
+                        zIndex: layerData.zIndex || layers.length + 1,
+                        opacity: layerData.opacity || 1
+                    });
+                }
             });
         }
-    }
-    
-    if (data.layers) {
-        loadLayersData(data.layers);
+
+        updateAll();
+        if (layers.length > 0) {
+            activeLayerId = layers[0].id;
+            loadLayerControls(layers[0].id);
+            updateAll();
+        }
+        saveState();
+        showToast('✅ تم تحميل القالب: ' + data.name, 'success');
+    } catch (error) {
+        console.error('❌ خطأ:', error);
+        showToast('❌ حدث خطأ في تحميل القالب', 'error');
     }
 }
+window.loadTemplateForEdit = loadTemplateForEdit;
 
-// ============================================
-// 🆕 تحميل طبقات من بيانات
-// ============================================
-function loadLayersData(layersData) {
-    layers.forEach(function(l) { 
-        if (l.element && l.element.parentNode) {
-            l.element.remove(); 
-        }
-    });
-    layers = [];
-    layerCounter = 0;
+async function loadProductsList() {
+    const select = document.getElementById('productSelect');
+    if (!select) return;
     
-    layersData.forEach(function(layerData) {
-        if (layerData.type === 'text') {
-            var layer = addTextLayer(
-                layerData.text || 'نص',
-                layerData.top || '20%',
-                layerData.left || '10%',
-                layerData.width || '80%',
-                layerData.height || '40px'
-            );
+    try {
+        const { data: products, error } = await supabase
+            .from('products')
+            .select('id, name, price, image_url, template_image, template_data, template_id')
+            .eq('status', 'active')
+            .order('name');
+        
+        if (error) {
+            console.error('❌ خطأ في تحميل المنتجات:', error);
+            return;
+        }
+        
+        productsList = products || [];
+        
+        select.innerHTML = '<option value="">-- اختر منتجاً لعرض قالبـه --</option>';
+        if (products && products.length > 0) {
+            products.forEach(p => {
+                const option = document.createElement('option');
+                option.value = p.id;
+                const hasTemplate = p.template_id || p.template_image || p.template_data;
+                option.textContent = p.name + ' (' + (p.price || 0) + ' ر.س)' + (hasTemplate ? ' ✅' : '');
+                select.appendChild(option);
+            });
+        }
+        
+        const quoteProductsSelect = document.getElementById('adminQuoteProducts');
+        if (quoteProductsSelect) {
+            quoteProductsSelect.innerHTML = '<option value="all">جميع المنتجات</option>';
+            if (products && products.length > 0) {
+                products.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = p.name;
+                    quoteProductsSelect.appendChild(opt);
+                });
+            }
+        }
+        
+        const linkSelect = document.getElementById('productLinkSelect');
+        if (linkSelect) {
+            linkSelect.innerHTML = '<option value="">-- غير مرتبط بمنتج --</option>';
+            if (products && products.length > 0) {
+                products.forEach(p => {
+                    linkSelect.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+                });
+            }
+        }
+        
+        console.log('✅ تم تحميل ' + (products ? products.length : 0) + ' منتج من Supabase');
+        
+    } catch (error) {
+        console.error('❌ خطأ في تحميل المنتجات:', error);
+        showToast('⚠️ خطأ في تحميل المنتجات', 'error');
+    }
+}
+window.loadProductsList = loadProductsList;
+
+async function loadProductForCustomization(productId) {
+    if (!productId) {
+        showToast('⚠️ يرجى اختيار منتج', 'warning');
+        return;
+    }
+    
+    const loading = document.getElementById('loadingOverlay');
+    if (loading) loading.classList.add('active');
+    
+    try {
+        console.log('📦 تحميل المنتج من Supabase:', productId);
+        showToast('⏳ جاري تحميل المنتج...', 'info');
+        
+        const { data: product, error } = await supabase
+            .from('products')
+            .select('*')
+            .eq('id', productId)
+            .single();
+        
+        if (error || !product) {
+            showToast('⚠️ المنتج غير موجود', 'error');
+            if (loading) loading.classList.remove('active');
+            return;
+        }
+        
+        console.log('✅ تم العثور على المنتج:', product.name);
+        
+        document.getElementById('productNameDisplay').textContent = product.name || 'درع مخصص';
+        document.getElementById('productPrice').textContent = product.price || '-';
+        document.getElementById('productStatus').textContent = product.status || 'متوفر';
+        currentProductId = product.id;
+        currentProductData = product;
+        
+        if (product.image_url) {
+            document.getElementById('referenceImage').src = product.image_url;
+        }
+        
+        renderQuoteButtons();
+        
+        let templateLoaded = false;
+        
+        if (product.template_id) {
+            const { data: template, error: templateError } = await supabase
+                .from('templates')
+                .select('*')
+                .eq('id', product.template_id)
+                .single();
             
-            if (layerData.style) {
-                var content = layer.element.querySelector('.text-content');
-                if (content) {
-                    content.style.fontSize = layerData.style.fontSize || '18px';
-                    content.style.fontFamily = layerData.style.fontFamily || 'Cairo';
-                    content.style.color = layerData.style.color || '#d4af37';
-                    content.style.backgroundColor = layerData.style.backgroundColor || 'rgba(0,0,0,0.7)';
-                }
+            if (!templateError && template) {
+                await loadTemplateForEdit(template.id);
+                templateLoaded = true;
+                console.log('✅ تم تحميل القالب المرتبط بالمنتج:', template.name);
             }
-        } else if (layerData.type === 'image') {
-            if (layerData.isEmpty) {
-                addEmptyImageLayer(
-                    layerData.top || '30%',
-                    layerData.left || '30%',
-                    layerData.width || '120px',
-                    layerData.height || '120px'
-                );
-            } else if (layerData.src) {
-                addImageLayer(
-                    layerData.src || '',
-                    layerData.top || '30%',
-                    layerData.left || '30%',
-                    layerData.width || '120px',
-                    layerData.height || '120px'
-                );
+        }
+        
+        if (!templateLoaded && product.template_data) {
+            const templateData = typeof product.template_data === 'string' 
+                ? JSON.parse(product.template_data) 
+                : product.template_data;
+            
+            if (templateData && templateData.layers && templateData.layers.length > 0) {
+                applyTemplateData(templateData);
+                templateLoaded = true;
             }
+        }
+        
+        if (!templateLoaded && product.template_image) {
+            document.getElementById('baseImage').src = product.template_image;
+            templateLoaded = true;
+            showToast('✅ تم تحميل صورة القالب', 'success');
+        }
+        
+        if (!templateLoaded) {
+            isUsingProductImage = true;
+            const productImage = product.image_url || 'https://i.ibb.co/vxn3p7C7/Gemini-Generated-Image-g2xtelg2xtelg2xt.png';
+            document.getElementById('baseImage').src = productImage;
+            document.getElementById('referenceImage').src = productImage;
+            showToast('✅ تم تحميل صورة المنتج كقالب', 'success');
+            
+            layers = [];
+            activeLayerId = null;
+            nextId = 1;
+            addDefaultTextLayer();
+            addTextLayer('اسم صاحب الإهداء', '42%', '5%', '90%', '45px');
+            addTextLayer('عبارة الإهداء أو التكريم', '52%', '5%', '90%', '30%');
+            updateAll();
+            saveState();
+        }
+        
+        const select = document.getElementById('productSelect');
+        if (select) select.value = productId;
+        
+        const designName = document.getElementById('designName');
+        if (designName) designName.value = product.name;
+        const designPrice = document.getElementById('designPrice');
+        if (designPrice) designPrice.value = product.price || 199;
+        
+        saveSession();
+        
+        console.log('✅ تم تحميل المنتج بنجاح');
+        
+    } catch (error) {
+        console.error('❌ خطأ في تحميل المنتج:', error);
+        showToast('❌ حدث خطأ في تحميل المنتج: ' + error.message, 'error');
+    } finally {
+        if (loading) loading.classList.remove('active');
+    }
+}
+window.loadProductForCustomization = loadProductForCustomization;
+
+async function linkTemplateToProduct(templateId, productId) {
+    if (!templateId || !productId) {
+        console.warn('⚠️ لا يمكن الربط: templateId أو productId غير موجود');
+        return false;
+    }
+
+    try {
+        console.log('🔗 ربط القالب بالمنتج:', { templateId, productId });
+        
+        const { error } = await supabase
+            .from('products')
+            .update({ 
+                template_id: templateId,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', productId);
+
+        if (error) {
+            console.error('❌ خطأ في ربط القالب:', error);
+            return false;
+        }
+
+        console.log('✅ تم ربط القالب بالمنتج بنجاح');
+        return true;
+        
+    } catch (error) {
+        console.error('❌ خطأ في ربط القالب:', error);
+        return false;
+    }
+}
+window.linkTemplateToProduct = linkTemplateToProduct;
+
+function syncTemplateToProduct() {
+    if (!isAdminUser) {
+        showToast('⚠️ فقط المسؤول يمكنه ربط القوالب', 'error');
+        return;
+    }
+    
+    if (!currentTemplateId) {
+        showToast('⚠️ اختر قالباً أولاً', 'warning');
+        return;
+    }
+    
+    const productSelect = document.getElementById('productSelect');
+    const productId = productSelect ? productSelect.value : null;
+    
+    if (!productId) {
+        showToast('⚠️ اختر منتجاً للربط', 'warning');
+        return;
+    }
+    
+    linkTemplateToProduct(currentTemplateId, productId);
+}
+window.syncTemplateToProduct = syncTemplateToProduct;
+
+function onProductSelectChange() {
+    const select = document.getElementById('productSelect');
+    const productId = select.value;
+    if (productId) {
+        currentProductId = productId;
+        loadProductForCustomization(productId);
+        renderQuoteButtons();
+    }
+}
+window.onProductSelectChange = onProductSelectChange;
+
+function loadSelectedProductTemplate() {
+    const select = document.getElementById('productSelect');
+    const productId = select.value;
+    if (productId) {
+        currentProductId = productId;
+        loadProductForCustomization(productId);
+        renderQuoteButtons();
+    } else {
+        showToast('⚠️ يرجى اختيار منتج أولاً', 'warning');
+    }
+}
+window.loadSelectedProductTemplate = loadSelectedProductTemplate;
+
+function applyTemplateData(templateData) {
+    if (!templateData) return;
+    
+    layers = [];
+    activeLayerId = null;
+    nextId = 1;
+    
+    if (templateData.image_url || templateData.base_image || templateData.image) {
+        document.getElementById('baseImage').src = templateData.image_url || templateData.base_image || templateData.image;
+    }
+    
+    if (templateData.reference_image || templateData.referenceImage) {
+        document.getElementById('referenceImage').src = templateData.reference_image || templateData.referenceImage;
+    }
+    
+    if (templateData.name) {
+        document.getElementById('productNameDisplay').textContent = templateData.name;
+    }
+    
+    const layersData = templateData.layers || [];
+    if (layersData.length > 0) {
+        layersData.forEach(layerData => {
+            if (layerData.type === 'text') {
+                layers.push({
+                    id: nextId++,
+                    type: 'text',
+                    content: layerData.content || layerData.text || 'نص',
+                    x: layerData.x || 20,
+                    y: layerData.y || 30,
+                    width: layerData.width || 60,
+                    height: layerData.height || 15,
+                    rotation: layerData.rotation || 0,
+                    zIndex: layerData.zIndex || layers.length + 1,
+                    fontFamily: layerData.fontFamily || 'Cairo',
+                    fontSize: layerData.fontSize || 18,
+                    color: layerData.color || '#d4af37',
+                    bgColor: layerData.bgColor || '#000000',
+                    bgEnabled: layerData.bgEnabled !== false,
+                    opacity: layerData.opacity || 1
+                });
+            } else if (layerData.type === 'image') {
+                layers.push({
+                    id: nextId++,
+                    type: 'image',
+                    imageData: layerData.imageData || null,
+                    x: layerData.x || 20,
+                    y: layerData.y || 30,
+                    width: layerData.width || 30,
+                    height: layerData.height || 30,
+                    rotation: layerData.rotation || 0,
+                    zIndex: layerData.zIndex || layers.length + 1,
+                    opacity: layerData.opacity || 1
+                });
+            }
+        });
+    }
+    
+    updateAll();
+    if (layers.length > 0) {
+        activeLayerId = layers[0].id;
+        loadLayerControls(layers[0].id);
+        updateAll();
+    }
+    saveState();
+    showToast('✅ تم تطبيق القالب بنجاح', 'success');
+}
+window.applyTemplateData = applyTemplateData;
+
+function loadProductFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get('productId');
+    
+    if (productId) {
+        console.log('📦 تحميل المنتج من الرابط:', productId);
+        setTimeout(() => {
+            loadProductForCustomization(productId);
+        }, 500);
+        return true;
+    }
+    return false;
+}
+window.loadProductFromUrl = loadProductFromUrl;
+
+// ============================================
+// دوال إدارة العبارات (مختصرة)
+// ============================================
+function loadAdminQuotes() {
+    try {
+        const saved = localStorage.getItem('tithkari_admin_quotes');
+        if (saved) {
+            adminQuotes = JSON.parse(saved);
+        } else {
+            adminQuotes = [
+                { id: 'q1', text: 'بكل فخر واعتزاز، نقدم هذا الدرع تعبيراً عن شكرنا وتقديرنا لجهودكم المتميزة.', tags: ['شكر', 'تقدير'], products: ['all'] },
+                { id: 'q2', text: 'من وفاء وولاء، نهديكم هذا الدرع رمزاً للعرفان والامتنان على عطائكم المستمر.', tags: ['وفاء', 'عرفان'], products: ['all'] },
+                { id: 'q3', text: 'تميزتم فأبدعتم، وهذا الدرع شهادة على إخلاصكم وتفانيكم في العمل.', tags: ['تميز', 'إبداع'], products: ['all'] },
+                { id: 'q4', text: 'تقديراً لعطائكم وإخلاصكم، نمنحكم هذا الدرع كرمز للفخر والاعتزاز.', tags: ['تكريم', 'تقدير'], products: ['all'] },
+                { id: 'q5', text: 'مسيرة عطاء حافلة بالإنجازات، وهذا الدرع تكريم لمسيرتكم المباركة.', tags: ['مسيرة', 'عطاء'], products: ['all'] }
+            ];
+            localStorage.setItem('tithkari_admin_quotes', JSON.stringify(adminQuotes));
+        }
+        renderAdminQuotes();
+        renderQuoteButtons();
+    } catch (e) {
+        console.error('❌ خطأ في تحميل العبارات:', e);
+    }
+}
+window.loadAdminQuotes = loadAdminQuotes;
+
+function renderAdminQuotes() {
+    const container = document.getElementById('adminQuotesList');
+    if (!container) return;
+    
+    if (adminQuotes.length === 0) {
+        container.innerHTML = '<p style="color:var(--studio-muted);font-size:9px;">لا توجد عبارات مضافة</p>';
+        return;
+    }
+    
+    container.innerHTML = '';
+    adminQuotes.forEach((q, index) => {
+        const div = document.createElement('div');
+        div.className = 'quote-item-admin';
+        div.innerHTML = `
+            <span class="quote-text">${q.text.substring(0, 50)}${q.text.length > 50 ? '...' : ''}</span>
+            <span class="quote-tags">${q.tags.map(t => `<span class="tag">#${t}</span>`).join('')}</span>
+            <div class="quote-actions">
+                <button onclick="applyQuote('${q.text.replace(/'/g, "\\'")}')" title="تطبيق"><i class="fas fa-check"></i></button>
+                <button class="delete" onclick="deleteAdminQuote(${index})" title="حذف"><i class="fas fa-trash"></i></button>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+window.renderAdminQuotes = renderAdminQuotes;
+
+function renderQuoteButtons() {
+    const container = document.getElementById('quoteButtonsContainer');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    const currentProduct = currentProductId || 'all';
+    
+    let filteredQuotes = adminQuotes.filter(q => 
+        q.products.includes('all') || q.products.includes(currentProduct)
+    );
+    
+    if (filteredQuotes.length === 0) {
+        const emptyMsg = document.createElement('span');
+        emptyMsg.style.cssText = 'color:var(--studio-muted);font-size:8px;';
+        emptyMsg.textContent = 'لا توجد عبارات لهذا المنتج';
+        container.appendChild(emptyMsg);
+        return;
+    }
+    
+    filteredQuotes.forEach(q => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-sm btn-dark';
+        const displayText = q.text.length > 25 ? q.text.substring(0, 25) + '...' : q.text;
+        btn.textContent = '📝 ' + displayText;
+        btn.title = q.text + '\n🏷️ ' + q.tags.join(', ');
+        btn.onclick = () => applyQuote(q.text);
+        container.appendChild(btn);
+    });
+}
+window.renderQuoteButtons = renderQuoteButtons;
+
+function addAdminQuote() {
+    if (!isAdminUser) {
+        showToast('⚠️ فقط المسؤول يمكنه إضافة عبارات', 'error');
+        return;
+    }
+    
+    const text = document.getElementById('adminQuoteText').value.trim();
+    const tagsInput = document.getElementById('adminQuoteTags').value.trim();
+    const productsSelect = document.getElementById('adminQuoteProducts');
+    const selectedProducts = Array.from(productsSelect.selectedOptions).map(opt => opt.value);
+    
+    if (!text) {
+        showToast('⚠️ الرجاء كتابة العبارة', 'warning');
+        return;
+    }
+    
+    const tags = tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(t => t) : ['عام'];
+    const products = selectedProducts.length > 0 ? selectedProducts : ['all'];
+    
+    const newQuote = {
+        id: 'q_' + Date.now(),
+        text: text,
+        tags: tags,
+        products: products,
+        created_at: new Date().toISOString()
+    };
+    
+    adminQuotes.push(newQuote);
+    localStorage.setItem('tithkari_admin_quotes', JSON.stringify(adminQuotes));
+    
+    document.getElementById('adminQuoteText').value = '';
+    document.getElementById('adminQuoteTags').value = '';
+    
+    saveQuotesToSupabase();
+    
+    renderAdminQuotes();
+    renderQuoteButtons();
+    showToast('✅ تم إضافة العبارة وتحديثها للزبائن', 'success');
+}
+window.addAdminQuote = addAdminQuote;
+
+function deleteAdminQuote(index) {
+    if (!isAdminUser) {
+        showToast('⚠️ فقط المسؤول يمكنه حذف العبارات', 'error');
+        return;
+    }
+    
+    if (!confirm('هل أنت متأكد من حذف هذه العبارة؟')) return;
+    adminQuotes.splice(index, 1);
+    localStorage.setItem('tithkari_admin_quotes', JSON.stringify(adminQuotes));
+    
+    saveQuotesToSupabase();
+    
+    renderAdminQuotes();
+    renderQuoteButtons();
+    showToast('🗑️ تم حذف العبارة', 'warning');
+}
+window.deleteAdminQuote = deleteAdminQuote;
+
+async function saveQuotesToSupabase() {
+    try {
+        await supabase
+            .from('quotes')
+            .delete()
+            .neq('id', 'none');
+        
+        if (adminQuotes.length > 0) {
+            const { error } = await supabase
+                .from('quotes')
+                .insert(
+                    adminQuotes.map(q => ({
+                        id: q.id,
+                        text: q.text,
+                        tags: q.tags || ['عام'],
+                        products: q.products || ['all'],
+                        created_at: q.created_at || new Date().toISOString()
+                    }))
+                );
+            
+            if (error) {
+                console.error('❌ خطأ في حفظ العبارات:', error);
+            } else {
+                console.log('✅ تم حفظ العبارات في قاعدة البيانات');
+            }
+        }
+    } catch (e) {
+        console.error('❌ خطأ في حفظ العبارات:', e);
+    }
+}
+window.saveQuotesToSupabase = saveQuotesToSupabase;
+
+async function loadQuotesFromSupabase() {
+    try {
+        const { data, error } = await supabase
+            .from('quotes')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (error) {
+            console.warn('⚠️ خطأ في تحميل العبارات:', error);
+            return;
+        }
+        
+        if (data && data.length > 0) {
+            adminQuotes = data.map(q => ({
+                id: q.id,
+                text: q.text,
+                tags: q.tags || ['عام'],
+                products: q.products || ['all'],
+                created_at: q.created_at
+            }));
+            localStorage.setItem('tithkari_admin_quotes', JSON.stringify(adminQuotes));
+            renderAdminQuotes();
+            renderQuoteButtons();
+            console.log('✅ تم تحميل ' + adminQuotes.length + ' عبارات من قاعدة البيانات');
+        }
+    } catch (e) {
+        console.error('❌ خطأ في تحميل العبارات:', e);
+    }
+}
+window.loadQuotesFromSupabase = loadQuotesFromSupabase;
+
+// ============================================
+// دوال الصور الإضافية
+// ============================================
+function handleDesignImagesUpload(e) {
+    const files = Array.from(e.target.files);
+    if (designImages.length + files.length > 5) {
+        showToast('⚠️ الحد الأقصى 5 صور', 'error');
+        return;
+    }
+    files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = ev => {
+            designImages.push(ev.target.result);
+            renderDesignImages();
+        };
+        reader.readAsDataURL(file);
+    });
+    showToast('✅ تم رفع الصور', 'success');
+}
+window.handleDesignImagesUpload = handleDesignImagesUpload;
+
+function renderDesignImages() {
+    const container = document.getElementById('designImagesPreview');
+    if (!container) return;
+    container.innerHTML = '';
+    designImages.forEach((img, i) => {
+        const div = document.createElement('div');
+        div.className = 'image-item';
+        div.innerHTML = `
+            <img src="${img}" alt="صورة">
+            <button class="remove-btn" onclick="removeDesignImage(${i})"><i class="fas fa-times"></i></button>
+        `;
+        container.appendChild(div);
+    });
+}
+window.renderDesignImages = renderDesignImages;
+
+function removeDesignImage(index) {
+    designImages.splice(index, 1);
+    renderDesignImages();
+}
+window.removeDesignImage = removeDesignImage;
+
+function uploadTemplateImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('baseImage').src = e.target.result;
+        isUsingProductImage = false;
+        showToast('✅ تم رفع صورة القالب', 'success');
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+}
+window.uploadTemplateImage = uploadTemplateImage;
+
+function applyTemplateImageUrl() {
+    const url = document.getElementById('templateImageUrl').value.trim();
+    if (!url) {
+        showToast('⚠️ الرجاء إدخال رابط صورة', 'warning');
+        return;
+    }
+    document.getElementById('baseImage').src = url;
+    isUsingProductImage = false;
+    showToast('✅ تم تطبيق الرابط', 'success');
+}
+window.applyTemplateImageUrl = applyTemplateImageUrl;
+
+function uploadReferenceImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('referenceImage').src = e.target.result;
+        showToast('✅ تم رفع الصورة المرجعية', 'success');
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+}
+window.uploadReferenceImage = uploadReferenceImage;
+
+function applyReferenceImageUrl() {
+    const url = document.getElementById('referenceImageUrl').value.trim();
+    if (!url) {
+        showToast('⚠️ الرجاء إدخال رابط صورة', 'warning');
+        return;
+    }
+    document.getElementById('referenceImage').src = url;
+    showToast('✅ تم تطبيق الرابط', 'success');
+}
+window.applyReferenceImageUrl = applyReferenceImageUrl;
+
+// ============================================
+// دوال حساب العميل
+// ============================================
+function saveCustomerDesign() {
+    const customerName = prompt('👤 أدخل اسمك لحفظ التصميم:');
+    if (!customerName) {
+        showToast('⚠️ تم إلغاء الحفظ', 'warning');
+        return;
+    }
+    
+    const designData = {
+        id: 'design_' + Date.now(),
+        customerName: customerName,
+        date: new Date().toISOString(),
+        layers: layers.map(l => ({ ...l })),
+        baseImage: document.getElementById('baseImage').src,
+        referenceImage: document.getElementById('referenceImage').src,
+        productName: document.getElementById('productNameDisplay').textContent
+    };
+    
+    const designs = JSON.parse(localStorage.getItem('tithkari_customer_designs') || '[]');
+    designs.push(designData);
+    localStorage.setItem('tithkari_customer_designs', JSON.stringify(designs));
+    
+    showToast('✅ تم حفظ التصميم باسم "' + customerName + '"', 'success');
+    loadCustomerDesigns();
+}
+window.saveCustomerDesign = saveCustomerDesign;
+
+function loadCustomerDesigns() {
+    const designs = JSON.parse(localStorage.getItem('tithkari_customer_designs') || '[]');
+    const container = document.getElementById('customerDesignsList');
+    if (!container) return;
+    
+    if (designs.length === 0) {
+        container.innerHTML = '<p style="color:var(--studio-muted);font-size:9px;">لا توجد تصميمات محفوظة</p>';
+        return;
+    }
+    
+    container.innerHTML = '';
+    designs.forEach((d, i) => {
+        const div = document.createElement('div');
+        div.className = 'layer-item';
+        div.innerHTML = `
+            <span>📁 ${d.customerName} - ${new Date(d.date).toLocaleDateString('ar-SA')}</span>
+            <span>
+                <button class="btn-sm btn-dark" onclick="loadCustomerDesign(${i})">📂 تحميل</button>
+                <button class="btn-sm btn-danger" onclick="deleteCustomerDesign(${i})">🗑️</button>
+            </span>
+        `;
+        container.appendChild(div);
+    });
+}
+window.loadCustomerDesigns = loadCustomerDesigns;
+
+function loadCustomerDesign(index) {
+    const designs = JSON.parse(localStorage.getItem('tithkari_customer_designs') || '[]');
+    const design = designs[index];
+    if (!design) return;
+    
+    layers = design.layers.map(l => ({ ...l }));
+    activeLayerId = null;
+    nextId = layers.length + 1;
+    document.getElementById('baseImage').src = design.baseImage;
+    document.getElementById('referenceImage').src = design.referenceImage;
+    document.getElementById('productNameDisplay').textContent = design.productName || 'درع مخصص';
+    
+    updateAll();
+    saveState();
+    showToast('✅ تم تحميل التصميم بنجاح', 'success');
+}
+window.loadCustomerDesign = loadCustomerDesign;
+
+function deleteCustomerDesign(index) {
+    if (!confirm('هل أنت متأكد من حذف هذا التصميم؟')) return;
+    const designs = JSON.parse(localStorage.getItem('tithkari_customer_designs') || '[]');
+    designs.splice(index, 1);
+    localStorage.setItem('tithkari_customer_designs', JSON.stringify(designs));
+    loadCustomerDesigns();
+    showToast('🗑️ تم حذف التصميم', 'warning');
+}
+window.deleteCustomerDesign = deleteCustomerDesign;
+
+function customerLogin() {
+    const name = prompt('👤 أدخل اسمك:');
+    if (!name) return;
+    currentCustomer = name;
+    document.getElementById('customerInfo').innerHTML = `
+        <p style="color:var(--studio-gold);font-size:10px;">👋 مرحباً ${name}</p>
+        <button class="btn-sm btn-danger" onclick="customerLogout()">تسجيل خروج</button>
+    `;
+    document.getElementById('customerDesignsSection').style.display = 'block';
+    loadCustomerDesigns();
+    showToast('✅ تم تسجيل الدخول بنجاح', 'success');
+}
+window.customerLogin = customerLogin;
+
+function customerLogout() {
+    currentCustomer = null;
+    document.getElementById('customerInfo').innerHTML = `
+        <p style="color:var(--studio-muted);font-size:10px;">سجل الدخول لحفظ تصميماتك</p>
+        <button class="btn-gold btn-sm" onclick="customerLogin()" style="margin-top:4px;">
+            <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+        </button>
+    `;
+    document.getElementById('customerDesignsSection').style.display = 'none';
+    showToast('👋 تم تسجيل الخروج', 'info');
+}
+window.customerLogout = customerLogout;
+
+// ============================================
+// دوال إدارة المسؤول
+// ============================================
+function checkAdminAccess() {
+    const password = prompt('🔐 أدخل كلمة المرور للمسؤول:');
+    if (password === 'admin123') {
+        isAdminUser = true;
+        updateAdminUI(true);
+        showToast('🔐 تم تفعيل وضع المسؤول', 'success');
+        loadQuotesFromSupabase();
+        enableAutoSave();
+    } else {
+        showToast('❌ كلمة المرور غير صحيحة', 'error');
+    }
+}
+window.checkAdminAccess = checkAdminAccess;
+
+function adminLogout() {
+    isAdminUser = false;
+    updateAdminUI(false);
+    disableAutoSave();
+    showToast('👋 تم تسجيل الخروج من وضع المسؤول', 'info');
+}
+window.adminLogout = adminLogout;
+
+function updateAdminUI(adminStatus) {
+    const adminTab = document.getElementById('adminDesignTab');
+    const adminControls = document.querySelectorAll('.admin-controls');
+    const adminOnly = document.querySelectorAll('.admin-only');
+    const loginBtn = document.getElementById('adminLoginBtn');
+    const logoutBtn = document.getElementById('adminLogoutBtn');
+    
+    if (adminTab) {
+        adminTab.style.display = adminStatus ? 'inline-block' : 'none';
+    }
+    
+    adminControls.forEach(el => {
+        el.style.display = adminStatus ? 'block' : 'none';
+        if (adminStatus) {
+            el.classList.add('show');
+        } else {
+            el.classList.remove('show');
         }
     });
     
-    updateLayerCount();
-    saveState();
+    adminOnly.forEach(el => {
+        el.style.display = adminStatus ? 'block' : 'none';
+    });
+    
+    if (loginBtn) {
+        loginBtn.style.display = adminStatus ? 'none' : 'inline-flex';
+    }
+    if (logoutBtn) {
+        logoutBtn.style.display = adminStatus ? 'inline-flex' : 'none';
+    }
 }
-window.loadLayersData = loadLayersData;
+window.updateAdminUI = updateAdminUI;
 
-console.log('✅ Design Studio - تم تحميل الإضافات الجديدة');
-console.log('✅ Design Studio loaded successfully');
+function isAdmin() {
+    return isAdminUser || localStorage.getItem('is_admin') === 'true';
+}
+window.isAdmin = isAdmin;
+
+// ============================================
+// نافذة التصدير
+// ============================================
+function showExportOptions(templateData) {
+    const modal = document.getElementById('exportModal');
+    const previewImg = document.getElementById('exportPreviewImage');
+    const nameEl = document.getElementById('exportTemplateName');
+    const linkedEl = document.getElementById('exportLinkedProduct');
+    
+    if (!modal || !previewImg) return;
+    
+    captureDesignImage().then(imageData => {
+        previewImg.src = imageData;
+        nameEl.textContent = templateData.name || 'قالب مخصص';
+        linkedEl.textContent = templateData.linkedProductName ? '🔗 مرتبط بـ: ' + templateData.linkedProductName : '';
+        
+        window._exportImageData = imageData;
+        window._exportTemplateData = templateData;
+        
+        modal.classList.add('active');
+    }).catch(err => {
+        console.error('❌ خطأ في التقاط الصورة:', err);
+        showToast('❌ حدث خطأ في التقاط الصورة', 'error');
+    });
+}
+window.showExportOptions = showExportOptions;
+
+function closeExportModal() {
+    const modal = document.getElementById('exportModal');
+    if (modal) modal.classList.remove('active');
+    window._exportImageData = null;
+    window._exportTemplateData = null;
+}
+window.closeExportModal = closeExportModal;
+
+function downloadTemplateImage() {
+    if (window._exportImageData) {
+        const link = document.createElement('a');
+        link.download = 'قالب_' + Date.now() + '.png';
+        link.href = window._exportImageData;
+        link.click();
+        showToast('✅ تم تحميل الصورة', 'success');
+    }
+}
+window.downloadTemplateImage = downloadTemplateImage;
+
+function sendViaWhatsApp() {
+    const whatsappNumber = localStorage.getItem('tithkari_whatsapp_link') || '966500000000';
+    const cleanNumber = whatsappNumber.replace('https://wa.me/', '').replace(/[^0-9]/g, '');
+    
+    const templateName = window._exportTemplateData?.name || document.getElementById('productNameDisplay').textContent || 'درع مخصص';
+    
+    const message = encodeURIComponent(
+        '🛡️ طلب تصميم درع مخصص\n\n' +
+        '📝 اسم التصميم: ' + templateName + '\n' +
+        '📅 التاريخ: ' + new Date().toLocaleDateString('ar-SA') + '\n\n' +
+        '🔗 تم تصميم هذا الدرع باستخدام Tithkari Studio\n' +
+        '📸 الصورة مرفقة في المحادثة'
+    );
+    
+    window.open('https://wa.me/' + cleanNumber + '?text=' + message, '_blank');
+    showToast('✅ تم فتح واتساب', 'success');
+}
+window.sendViaWhatsApp = sendViaWhatsApp;
+
+// ============================================
+// التهيئة
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Design Studio - Initializing...');
+    
+    loadProductsList();
+    loadTemplates();
+    loadAdminQuotes();
+    loadQuotesFromSupabase();
+    loadCustomerDesigns();
+    
+    addDefaultTextLayer();
+    addTextLayer('اسم صاحب الإهداء', '42%', '5%', '90%', '45px');
+    addTextLayer('عبارة الإهداء أو التكريم', '52%', '5%', '90%', '30%');
+    
+    updateAll();
+    
+    const session = localStorage.getItem('session');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const isAdminFromStorage = session && (user?.email === 'admin@tithkari.com' || user?.role === 'admin' || localStorage.getItem('is_admin') === 'true');
+    
+    if (isAdminFromStorage) {
+        isAdminUser = true;
+        updateAdminUI(true);
+        enableAutoSave();
+    }
+
+    const tabsNav = document.getElementById('tabsNav');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+    if (tabsNav) {
+        tabsNav.addEventListener('click', function(e) {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+            tabsNav.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            tabPanels.forEach(p => p.classList.remove('active'));
+            const tabId = btn.dataset.tab;
+            const target = document.getElementById('tab-' + tabId);
+            if (target) target.classList.add('active');
+        });
+    }
+
+    if (!loadProductFromUrl()) {
+        restoreSession();
+    }
+
+    console.log('✅ Design Studio initialized successfully');
+    console.log('🔐 Connected to Supabase');
+    console.log('👑 Admin mode:', isAdminUser);
+    console.log('💾 Auto-save:', !!autoSaveTimer);
+});
+
+console.log('✅ All functions registered to window');

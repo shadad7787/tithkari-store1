@@ -1061,17 +1061,63 @@
 <div id="toastContainer"></div>
 
 <!-- ===== Scripts ===== -->
-<script>
+<script type="module">
     // ============================================
-    // 🔧 إصلاح: تهيئة Supabase يدوياً
+    // استيراد المفاتيح من keys.js
     // ============================================
-    const supabaseUrl = 'https://savtqajghyloevzwrzvt.supabase.co';
-    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhdnRxYWpnaHlsb2V2endyenZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3ODA1OTMsImV4cCI6MjA5ODM1NjU5M30.CBq7eKyr3RR11op_SevMBBcKQNKF7uftpaa-URemEww';
+    import KEYS from './keys.js';
+
+    // ============================================
+    // إعدادات Supabase - مستوردة من keys.js
+    // ============================================
+    const supabaseUrl = KEYS.supabaseUrl;
+    const supabaseAnonKey = KEYS.supabaseAnonKey;
     
-    // ✅ تهيئة عميل Supabase بشكل صحيح
-    const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
-    
-    console.log('✅ Supabase client initialized successfully');
+    let supabaseClient = null;
+    let supabaseReady = false;
+
+    function initSupabase() {
+        try {
+            if (typeof window.supabase !== 'undefined' && window.supabase) {
+                supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+                supabaseReady = true;
+                console.log('✅ Supabase initialized with keys from keys.js');
+                return true;
+            }
+            
+            console.warn('⚠️ Supabase library not found, attempting dynamic load...');
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+                script.onload = function() {
+                    try {
+                        supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+                        supabaseReady = true;
+                        console.log('✅ Supabase initialized (dynamic load)');
+                        resolve(true);
+                    } catch (err) {
+                        console.error('❌ Failed to create Supabase client:', err);
+                        reject(err);
+                    }
+                };
+                script.onerror = function() {
+                    console.error('❌ Failed to load Supabase library');
+                    showToast('⚠️ فشل تحميل Supabase، يرجى تحديث الصفحة', 'error');
+                    reject(new Error('Supabase library load failed'));
+                };
+                document.head.appendChild(script);
+            });
+        } catch (error) {
+            console.error('❌ Supabase init error:', error);
+            showToast('⚠️ خطأ في تهيئة Supabase', 'error');
+            return false;
+        }
+    }
+
+    // تهيئة Supabase فوراً
+    initSupabase();
+
+    console.log('🔐 Keys loaded from keys.js');
     
     // ============================================
     // 🔧 دالة الحصول على صورة افتراضية (SVG) - تجنب مشكلة 404
@@ -1173,6 +1219,16 @@
     async function loadPaymentSettings() {
         try {
             console.log('📋 جاري تحميل إعدادات الدفع من Supabase...');
+            
+            if (!supabaseReady || !supabaseClient) {
+                await initSupabase();
+                if (!supabaseReady || !supabaseClient) {
+                    paymentSettings = getDefaultPaymentSettings();
+                    renderPaymentSettings();
+                    updateBankDetails();
+                    return;
+                }
+            }
             
             const { data, error } = await supabaseClient
                 .from('store_settings')
@@ -1329,6 +1385,13 @@
         try {
             console.log('🚚 جاري تحميل شركات الشحن...');
             
+            if (!supabaseReady || !supabaseClient) {
+                await initSupabase();
+                if (!supabaseReady || !supabaseClient) {
+                    return;
+                }
+            }
+            
             const { data, error } = await supabaseClient
                 .from('shipping_methods')
                 .select('*')
@@ -1396,6 +1459,13 @@
     async function loadCheckoutFields() {
         try {
             console.log('📋 جاري تحميل حقول الطلب...');
+            
+            if (!supabaseReady || !supabaseClient) {
+                await initSupabase();
+                if (!supabaseReady || !supabaseClient) {
+                    return;
+                }
+            }
             
             const { data, error } = await supabaseClient
                 .from('checkout_fields')
@@ -1505,6 +1575,13 @@
         const bucketName = 'order-images';
         
         try {
+            if (!supabaseReady || !supabaseClient) {
+                await initSupabase();
+                if (!supabaseReady || !supabaseClient) {
+                    return urls;
+                }
+            }
+            
             const { data: buckets } = await supabaseClient.storage.listBuckets();
             const bucketExists = buckets.some(b => b.name === bucketName);
             
@@ -1885,6 +1962,46 @@
                 console.log('✅ تم رفع الصور:', uploadedImageUrls);
             }
             
+            if (!supabaseReady || !supabaseClient) {
+                await initSupabase();
+                if (!supabaseReady || !supabaseClient) {
+                    showToast('⚠️ Supabase غير متصل، حفظ الطلب محلياً', 'error');
+                    // حفظ الطلب محلياً
+                    const orders = JSON.parse(localStorage.getItem('tithkari_orders') || '[]');
+                    orders.push({
+                        order_number: orderNumber,
+                        customer_name: name,
+                        customer_email: email,
+                        customer_phone: phone,
+                        shipping_address: `${address}${city ? ', ' + city : ''}`,
+                        notes: additionalNotes || '',
+                        items: cart,
+                        total_amount: total,
+                        discount_applied: discount,
+                        coupon_code: appliedCoupon?.code || null,
+                        currency: currentCurrency,
+                        status: 'pending',
+                        payment_method: selectedPaymentMethod,
+                        occasion_type: occasionType,
+                        occasion_text: occasionText,
+                        dedication_text: dedicationText,
+                        person_name: personName,
+                        dynamic_fields: dynamicFields,
+                        uploaded_images: uploadedImageUrls,
+                        uploaded_files_names: uploadedFiles.map(f => f.name),
+                        created_at: new Date().toISOString(),
+                        offline: true
+                    });
+                    localStorage.setItem('tithkari_orders', JSON.stringify(orders));
+                    
+                    showToast(`🎉 تم حفظ الطلب محلياً! رقم الطلب: ${orderNumber}`, 'success');
+                    setTimeout(() => {
+                        window.location.href = `thank-you.html?order=${orderNumber}&total=${total}&method=${selectedPaymentMethod}`;
+                    }, 1500);
+                    return;
+                }
+            }
+            
             const { data, error } = await supabaseClient
                 .from('orders')
                 .insert({
@@ -1962,6 +2079,7 @@
     // ============================================
     document.addEventListener('DOMContentLoaded', async function() {
         console.log('🚀 Checkout page loaded');
+        console.log('🔐 Keys loaded from keys.js');
         console.log('📌 للتصحيح، اكتب: debugCheckoutData()');
         window.debugCheckoutData = debugCheckoutData;
         

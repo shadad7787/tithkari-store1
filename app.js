@@ -1,17 +1,19 @@
 // ============================================
-// استيراد Supabase
+// استيراد Supabase ونظام المفاتيح
 // ============================================
 import { createClient } from '@supabase/supabase-js';
+import KEYS from './keys.js';
 
 // ============================================
-// إعدادات Supabase
+// إعدادات Supabase - مستوردة من keys.js فقط
 // ============================================
-const supabaseUrl = 'https://savtqajghyloevzwrzvt.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhdnRxYWpnaHlsb2V2endyenZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3ODA1OTMsImV4cCI6MjA5ODM1NjU5M30.CBq7eKyr3RR11op_SevMBBcKQNKF7uftpaa-URemEww';
+const supabaseUrl = KEYS.supabaseUrl;
+const supabaseAnonKey = KEYS.supabaseAnonKey;
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 console.log('✅ Supabase initialized');
+console.log('🔐 Keys loaded from keys.js');
 
 // ============================================
 // 🛠️ دالة مساعدة للحصول على صورة افتراضية (SVG)

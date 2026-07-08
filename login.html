@@ -399,11 +399,24 @@
         </div>
     </div>
     
-    <script>
+    <script type="module">
+        // ============================================
+        // استيراد المفاتيح من keys.js
+        // ============================================
+        import KEYS from './keys.js';
+
+        console.log('🔐 Keys loaded from keys.js');
+
+        // ============================================
+        // إعدادات Supabase - مستوردة من keys.js
+        // ============================================
+        const SUPABASE_URL = KEYS.supabaseUrl;
+        const SUPABASE_ANON_KEY = KEYS.supabaseAnonKey;
+        
         // ============================================
         // دالة عرض/إخفاء كلمة المرور
         // ============================================
-        function togglePassword() {
+        window.togglePassword = function() {
             const passwordInput = document.getElementById('loginPassword');
             const eyeIcon = document.getElementById('eyeIcon');
             
@@ -414,47 +427,10 @@
                 passwordInput.type = 'password';
                 eyeIcon.className = 'fas fa-eye';
             }
-        }
-        window.togglePassword = togglePassword;
+        };
         
         // ============================================
         // دوال مساعدة
-        // ============================================
-        function handleForgotPassword(event) {
-            event.preventDefault();
-            showToast('📧 سيتم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني', 'info');
-        }
-        window.handleForgotPassword = handleForgotPassword;
-        
-        function handleRegister(event) {
-            event.preventDefault();
-            showToast('🔧 هذه الميزة قيد التطوير حالياً', 'warning');
-        }
-        window.handleRegister = handleRegister;
-    </script>
-    
-    <!-- ===== كود تسجيل الدخول المدمج (بدون import) ===== -->
-    <script>
-        // ============================================
-        // إعدادات Supabase
-        // ============================================
-        const SUPABASE_URL = 'https://savtqajghyloevzwrzvt.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhdnRxYWpnaHlsb2V2endyenZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3ODA1OTMsImV4cCI6MjA5ODM1NjU5M30.CBq7eKyr3RR11op_SevMBBcKQNKF7uftpaa-URemEww';
-        
-        // ============================================
-        // عناصر DOM
-        // ============================================
-        const form = document.getElementById('loginForm');
-        const errorDiv = document.getElementById('loginError');
-        const successDiv = document.getElementById('loginSuccess');
-        const loadingDiv = document.getElementById('loginLoading');
-        const loginBtn = document.getElementById('loginBtn');
-        const emailInput = document.getElementById('loginEmail');
-        const passwordInput = document.getElementById('loginPassword');
-        const rememberMeCheck = document.getElementById('rememberMe');
-        
-        // ============================================
-        // دالة عرض الإشعارات
         // ============================================
         function showToast(message, type = 'info') {
             const colors = { 
@@ -499,6 +475,28 @@
         }
         window.showToast = showToast;
         
+        window.handleForgotPassword = function(event) {
+            event.preventDefault();
+            showToast('📧 سيتم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني', 'info');
+        };
+        
+        window.handleRegister = function(event) {
+            event.preventDefault();
+            showToast('🔧 هذه الميزة قيد التطوير حالياً', 'warning');
+        };
+
+        // ============================================
+        // عناصر DOM
+        // ============================================
+        const form = document.getElementById('loginForm');
+        const errorDiv = document.getElementById('loginError');
+        const successDiv = document.getElementById('loginSuccess');
+        const loadingDiv = document.getElementById('loginLoading');
+        const loginBtn = document.getElementById('loginBtn');
+        const emailInput = document.getElementById('loginEmail');
+        const passwordInput = document.getElementById('loginPassword');
+        const rememberMeCheck = document.getElementById('rememberMe');
+        
         // ============================================
         // دالة تسجيل الدخول
         // ============================================
@@ -529,7 +527,7 @@
             try {
                 console.log('📝 محاولة تسجيل الدخول:', email);
                 
-                // ✅ تحميل Supabase بشكل ديناميكي
+                // ✅ تحميل Supabase بشكل ديناميكي باستخدام المفاتيح المستوردة
                 const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.39.0');
                 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 
@@ -637,6 +635,7 @@
         // ============================================
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 صفحة تسجيل الدخول جاهزة');
+            console.log('🔐 Keys loaded from keys.js');
             
             // ملء البريد وكلمة المرور في حالة وجود تذكرني
             const rememberMe = localStorage.getItem('remember_me');

@@ -1,22 +1,24 @@
 // ==========================================
-// إعدادات بوابات الدفع
+// إعدادات بوابات الدفع - مستوردة من keys.js
 // ==========================================
+
+import KEYS from '../keys.js';
 
 export const PAYMENT_CONFIG = {
     // Stripe
     stripe: {
         enabled: true,
-        publicKey: 'pk_test_XXXXXXXXXXXXXXXXXXXXXXXX',
-        secretKey: '',
+        publicKey: KEYS.stripePublishableKey || 'pk_test_XXXXXXXXXXXXXXXXXXXXXXXX',
+        secretKey: KEYS.stripeSecretKey || '',
         currency: 'usd',
-        successUrl: 'https://shadad7787.github.io/tithkari-store1/thank-you.html',
-        cancelUrl: 'https://shadad7787.github.io/tithkari-store1/checkout.html'
+        successUrl: KEYS.siteUrl ? `${KEYS.siteUrl}/thank-you.html` : 'https://shadad7787.github.io/tithkari-store1/thank-you.html',
+        cancelUrl: KEYS.siteUrl ? `${KEYS.siteUrl}/checkout.html` : 'https://shadad7787.github.io/tithkari-store1/checkout.html'
     },
     
     // PayPal
     paypal: {
         enabled: true,
-        clientId: 'XXXXXXXXXXXXXXXXXXXXXXXX',
+        clientId: KEYS.paypalClientId || 'XXXXXXXXXXXXXXXXXXXXXXXX',
         currency: 'USD',
         intent: 'capture'
     },
@@ -40,6 +42,8 @@ export const PAYMENT_CONFIG = {
     }
 };
 
+console.log('🔐 Payment config loaded from keys.js');
+
 // ==========================================
 // دالة تحويل العملة
 // ==========================================
@@ -58,6 +62,30 @@ export function convertCurrency(amount, fromCurrency, toCurrency) {
 export function formatPrice(amount, currency) {
     const symbol = PAYMENT_CONFIG.currencies[currency]?.symbol || currency;
     return `${symbol} ${amount.toFixed(2)}`;
+}
+
+// ==========================================
+// دالة التحقق من وجود المفاتيح
+// ==========================================
+export function validatePaymentKeys() {
+    const missing = [];
+    
+    if (!PAYMENT_CONFIG.stripe.publicKey || PAYMENT_CONFIG.stripe.publicKey === 'pk_test_XXXXXXXXXXXXXXXXXXXXXXXX') {
+        missing.push('Stripe Public Key');
+    }
+    
+    if (!PAYMENT_CONFIG.paypal.clientId || PAYMENT_CONFIG.paypal.clientId === 'XXXXXXXXXXXXXXXXXXXXXXXX') {
+        missing.push('PayPal Client ID');
+    }
+    
+    if (missing.length > 0) {
+        console.warn(`⚠️ مفاتيح الدفع المفقودة: ${missing.join(', ')}`);
+        console.warn('📦 سيتم استخدام وضع المحاكاة للدفع');
+        return false;
+    }
+    
+    console.log('✅ جميع مفاتيح الدفع موجودة');
+    return true;
 }
 
 export default PAYMENT_CONFIG;
