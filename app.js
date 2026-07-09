@@ -61,6 +61,108 @@ let storeSettings = {
 };
 
 // ============================================
+// ===== 📱 تحسينات أداء الجوال =====
+// ============================================
+
+// كشف نوع الجهاز
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+function isTouchDevice() {
+    return 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
+}
+
+// تحسين التمرير السلس
+function enableSmoothScroll() {
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+}
+
+// تحسين تحميل الصور (Lazy Loading)
+function initLazyLoading() {
+    if ('IntersectionObserver' in window) {
+        const images = document.querySelectorAll('img[data-src]');
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    img.src = img.dataset.src;
+                    img.removeAttribute('data-src');
+                    imageObserver.unobserve(img);
+                }
+            });
+        });
+        
+        images.forEach(img => imageObserver.observe(img));
+    }
+}
+
+// تحسين اللمس - منع التكبير المزدوج والتمرير الخلفي
+function initTouchOptimizations() {
+    // منع التكبير المزدوج
+    document.addEventListener('dblclick', function(e) {
+        e.preventDefault();
+    }, { passive: true });
+    
+    // منع التمرير الخلفي على الجوال
+    let lastTouchY = 0;
+    document.addEventListener('touchstart', function(e) {
+        lastTouchY = e.touches[0].clientY;
+    }, { passive: true });
+    
+    document.addEventListener('touchmove', function(e) {
+        if (e.target.closest('.cart-sidebar') || e.target.closest('.modal-content') || e.target.closest('.custom-scroll')) {
+            // السماح بالتمرير داخل العناصر
+        } else {
+            // منع التمرير الخلفي في الصفحة الرئيسية
+            const touchY = e.touches[0].clientY;
+            const deltaY = touchY - lastTouchY;
+            if (deltaY > 0 && window.scrollY === 0) {
+                e.preventDefault();
+            }
+            lastTouchY = touchY;
+        }
+    }, { passive: false });
+}
+
+// تقليل حركات البانر على الجوال
+function optimizeCarouselForMobile() {
+    if (isMobileDevice()) {
+        if (window.slideInterval) {
+            clearInterval(window.slideInterval);
+            window.slideInterval = setInterval(() => moveSlide(1), 8000);
+        }
+    }
+}
+
+// تهيئة تحسينات الجوال
+function initMobileOptimizations() {
+    if (isMobileDevice()) {
+        document.body.classList.add('mobile-device');
+        enableSmoothScroll();
+        initTouchOptimizations();
+        optimizeCarouselForMobile();
+    }
+    
+    if (isTouchDevice()) {
+        document.body.classList.add('touch-device');
+    }
+    
+    initLazyLoading();
+}
+
+// ============================================
 // ===== دوال العملات =====
 // ============================================
 function getExchangeRate(fromCurrency, toCurrency) {
@@ -401,7 +503,7 @@ async function initCarousel() {
                  style="background: ${banner.bg_color || '#1A1A2E'}; 
                         width: ${banner.width || '100%'}; 
                         height: ${banner.height || 'auto'};">
-                ${hasImage ? `<img src="${banner.image_url}" alt="${banner.title}" />` : ''}
+                ${hasImage ? `<img src="${banner.image_url}" alt="${banner.title}" loading="lazy" />` : ''}
                 <div class="banner-content">
                     <h3>${banner.title}</h3>
                     ${banner.subtitle ? `<p>${banner.subtitle}</p>` : ''}
@@ -425,8 +527,26 @@ async function initCarousel() {
             ).join('');
         }
         
-        document.getElementById('carouselPrev')?.addEventListener('click', () => moveSlide(-1));
-        document.getElementById('carouselNext')?.addEventListener('click', () => moveSlide(1));
+        // تحسين أزرار البانر للجوال
+        const prevBtn = document.getElementById('carouselPrev');
+        const nextBtn = document.getElementById('carouselNext');
+        
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => moveSlide(-1));
+            // تحسين اللمس
+            prevBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                moveSlide(-1);
+            }, { passive: false });
+        }
+        
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => moveSlide(1));
+            nextBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                moveSlide(1);
+            }, { passive: false });
+        }
         
         if (dots) {
             dots.querySelectorAll('.dot').forEach(dot => {
@@ -434,10 +554,19 @@ async function initCarousel() {
                     const index = parseInt(dot.dataset.index);
                     goToSlide(index);
                 });
+                dot.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    const index = parseInt(dot.dataset.index);
+                    goToSlide(index);
+                }, { passive: false });
             });
         }
         
         startAutoPlay();
+        
+        // إيقاف التشغيل التلقائي عند اللمس
+        track.addEventListener('touchstart', stopAutoPlay, { passive: true });
+        track.addEventListener('touchend', startAutoPlay, { passive: true });
         track.addEventListener('mouseenter', stopAutoPlay);
         track.addEventListener('mouseleave', startAutoPlay);
     }
@@ -457,6 +586,8 @@ function goToSlide(index) {
     
     if (!track || !slides || slides.length === 0) return;
     
+    // استخدام transform مع transition سلس
+    track.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
     track.style.transform = `translateX(-${index * 100}%)`;
     currentSlide = index;
     
@@ -467,7 +598,8 @@ function goToSlide(index) {
 
 function startAutoPlay() {
     stopAutoPlay();
-    slideInterval = setInterval(() => moveSlide(1), 5000);
+    const delay = isMobileDevice() ? 8000 : 5000;
+    slideInterval = setInterval(() => moveSlide(1), delay);
 }
 
 function stopAutoPlay() {
@@ -604,9 +736,13 @@ function renderCategories() {
         return;
     }
     
-    container.innerHTML = categories.map(cat => `
-        <div class="category-item" onclick="filterByCategory('${cat.slug}')">
-            ${cat.image_url ? `<img src="${cat.image_url}" alt="${cat.name}" onerror="this.src='${PLACEHOLDER_SMALL}'" />` : `<i class="fas ${cat.icon || 'fa-tag'}"></i>`}
+    // تحسين للجوال: عرض محدود من التصنيفات
+    const maxDisplay = isMobileDevice() ? 6 : categories.length;
+    const displayCategories = categories.slice(0, maxDisplay);
+    
+    container.innerHTML = displayCategories.map(cat => `
+        <div class="category-item" onclick="filterByCategory('${cat.slug}')" role="button" tabindex="0">
+            ${cat.image_url ? `<img src="${cat.image_url}" alt="${cat.name}" loading="lazy" onerror="this.src='${PLACEHOLDER_SMALL}'" />` : `<i class="fas ${cat.icon || 'fa-tag'}"></i>`}
             <span>${cat.name}</span>
         </div>
     `).join('');
@@ -711,7 +847,6 @@ function renderFooter() {
     }
     
     console.log('📋 جاري عرض التذييل، عدد العناصر:', footerItems.length);
-    console.log('📋 البيانات المعروضة:', JSON.stringify(footerItems, null, 2));
     
     if (!footerItems || footerItems.length === 0) {
         container.innerHTML = `
@@ -723,7 +858,9 @@ function renderFooter() {
         return;
     }
     
-    const itemsPerColumn = Math.ceil(footerItems.length / 4);
+    // تحسين للجوال: عرض عدد أقل من الأعمدة
+    const columnsCount = isMobileDevice() ? 2 : 4;
+    const itemsPerColumn = Math.ceil(footerItems.length / columnsCount);
     const columns = [];
     
     for (let i = 0; i < footerItems.length; i += itemsPerColumn) {
@@ -880,7 +1017,7 @@ function renderProducts(productsToShow) {
             productImages = [PLACEHOLDER_IMAGE];
         }
         
-        // بناء معرض الصور
+        // بناء معرض الصور مع تحسينات الجوال
         if (hasMultipleImages) {
             imagesHtml = `
                 <div class="product-image-gallery" data-product-id="${product.id}">
@@ -891,8 +1028,8 @@ function renderProducts(productsToShow) {
                             </div>
                         `).join('')}
                     </div>
-                    <button class="gallery-btn prev" onclick="event.stopPropagation(); moveGallery('${product.id}', -1)">‹</button>
-                    <button class="gallery-btn next" onclick="event.stopPropagation(); moveGallery('${product.id}', 1)">›</button>
+                    <button class="gallery-btn prev" onclick="event.stopPropagation(); moveGallery('${product.id}', -1)" aria-label="السابق">‹</button>
+                    <button class="gallery-btn next" onclick="event.stopPropagation(); moveGallery('${product.id}', 1)" aria-label="التالي">›</button>
                     <div class="gallery-dots">
                         ${productImages.map((_, i) => `
                             <span class="dot ${i === 0 ? 'active' : ''}" onclick="event.stopPropagation(); goToGallerySlide('${product.id}', ${i})"></span>
@@ -922,21 +1059,24 @@ function renderProducts(productsToShow) {
             promoBadge = `<span class="product-promo-badge custom">🎨 مخصص</span>`;
         }
         
+        // تحسين للجوال: عرض أقل للتفاصيل
+        const isMobile = isMobileDevice();
+        
         return `
-        <div class="product-card" onclick="openProductModal('${product.id}')">
+        <div class="product-card" onclick="openProductModal('${product.id}')" role="button" tabindex="0">
             <div class="product-image-wrapper">
                 ${imagesHtml}
                 ${promoBadge}
                 ${product.stock === 0 ? '<span class="product-badge sale">نفذ</span>' : ''}
                 <div class="product-actions">
-                    <button class="action-btn" onclick="event.stopPropagation(); addToCartFromCard('${product.id}')">
-                        <i class="fas fa-cart-plus"></i> أضف
+                    <button class="action-btn" onclick="event.stopPropagation(); addToCartFromCard('${product.id}')" aria-label="أضف للسلة">
+                        <i class="fas fa-cart-plus"></i> ${isMobile ? '' : 'أضف'}
                     </button>
-                    <button class="action-btn quick-view" onclick="event.stopPropagation(); openProductModal('${product.id}')">
+                    <button class="action-btn quick-view" onclick="event.stopPropagation(); openProductModal('${product.id}')" aria-label="عرض سريع">
                         <i class="fas fa-eye"></i>
                     </button>
-                    <button class="action-btn customize-btn" onclick="event.stopPropagation(); openDesignStudio('${product.image_url || PLACEHOLDER_IMAGE}', '${product.name}', '${product.id}')">
-                        <i class="fas fa-paint-brush"></i> تخصيص
+                    <button class="action-btn customize-btn" onclick="event.stopPropagation(); openDesignStudio('${product.image_url || PLACEHOLDER_IMAGE}', '${product.name}', '${product.id}')" aria-label="تخصيص">
+                        <i class="fas fa-paint-brush"></i>
                     </button>
                 </div>
             </div>
@@ -961,7 +1101,7 @@ function renderProducts(productsToShow) {
         </div>
     `}).join('');
     
-    // تهيئة معارض الصور
+    // تهيئة معارض الصور بعد التحميل
     setTimeout(() => initGalleries(), 100);
     
     console.log('✅ تم عرض', productsToShow.length, 'منتج');
@@ -1036,6 +1176,7 @@ function goToGallerySlide(productId, index) {
     if (!track || slides.length === 0) return;
     
     const slideWidth = track.offsetWidth || 100;
+    track.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
     track.style.transform = `translateX(-${index * slideWidth}px)`;
     
     // تحديث النقاط
@@ -1495,6 +1636,7 @@ async function openProductModal(productId) {
             <div class="modal-image">
                 <img src="${product.image_url || PLACEHOLDER_IMAGE}" 
                      alt="${product.name}"
+                     loading="lazy"
                      onerror="this.src='${PLACEHOLDER_IMAGE}'" />
             </div>
             <div class="modal-info">
@@ -1527,19 +1669,19 @@ async function openProductModal(productId) {
                 </div>
                 
                 <div class="modal-quantity" style="display:flex;align-items:center;gap:15px;margin:15px 0;">
-                    <button onclick="changeQuantity(-1)" style="width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,215,0,0.2);background:transparent;color:var(--white);font-size:20px;cursor:pointer;">-</button>
+                    <button onclick="changeQuantity(-1)" aria-label="تقليل الكمية">-</button>
                     <span class="quantity-number" id="modalQuantity" style="font-size:20px;font-weight:700;min-width:30px;text-align:center;">1</span>
-                    <button onclick="changeQuantity(1)" style="width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,215,0,0.2);background:transparent;color:var(--white);font-size:20px;cursor:pointer;">+</button>
+                    <button onclick="changeQuantity(1)" aria-label="زيادة الكمية">+</button>
                 </div>
-                <button class="btn-primary" onclick="addFromModal('${product.id}')" style="width:100%;justify-content:center;display:flex;align-items:center;gap:10px;padding:14px 32px;background:linear-gradient(135deg,var(--gold),var(--gold-light));color:var(--dark);border:none;border-radius:50px;font-size:18px;font-weight:700;cursor:pointer;transition:all 0.3s ease;">
+                <button class="btn-primary" onclick="addFromModal('${product.id}')" style="width:100%;justify-content:center;display:flex;align-items:center;gap:10px;padding:14px 32px;background:linear-gradient(135deg,var(--gold),var(--gold-light));color:var(--dark);border:none;border-radius:50px;font-size:18px;font-weight:700;cursor:pointer;transition:all 0.3s ease;min-height:52px;">
                     <i class="fas fa-cart-plus"></i> أضف للسلة
                 </button>
                 <button class="btn-primary" onclick="openDesignStudio('${product.image_url || PLACEHOLDER_IMAGE}', '${product.name}', '${product.id}')" 
-                        style="width:100%;justify-content:center;margin-top:8px;background:linear-gradient(135deg, #8B5CF6, #6D28D9);color:white;border:none;border-radius:50px;padding:14px 32px;font-size:18px;font-weight:700;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;gap:10px;">
+                        style="width:100%;justify-content:center;margin-top:8px;background:linear-gradient(135deg, #8B5CF6, #6D28D9);color:white;border:none;border-radius:50px;padding:14px 32px;font-size:18px;font-weight:700;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;gap:10px;min-height:52px;">
                     <i class="fas fa-paint-brush"></i> 🎨 تخصيص وتصميم الدرع
                 </button>
                 <button class="btn-primary" onclick="redirectToCheckout('${product.id}')" 
-                        style="width:100%;justify-content:center;margin-top:8px;background:linear-gradient(135deg, #10b981, #059669);color:white;border:none;border-radius:50px;padding:14px 32px;font-size:18px;font-weight:700;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;gap:10px;">
+                        style="width:100%;justify-content:center;margin-top:8px;background:linear-gradient(135deg, #10b981, #059669);color:white;border:none;border-radius:50px;padding:14px 32px;font-size:18px;font-weight:700;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;gap:10px;min-height:52px;">
                     <i class="fas fa-credit-card"></i> 💳 إتمام الطلب مباشرة
                 </button>
             </div>
@@ -1678,6 +1820,7 @@ function updateCartUI() {
         <div class="cart-item">
             <img src="${item.image_url || PLACEHOLDER_SMALL}" 
                  alt="${item.name}" 
+                 loading="lazy"
                  onerror="this.src='${PLACEHOLDER_SMALL}'" />
             <div class="cart-item-info">
                 <div class="cart-item-name">${item.name}</div>
@@ -1686,7 +1829,7 @@ function updateCartUI() {
                 ${item.isCustom ? '<span style="color:#8B5CF6;font-size:11px;">🎨 مخصص</span>' : ''}
                 ${customFieldsSummary}
             </div>
-            <button class="cart-item-remove" onclick="removeFromCart('${item.id}')">
+            <button class="cart-item-remove" onclick="removeFromCart('${item.id}')" aria-label="إزالة المنتج">
                 <i class="fas fa-trash"></i>
             </button>
         </div>
@@ -2183,6 +2326,9 @@ function watchFooterUpdates() {
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('🚀 جاري تهيئة المتجر...');
     
+    // 📱 تهيئة تحسينات الجوال
+    initMobileOptimizations();
+    
     await loadStoreSettings();
     loadCartFromStorage();
     await loadSettings();
@@ -2209,26 +2355,47 @@ document.addEventListener('DOMContentLoaded', async function() {
     const cartToggle = document.getElementById('cartToggle');
     if (cartToggle) {
         cartToggle.addEventListener('click', toggleCart);
+        // تحسين اللمس
+        cartToggle.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            toggleCart();
+        }, { passive: false });
     }
     
     const closeCart = document.getElementById('closeCart');
     if (closeCart) {
         closeCart.addEventListener('click', toggleCart);
+        closeCart.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            toggleCart();
+        }, { passive: false });
     }
     
     const cartOverlay = document.getElementById('cartOverlay');
     if (cartOverlay) {
         cartOverlay.addEventListener('click', toggleCart);
+        cartOverlay.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            toggleCart();
+        }, { passive: false });
     }
     
     const checkoutBtn = document.getElementById('checkoutBtn');
     if (checkoutBtn) {
         checkoutBtn.addEventListener('click', handleCheckout);
+        checkoutBtn.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            handleCheckout();
+        }, { passive: false });
     }
     
     const modalClose = document.getElementById('modalClose');
     if (modalClose) {
         modalClose.addEventListener('click', closeModal);
+        modalClose.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            closeModal();
+        }, { passive: false });
     }
     
     const productModal = document.getElementById('productModal');
@@ -2256,6 +2423,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     
     console.log('✅ تم تهيئة المتجر بنجاح');
+    console.log('📱 وضع الجوال:', isMobileDevice());
+    console.log('👆 جهاز يعمل باللمس:', isTouchDevice());
 });
 
 // ============================================

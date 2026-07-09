@@ -1,23 +1,78 @@
-/* ===== لوحة التحكم ===== */
+/* ===== لوحة التحكم - Tithkari Admin ===== */
+/* ===== تحسينات الجوال متضمنة ===== */
+
+/* ===== إعادة تعيين وتحسينات أساسية ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+}
+
+:root {
+    --dark: #0F0F1A;
+    --dark-light: #1A1A2E;
+    --gray: #8A8A9B;
+    --gold: #FFD700;
+    --gold-light: #FFED4A;
+    --white: #FFFFFF;
+    --radius: 16px;
+    --radius-sm: 8px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --font-family: 'Cairo', 'Segoe UI', sans-serif;
+}
+
+html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    touch-action: manipulation;
+}
+
+body {
+    font-family: var(--font-family);
+    background: var(--dark);
+    color: var(--white);
+    direction: rtl;
+    min-height: 100vh;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== الحاوية الرئيسية ===== */
 .admin-container {
     display: flex;
     min-height: 100vh;
+    width: 100%;
+    max-width: 100vw;
+    overflow: hidden;
     background: var(--dark);
-    color: var(--light);
+    color: var(--white);
 }
 
-/* الشريط الجانبي */
+/* ===== الشريط الجانبي ===== */
 .admin-sidebar {
-    width: 280px;
+    width: 240px;
+    min-width: 240px;
     background: var(--dark-light);
-    padding: 30px 20px;
-    border-left: 1px solid rgba(255, 215, 0, 0.1);
+    padding: 20px 0;
+    border-left: 1px solid rgba(255, 215, 0, 0.05);
     display: flex;
     flex-direction: column;
+    height: 100vh;
     position: sticky;
     top: 0;
-    height: 100vh;
     overflow-y: auto;
+    overflow-x: hidden;
+    transition: var(--transition);
+    z-index: 100;
+    -webkit-overflow-scrolling: touch;
 }
 
 .admin-sidebar::-webkit-scrollbar {
@@ -30,14 +85,20 @@
 
 .admin-sidebar::-webkit-scrollbar-thumb {
     background: rgba(255, 215, 0, 0.2);
-    border-radius: 2px;
+    border-radius: 10px;
 }
 
+.admin-sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 215, 0, 0.3);
+}
+
+/* ===== شعار لوحة التحكم ===== */
 .admin-logo {
     text-align: center;
     margin-bottom: 30px;
     padding-bottom: 20px;
-    border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+    border-bottom: 1px solid rgba(255, 215, 0, 0.05);
+    flex-shrink: 0;
 }
 
 .admin-logo i {
@@ -59,11 +120,15 @@
     font-size: 14px;
 }
 
+/* ===== قائمة التنقل ===== */
 .admin-nav {
     flex: 1;
     display: flex;
     flex-direction: column;
     gap: 5px;
+    padding: 5px 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .admin-nav a {
@@ -76,30 +141,51 @@
     align-items: center;
     gap: 12px;
     font-weight: 600;
+    font-size: 14px;
+    min-height: 44px;
+    touch-action: manipulation;
+    cursor: pointer;
+    border-right: 3px solid transparent;
 }
 
 .admin-nav a:hover {
     background: rgba(255, 215, 0, 0.05);
     color: var(--gold);
+    transform: translateX(-3px);
+}
+
+.admin-nav a:active {
+    transform: scale(0.97);
 }
 
 .admin-nav a.active {
     background: rgba(255, 215, 0, 0.1);
     color: var(--gold);
+    border-right-color: var(--gold);
 }
 
 .admin-nav a i {
     width: 20px;
     text-align: center;
+    font-size: 16px;
+    flex-shrink: 0;
 }
 
+.admin-nav a span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ===== القسم السفلي من الشريط الجانبي ===== */
 .admin-bottom {
     margin-top: 20px;
-    border-top: 1px solid rgba(255, 215, 0, 0.1);
+    border-top: 1px solid rgba(255, 215, 0, 0.05);
     padding-top: 20px;
     display: flex;
     flex-direction: column;
     gap: 10px;
+    flex-shrink: 0;
 }
 
 .admin-back {
@@ -111,11 +197,30 @@
     text-align: center;
     font-weight: 700;
     transition: var(--transition);
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    touch-action: manipulation;
 }
 
 .admin-back:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
+}
+
+.admin-back:active {
+    transform: scale(0.97);
+}
+
+.admin-back.admin-design {
+    background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+    color: white;
+}
+
+.admin-back.admin-design:hover {
+    opacity: 0.85;
 }
 
 .admin-logout {
@@ -127,8 +232,14 @@
     text-align: center;
     font-weight: 700;
     cursor: pointer;
-    font-family: 'Cairo', sans-serif;
+    font-family: var(--font-family);
     transition: var(--transition);
+    min-height: 44px;
+    touch-action: manipulation;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
 .admin-logout:hover {
@@ -136,20 +247,27 @@
     color: white;
 }
 
-/* المحتوى الرئيسي */
+.admin-logout:active {
+    transform: scale(0.97);
+}
+
+/* ===== المحتوى الرئيسي ===== */
 .admin-main {
     flex: 1;
     padding: 30px;
     overflow-x: hidden;
+    min-height: 100vh;
+    -webkit-overflow-scrolling: touch;
 }
 
+/* ===== هيدر المحتوى ===== */
 .admin-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 30px;
     padding-bottom: 20px;
-    border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+    border-bottom: 1px solid rgba(255, 215, 0, 0.05);
     flex-wrap: wrap;
     gap: 10px;
 }
@@ -157,6 +275,9 @@
 .admin-header h1 {
     font-size: 28px;
     color: var(--gold);
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .admin-user {
@@ -164,6 +285,7 @@
     align-items: center;
     gap: 10px;
     color: var(--gray);
+    font-size: 14px;
 }
 
 .admin-user i {
@@ -171,7 +293,7 @@
     color: var(--gold);
 }
 
-/* التبويبات */
+/* ===== التبويبات ===== */
 .admin-tab {
     display: none;
 }
@@ -186,7 +308,7 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* الإحصائيات */
+/* ===== الإحصائيات ===== */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -198,16 +320,21 @@
     background: var(--dark-light);
     padding: 25px;
     border-radius: var(--radius);
-    border: 1px solid rgba(255, 215, 0, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.05);
     display: flex;
     align-items: center;
     gap: 15px;
     transition: var(--transition);
+    touch-action: manipulation;
 }
 
 .stat-card:hover {
     border-color: var(--gold);
     transform: translateY(-5px);
+}
+
+.stat-card:active {
+    transform: scale(0.98);
 }
 
 .stat-card i {
@@ -233,29 +360,53 @@
     background: var(--dark-light);
     border-radius: var(--radius);
     overflow: auto;
-    border: 1px solid rgba(255, 215, 0, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.05);
+    -webkit-overflow-scrolling: touch;
+}
+
+.admin-table-wrapper::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+}
+
+.admin-table-wrapper::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.admin-table-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(255, 215, 0, 0.2);
+    border-radius: 10px;
+}
+
+.admin-table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 215, 0, 0.3);
 }
 
 .admin-table {
     width: 100%;
     border-collapse: collapse;
     min-width: 700px;
+    font-size: 14px;
 }
 
 .admin-table th {
-    background: rgba(255, 215, 0, 0.05);
+    background: rgba(255, 215, 0, 0.03);
     padding: 15px;
     text-align: right;
     color: var(--gold);
     font-weight: 700;
-    border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+    border-bottom: 1px solid rgba(255, 215, 0, 0.05);
     white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 5;
 }
 
 .admin-table td {
     padding: 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
     vertical-align: middle;
+    color: #D0D0D0;
 }
 
 .admin-table tr:hover td {
@@ -267,6 +418,7 @@
     height: 50px;
     object-fit: cover;
     border-radius: 8px;
+    background: var(--dark);
 }
 
 .admin-actions {
@@ -283,8 +435,9 @@
     background: var(--dark-light);
     padding: 30px;
     border-radius: var(--radius);
-    border: 1px solid rgba(255, 215, 0, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.05);
     max-width: 600px;
+    width: 100%;
 }
 
 .admin-form .form-group {
@@ -296,6 +449,7 @@
     margin-bottom: 8px;
     color: var(--gray);
     font-weight: 600;
+    font-size: 14px;
 }
 
 .admin-form label .required {
@@ -306,13 +460,16 @@
 .admin-form textarea,
 .admin-form select {
     width: 100%;
-    padding: 12px;
+    padding: 12px 16px;
     border-radius: 8px;
     background: var(--dark);
-    color: var(--light);
-    border: 1px solid rgba(255, 215, 0, 0.1);
-    font-family: 'Cairo', sans-serif;
+    color: var(--white);
+    border: 1px solid rgba(255, 215, 0, 0.05);
+    font-family: var(--font-family);
+    font-size: 15px;
     transition: var(--transition);
+    min-height: 44px;
+    touch-action: manipulation;
 }
 
 .admin-form input:focus,
@@ -356,31 +513,37 @@
     font-size: 12px;
     font-weight: 600;
     display: inline-block;
+    white-space: nowrap;
 }
 
 .status-pending {
     background: #FFA50020;
     color: #FFA500;
+    border: 1px solid #FFA50030;
 }
 
 .status-processing {
     background: #2196F320;
     color: #2196F3;
+    border: 1px solid #2196F330;
 }
 
 .status-shipped {
     background: #9C27B020;
     color: #9C27B0;
+    border: 1px solid #9C27B030;
 }
 
 .status-delivered {
     background: #4CAF5020;
     color: #4CAF50;
+    border: 1px solid #4CAF5030;
 }
 
 .status-cancelled {
     background: #F4433620;
     color: #F44336;
+    border: 1px solid #F4433630;
 }
 
 .status-active {
@@ -412,9 +575,14 @@
     border-radius: 5px;
     cursor: pointer;
     font-size: 13px;
-    font-family: 'Cairo', sans-serif;
+    font-family: var(--font-family);
     transition: var(--transition);
     margin: 0 3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 32px;
+    touch-action: manipulation;
 }
 
 .btn-edit {
@@ -424,6 +592,11 @@
 
 .btn-edit:hover {
     background: #1976D2;
+    transform: scale(1.05);
+}
+
+.btn-edit:active {
+    transform: scale(0.95);
 }
 
 .btn-delete {
@@ -433,6 +606,11 @@
 
 .btn-delete:hover {
     background: #D32F2F;
+    transform: scale(1.05);
+}
+
+.btn-delete:active {
+    transform: scale(0.95);
 }
 
 .btn-view {
@@ -442,6 +620,11 @@
 
 .btn-view:hover {
     background: var(--gold-light);
+    transform: scale(1.05);
+}
+
+.btn-view:active {
+    transform: scale(0.95);
 }
 
 .btn-toggle {
@@ -451,8 +634,10 @@
     cursor: pointer;
     font-weight: 600;
     font-size: 12px;
-    font-family: 'Cairo', sans-serif;
+    font-family: var(--font-family);
     transition: var(--transition);
+    min-height: 32px;
+    touch-action: manipulation;
 }
 
 .btn-toggle.active {
@@ -467,6 +652,10 @@
 
 .btn-toggle:hover {
     transform: scale(1.05);
+}
+
+.btn-toggle:active {
+    transform: scale(0.95);
 }
 
 /* ============================================
@@ -484,6 +673,9 @@
 .admin-header-tab h2 {
     color: var(--gold);
     font-size: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 /* ============================================
@@ -530,10 +722,11 @@
     border-radius: 6px;
     background: var(--dark-light);
     color: var(--white);
-    border: 1px solid rgba(255, 215, 0, 0.08);
+    border: 1px solid rgba(255, 215, 0, 0.05);
     font-family: inherit;
     font-size: 14px;
     transition: var(--transition);
+    min-height: 40px;
 }
 
 .store-settings-grid .form-group input:focus,
@@ -581,6 +774,8 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
 .tool-card .tool-status {
@@ -636,6 +831,7 @@
 
 .payment-method-card:hover {
     border-color: rgba(255, 215, 0, 0.15);
+    transform: translateY(-3px);
 }
 
 /* ============================================
@@ -743,6 +939,7 @@
     align-items: center;
     justify-content: center;
     backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
 }
 
 .loading-overlay .loading-content {
@@ -750,7 +947,7 @@
     padding: 30px 40px;
     border-radius: var(--radius);
     text-align: center;
-    border: 1px solid rgba(255, 215, 0, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.05);
 }
 
 .loading-overlay .loading-content .spinner {
@@ -778,12 +975,22 @@
     border: 1px solid rgba(139, 92, 246, 0.2);
     border-radius: 6px;
     cursor: pointer;
-    font-family: 'Cairo', sans-serif;
+    font-family: var(--font-family);
     transition: all 0.3s ease;
+    min-height: 36px;
+    touch-action: manipulation;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .btn-purple:hover {
     background: rgba(139, 92, 246, 0.3);
+    transform: scale(1.05);
+}
+
+.btn-purple:active {
+    transform: scale(0.95);
 }
 
 .btn-green {
@@ -793,12 +1000,22 @@
     border: 1px solid rgba(16, 185, 129, 0.2);
     border-radius: 6px;
     cursor: pointer;
-    font-family: 'Cairo', sans-serif;
+    font-family: var(--font-family);
     transition: all 0.3s ease;
+    min-height: 36px;
+    touch-action: manipulation;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .btn-green:hover {
     background: rgba(16, 185, 129, 0.3);
+    transform: scale(1.05);
+}
+
+.btn-green:active {
+    transform: scale(0.95);
 }
 
 /* ============================================
@@ -820,6 +1037,7 @@
     border-radius: 6px;
     margin-bottom: 6px;
     border: 1px solid rgba(255, 215, 0, 0.05);
+    flex-wrap: wrap;
 }
 
 .dynamic-field-item:hover {
@@ -828,6 +1046,7 @@
 
 .dynamic-field-item .field-info {
     flex: 1;
+    min-width: 100px;
 }
 
 .dynamic-field-item .field-info .name {
@@ -843,6 +1062,7 @@
 .dynamic-field-item .field-actions {
     display: flex;
     gap: 5px;
+    flex-wrap: wrap;
 }
 
 .dynamic-field-item .field-actions button {
@@ -852,6 +1072,12 @@
     padding: 4px 6px;
     border-radius: 4px;
     transition: var(--transition);
+    min-height: 32px;
+    min-width: 32px;
+    touch-action: manipulation;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .dynamic-field-item .field-actions .edit-btn {
@@ -885,9 +1111,10 @@
     background: #0a0a12;
     padding: 15px;
     border-radius: 8px;
-    border: 1px solid rgba(255, 215, 0, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.05);
     max-height: 500px;
     overflow: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .code-preview-container pre {
@@ -917,9 +1144,11 @@
     background: var(--dark-light);
     color: var(--white);
     border: 1px solid rgba(255, 255, 255, 0.05);
-    font-family: 'Cairo', sans-serif;
+    font-family: var(--font-family);
     min-width: 200px;
     transition: var(--transition);
+    min-height: 44px;
+    touch-action: manipulation;
 }
 
 .search-container input:focus {
@@ -938,8 +1167,10 @@
     background: var(--dark-light);
     color: var(--white);
     border: 1px solid rgba(255, 255, 255, 0.05);
-    font-family: 'Cairo', sans-serif;
+    font-family: var(--font-family);
     transition: var(--transition);
+    min-height: 44px;
+    touch-action: manipulation;
 }
 
 .search-container select:focus {
@@ -966,6 +1197,7 @@
     align-items: center;
     gap: 10px;
     font-size: 14px;
+    min-height: 44px;
 }
 
 .stat-item .count {
@@ -987,6 +1219,7 @@
     align-items: center;
     padding: 20px;
     backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
 }
 
 .modal-overlay.active {
@@ -1001,8 +1234,9 @@
     max-height: 90vh;
     overflow-y: auto;
     padding: 30px;
-    border: 1px solid rgba(255, 215, 0, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.05);
     animation: modalFade 0.3s ease;
+    -webkit-overflow-scrolling: touch;
 }
 
 @keyframes modalFade {
@@ -1021,10 +1255,20 @@
     cursor: pointer;
     font-size: 18px;
     transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 35px;
+    min-width: 35px;
+    touch-action: manipulation;
 }
 
 .modal-close:hover {
     background: rgba(239, 68, 68, 0.3);
+}
+
+.modal-close:active {
+    transform: scale(0.95);
 }
 
 .modal-content h2 {
@@ -1033,6 +1277,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    font-size: 24px;
 }
 
 .modal-content::-webkit-scrollbar {
@@ -1061,9 +1306,15 @@
     gap: 15px;
 }
 
+/* ============================================
+   📱 تحسينات التوافق مع الجوال
+   ============================================ */
+
+/* الأجهزة المتوسطة والصغيرة (تابلت وهواتف) */
 @media (max-width: 992px) {
     .admin-sidebar {
         width: 80px;
+        min-width: 80px;
         padding: 15px 10px;
     }
     
@@ -1074,11 +1325,13 @@
     
     .admin-nav a {
         justify-content: center;
-        padding: 15px;
+        padding: 15px 10px;
+        min-height: 48px;
     }
     
     .admin-nav a i {
         font-size: 20px;
+        width: 24px;
     }
     
     .admin-main {
@@ -1087,72 +1340,7 @@
     
     .stats-grid {
         grid-template-columns: 1fr 1fr;
-    }
-}
-
-@media (max-width: 768px) {
-    .admin-container {
-        flex-direction: column;
-    }
-    
-    .admin-sidebar {
-        width: 100%;
-        height: auto;
-        flex-direction: row;
-        flex-wrap: wrap;
-        padding: 10px 15px;
-        position: relative;
-        border-left: none;
-        border-bottom: 1px solid rgba(255, 215, 0, 0.1);
-    }
-    
-    .admin-nav {
-        flex-direction: row;
-        flex-wrap: wrap;
-    }
-    
-    .admin-nav a {
-        font-size: 13px;
-        padding: 8px 12px;
-    }
-    
-    .admin-bottom {
-        flex-direction: row;
-        border-top: none;
-        padding-top: 0;
-        margin-top: 0;
-    }
-    
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .admin-table {
-        font-size: 13px;
-        min-width: 500px;
-    }
-    
-    .admin-table th,
-    .admin-table td {
-        padding: 10px;
-    }
-    
-    .admin-header-tab {
-        flex-direction: column;
-        align-items: stretch;
-        text-align: center;
-    }
-    
-    .store-settings-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .tools-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .payment-methods-grid {
-        grid-template-columns: 1fr;
+        gap: 12px;
     }
     
     .admin-form .form-row {
@@ -1163,13 +1351,357 @@
         grid-template-columns: 1fr;
     }
     
+    .store-settings-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .admin-header h1 {
+        font-size: 22px;
+    }
+}
+
+/* الأجهزة الصغيرة (هواتف) */
+@media (max-width: 768px) {
+    .admin-container {
+        flex-direction: column;
+    }
+    
+    .admin-sidebar {
+        width: 100%;
+        min-width: unset;
+        height: auto;
+        max-height: 60vh;
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: 10px 15px;
+        position: relative;
+        border-left: none;
+        border-bottom: 1px solid rgba(255, 215, 0, 0.05);
+        overflow-y: auto;
+    }
+    
+    .admin-sidebar .admin-logo {
+        width: 100%;
+        padding: 0 0 10px 0;
+        margin-bottom: 10px;
+    }
+    
+    .admin-sidebar .admin-logo i {
+        font-size: 28px;
+    }
+    
+    .admin-sidebar .admin-logo span {
+        font-size: 18px;
+    }
+    
+    .admin-nav {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 5px 0;
+        gap: 4px;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+        width: 100%;
+    }
+    
+    .admin-nav a {
+        flex: 0 0 auto;
+        padding: 8px 14px;
+        margin: 0 2px;
+        border-radius: 8px;
+        border-right: none;
+        border-bottom: 2px solid transparent;
+        font-size: 12px;
+        min-height: 40px;
+        white-space: nowrap;
+        scroll-snap-align: start;
+        justify-content: center;
+    }
+    
+    .admin-nav a.active {
+        border-right: none;
+        border-bottom-color: var(--gold);
+    }
+    
+    .admin-nav a span {
+        font-size: 11px;
+        display: inline;
+    }
+    
+    .admin-nav a i {
+        font-size: 14px;
+        width: 18px;
+    }
+    
+    .admin-bottom {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 6px;
+        border-top: none;
+        padding-top: 0;
+        margin-top: 0;
+        width: 100%;
+    }
+    
+    .admin-bottom .admin-back {
+        font-size: 12px;
+        padding: 6px 12px;
+        min-height: 36px;
+    }
+    
+    .admin-logout {
+        font-size: 12px;
+        padding: 6px 12px;
+        min-height: 36px;
+    }
+    
+    .admin-main {
+        padding: 15px;
+        max-width: 100%;
+    }
+    
+    .admin-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .admin-header h1 {
+        font-size: 20px;
+        justify-content: center;
+    }
+    
+    .admin-user {
+        justify-content: center;
+        font-size: 13px;
+    }
+    
+    .admin-user i {
+        font-size: 28px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    
+    .stat-card {
+        padding: 15px;
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+    }
+    
+    .stat-card i {
+        font-size: 28px;
+        width: auto;
+    }
+    
+    .stat-card h3 {
+        font-size: 22px;
+    }
+    
+    .stat-card p {
+        font-size: 12px;
+    }
+    
+    .admin-table-wrapper {
+        margin: 0 -8px;
+        padding: 0 8px;
+    }
+    
+    .admin-table {
+        font-size: 12px;
+        min-width: 500px;
+    }
+    
+    .admin-table th,
+    .admin-table td {
+        padding: 10px 12px;
+    }
+    
+    .admin-table .product-thumb {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .admin-table .status-badge {
+        font-size: 10px;
+        padding: 2px 8px;
+    }
+    
+    .admin-form {
+        padding: 20px;
+    }
+    
+    .admin-form .form-group input,
+    .admin-form .form-group textarea,
+    .admin-form .form-group select {
+        font-size: 14px;
+        padding: 10px 14px;
+        min-height: 40px;
+    }
+    
+    .admin-header-tab {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    
+    .admin-header-tab h2 {
+        font-size: 18px;
+    }
+    
+    .admin-header-tab .btn-primary,
+    .admin-header-tab .btn-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .admin-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .admin-actions .btn-primary,
+    .admin-actions .btn-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .analytics-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    
+    .analytics-card {
+        padding: 15px;
+    }
+    
+    .analytics-card p {
+        font-size: 18px;
+    }
+    
+    .chart-container {
+        padding: 15px;
+        overflow-x: auto;
+    }
+    
     .modal-content {
         padding: 20px;
         max-width: 95%;
+        margin: 10px;
+        max-height: 95vh;
     }
     
-    .stats {
-        justify-content: center;
+    .modal-content h2 {
+        font-size: 20px;
+    }
+    
+    .modal-close {
+        width: 30px;
+        height: 30px;
+        font-size: 16px;
+        min-height: 30px;
+        min-width: 30px;
+    }
+    
+    .code-editor-container {
+        flex-direction: column;
+    }
+    
+    .code-editor-sidebar {
+        width: 100% !important;
+        min-width: unset;
+        margin-bottom: 15px;
+    }
+    
+    .code-editor-main {
+        width: 100%;
+        min-width: unset;
+    }
+    
+    .code-editor-header {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+    
+    .file-list {
+        max-height: 120px;
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 4px;
+        padding: 4px 0;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .file-item {
+        flex: 0 0 auto;
+        white-space: nowrap;
+        padding: 6px 12px;
+        font-size: 12px;
+        border-radius: 6px;
+        min-height: 32px;
+    }
+    
+    .search-input {
+        max-width: 100%;
+        font-size: 14px;
+        min-height: 40px;
+    }
+    
+    .settings-section .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .settings-section {
+        padding: 15px;
+    }
+    
+    #imagePreview img,
+    #templatePreview img,
+    #editImagePreview img,
+    #editTemplatePreview img {
+        max-width: 100px;
+        max-height: 100px;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        font-size: 13px;
+        padding: 8px 16px;
+        min-height: 40px;
+    }
+    
+    .btn-danger,
+    .btn-success,
+    .btn-purple,
+    .btn-green {
+        font-size: 12px;
+        padding: 4px 10px;
+        min-height: 32px;
+    }
+    
+    .btn-edit,
+    .btn-delete,
+    .btn-view {
+        font-size: 11px;
+        padding: 3px 8px;
+        min-height: 28px;
+    }
+    
+    .tools-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .payment-methods-grid {
+        grid-template-columns: 1fr;
     }
     
     .search-container {
@@ -1179,26 +1711,324 @@
     .search-container input {
         min-width: 150px;
     }
+    
+    .store-settings-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
+/* الأجهزة الصغيرة جداً (هواتف صغيرة) */
 @media (max-width: 480px) {
     .admin-main {
         padding: 10px;
     }
     
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    
+    .stat-card {
+        padding: 10px 8px;
+    }
+    
+    .stat-card i {
+        font-size: 20px;
+    }
+    
+    .stat-card h3 {
+        font-size: 18px;
+    }
+    
+    .stat-card p {
+        font-size: 10px;
+    }
+    
+    .admin-header h1 {
+        font-size: 18px;
+    }
+    
+    .admin-table {
+        font-size: 11px;
+        min-width: 400px;
+    }
+    
+    .admin-table th,
+    .admin-table td {
+        padding: 6px 8px;
+    }
+    
+    .admin-table .product-thumb {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .admin-nav a {
+        padding: 6px 10px;
+        font-size: 11px;
+        min-height: 34px;
+    }
+    
+    .admin-nav a i {
+        font-size: 12px;
+        width: 16px;
+    }
+    
+    .admin-nav a span {
+        font-size: 10px;
+    }
+    
     .modal-content {
         padding: 15px;
+        margin: 5px;
     }
     
-    .tool-card {
-        padding: 15px;
+    .modal-content h2 {
+        font-size: 18px;
     }
     
-    .payment-method-card {
-        padding: 15px;
+    .modal-close {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+        min-height: 28px;
+        min-width: 28px;
     }
     
-    .admin-form {
-        padding: 20px;
+    .analytics-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    
+    .analytics-card p {
+        font-size: 16px;
+    }
+    
+    .admin-form .form-group input,
+    .admin-form .form-group textarea,
+    .admin-form .form-group select {
+        font-size: 13px;
+        padding: 8px 12px;
+        min-height: 36px;
+    }
+    
+    .code-area textarea {
+        font-size: 12px;
+        min-height: 80px;
+        padding: 8px 10px;
+        min-height: 36px;
+    }
+    
+    .admin-bottom .admin-back {
+        font-size: 11px;
+        padding: 4px 8px;
+        min-height: 32px;
+    }
+    
+    .admin-logout {
+        font-size: 11px;
+        padding: 4px 8px;
+        min-height: 32px;
+    }
+    
+    .tools-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .payment-methods-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        font-size: 12px;
+        padding: 6px 12px;
+        min-height: 36px;
+    }
+    
+    .btn-edit,
+    .btn-delete,
+    .btn-view {
+        font-size: 10px;
+        padding: 2px 6px;
+        min-height: 24px;
+    }
+}
+
+/* تحسينات اللمس للجوال */
+@media (hover: none) and (pointer: coarse) {
+    .admin-nav a,
+    .btn-primary,
+    .btn-secondary,
+    .btn-danger,
+    .btn-success,
+    .btn-purple,
+    .btn-green,
+    .btn-edit,
+    .btn-delete,
+    .btn-view,
+    .admin-logout,
+    .admin-back,
+    .file-item,
+    .modal-close,
+    .status-toggle,
+    .btn-toggle,
+    .dynamic-field-item .field-actions button,
+    .search-container input,
+    .search-container select,
+    .admin-form input,
+    .admin-form textarea,
+    .admin-form select {
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+    
+    .admin-nav a:active {
+        background: rgba(255, 215, 0, 0.15);
+    }
+    
+    .btn-primary:active,
+    .btn-secondary:active {
+        transform: scale(0.97);
+    }
+    
+    .stat-card:hover {
+        transform: none;
+    }
+    
+    .admin-nav a:hover {
+        transform: none;
+    }
+    
+    .admin-back:hover {
+        transform: none;
+    }
+    
+    .btn-edit:hover,
+    .btn-delete:hover,
+    .btn-view:hover {
+        transform: none;
+    }
+    
+    .tool-card:hover {
+        transform: none;
+    }
+    
+    .payment-method-card:hover {
+        transform: none;
+    }
+    
+    .dynamic-field-item:hover {
+        border-color: rgba(255, 215, 0, 0.05);
+    }
+}
+
+/* تحسينات التمرير للجوال */
+.admin-table-wrapper,
+.admin-nav,
+.admin-sidebar,
+.modal-content,
+.file-list,
+.code-preview-container {
+    -webkit-overflow-scrolling: touch;
+}
+
+.admin-nav::-webkit-scrollbar {
+    height: 3px;
+}
+
+.admin-nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.admin-nav::-webkit-scrollbar-thumb {
+    background: rgba(255, 215, 0, 0.2);
+    border-radius: 10px;
+}
+
+/* تحسينات العرض في الوضع الأفقي */
+@media (max-width: 768px) and (orientation: landscape) {
+    .admin-sidebar {
+        max-height: 50vh;
+    }
+    
+    .admin-nav {
+        padding: 3px 8px;
+    }
+    
+    .admin-nav a {
+        padding: 4px 10px;
+        font-size: 10px;
+        min-height: 30px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .admin-main {
+        padding: 10px;
+    }
+}
+
+/* تحسينات إمكانية الوصول */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* تحسينات الطباعة */
+@media print {
+    .admin-sidebar,
+    .admin-header,
+    .admin-actions,
+    .admin-header-tab,
+    .btn-primary,
+    .btn-secondary,
+    .btn-danger,
+    .btn-success,
+    .btn-purple,
+    .btn-green,
+    .btn-edit,
+    .btn-delete,
+    .btn-view {
+        display: none !important;
+    }
+    
+    .admin-main {
+        padding: 0 !important;
+        max-width: 100% !important;
+    }
+    
+    .admin-table-wrapper {
+        border: 1px solid #ddd !important;
+        border-radius: 0 !important;
+    }
+    
+    .admin-table th {
+        background: #f5f5f5 !important;
+        color: #333 !important;
+        border-bottom: 2px solid #ddd !important;
+    }
+    
+    .admin-table td {
+        color: #333 !important;
+        border-bottom: 1px solid #eee !important;
+    }
+    
+    .modal-overlay {
+        display: none !important;
+    }
+    
+    .status-badge {
+        border: 1px solid #ccc !important;
+        color: #333 !important;
+        background: #f5f5f5 !important;
     }
 }

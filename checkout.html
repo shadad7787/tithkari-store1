@@ -2,8 +2,16 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
     <title>إتمام الطلب - Tithkari</title>
+    
+    <!-- ===== 📱 Meta Tags للجوال ===== -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Tithkari - الدفع" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#0F0F1A" />
+    <meta name="format-detection" content="telephone=no" />
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -19,6 +27,8 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
         }
         
         body {
@@ -27,6 +37,11 @@
             color: #FFFFFF;
             direction: rtl;
             min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100vw;
         }
         
         .container {
@@ -38,6 +53,7 @@
         .checkout-header {
             background: rgba(15, 15, 26, 0.95);
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border-bottom: 2px solid #FFD700;
             padding: 20px 0;
             position: sticky;
@@ -61,6 +77,7 @@
             align-items: center;
             gap: 10px;
             text-decoration: none;
+            touch-action: manipulation;
         }
         
         .checkout-header .logo i {
@@ -71,6 +88,7 @@
             display: flex;
             align-items: center;
             gap: 15px;
+            flex-wrap: wrap;
         }
         
         .step {
@@ -92,6 +110,7 @@
             justify-content: center;
             font-weight: 700;
             font-size: 13px;
+            flex-shrink: 0;
         }
         
         .step.active .step-number {
@@ -114,6 +133,7 @@
             width: 40px;
             height: 2px;
             background: #8A8A9B;
+            flex-shrink: 0;
         }
         
         .step-line.active {
@@ -181,6 +201,8 @@
             font-family: 'Cairo', sans-serif;
             font-size: 16px;
             transition: all 0.3s ease;
+            min-height: 48px;
+            touch-action: manipulation;
         }
         
         .form-group input:focus,
@@ -240,11 +262,17 @@
             cursor: pointer;
             transition: all 0.3s ease;
             background: rgba(255, 255, 255, 0.02);
+            touch-action: manipulation;
+            min-height: 80px;
         }
         
         .file-upload-wrapper:hover {
             border-color: #FFD700;
             background: rgba(255, 215, 0, 0.05);
+        }
+        
+        .file-upload-wrapper:active {
+            transform: scale(0.98);
         }
         
         .file-upload-wrapper input[type="file"] {
@@ -324,10 +352,17 @@
             align-items: center;
             justify-content: center;
             transition: all 0.3s ease;
+            touch-action: manipulation;
+            min-width: 20px;
+            min-height: 20px;
         }
         
         .file-preview-item .remove-file:hover {
             transform: scale(1.1);
+        }
+        
+        .file-preview-item .remove-file:active {
+            transform: scale(0.95);
         }
         
         .file-preview-item .file-icon {
@@ -373,11 +408,17 @@
             transition: all 0.3s ease;
             text-align: center;
             position: relative;
+            touch-action: manipulation;
+            min-height: 80px;
         }
         
         .payment-method-card:hover {
             border-color: rgba(255, 215, 0, 0.3);
             transform: translateY(-2px);
+        }
+        
+        .payment-method-card:active {
+            transform: scale(0.97);
         }
         
         .payment-method-card.selected {
@@ -496,6 +537,7 @@
             max-height: 400px;
             overflow-y: auto;
             margin-bottom: 20px;
+            -webkit-overflow-scrolling: touch;
         }
         
         .checkout-items::-webkit-scrollbar {
@@ -662,11 +704,17 @@
             justify-content: center;
             gap: 12px;
             margin-top: 15px;
+            min-height: 56px;
+            touch-action: manipulation;
         }
         
         .submit-order-btn:hover {
             transform: translateY(-3px);
             box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+        }
+        
+        .submit-order-btn:active {
+            transform: scale(0.97);
         }
         
         .submit-order-btn:disabled {
@@ -683,10 +731,16 @@
             text-decoration: none;
             margin-top: 15px;
             transition: all 0.3s ease;
+            touch-action: manipulation;
+            min-height: 44px;
         }
         
         .back-to-cart:hover {
             color: #FFD700;
+        }
+        
+        .back-to-cart:active {
+            transform: scale(0.97);
         }
         
         #toastContainer {
@@ -732,6 +786,10 @@
             to { transform: translateX(100%); opacity: 0; }
         }
         
+        /* ============================================
+           📱 تحسينات الجوال
+           ============================================ */
+        
         @media (max-width: 992px) {
             .checkout-grid {
                 grid-template-columns: 1fr;
@@ -746,69 +804,341 @@
                 flex-direction: column;
                 text-align: center;
             }
+            
             .checkout-steps {
                 flex-wrap: wrap;
                 justify-content: center;
             }
+            
             .step-line {
                 width: 20px;
             }
+            
             .form-row {
                 grid-template-columns: 1fr;
             }
+            
             .checkout-form-section {
-                padding: 20px;
+                padding: 20px 16px;
             }
+            
+            .checkout-form-section h2 {
+                font-size: 20px;
+            }
+            
             .order-summary {
-                padding: 20px;
+                padding: 16px;
             }
+            
             .file-preview-item {
                 width: 60px;
                 height: 60px;
             }
+            
             .payment-methods-grid {
                 grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
             }
-        }
-        
-        @media (max-width: 480px) {
+            
+            .payment-method-card {
+                padding: 12px 10px;
+                min-height: 70px;
+            }
+            
+            .payment-method-card .method-icon {
+                font-size: 24px;
+            }
+            
+            .payment-method-card .method-name {
+                font-size: 12px;
+            }
+            
             .step {
                 font-size: 12px;
             }
+            
             .step .step-number {
                 width: 24px;
                 height: 24px;
                 font-size: 11px;
             }
+            
             .step-line {
                 width: 12px;
             }
+            
             .submit-order-btn {
-                font-size: 16px;
+                font-size: 17px;
                 padding: 14px;
+                min-height: 48px;
             }
+            
             .additional-fields-section {
-                padding: 15px;
+                padding: 16px;
             }
+            
+            .additional-fields-section h3 {
+                font-size: 16px;
+            }
+            
             .file-upload-wrapper {
-                padding: 15px;
+                padding: 16px;
+                min-height: 70px;
             }
-            .file-preview-item {
-                width: 50px;
-                height: 50px;
+            
+            .file-upload-wrapper .upload-icon {
+                font-size: 32px;
             }
+            
+            .file-upload-wrapper .upload-text {
+                font-size: 13px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .checkout-form-section {
+                padding: 16px 12px;
+            }
+            
+            .checkout-form-section h2 {
+                font-size: 18px;
+            }
+            
+            .form-group input,
+            .form-group textarea,
+            .form-group select {
+                font-size: 14px;
+                padding: 10px 12px;
+                min-height: 44px;
+            }
+            
+            .form-group label {
+                font-size: 13px;
+            }
+            
             .payment-methods-grid {
                 grid-template-columns: 1fr 1fr;
                 gap: 6px;
             }
+            
             .payment-method-card {
                 padding: 10px 8px;
+                min-height: 60px;
             }
+            
             .payment-method-card .method-icon {
                 font-size: 20px;
             }
+            
             .payment-method-card .method-name {
                 font-size: 11px;
+            }
+            
+            .payment-method-card .method-desc {
+                font-size: 9px;
+            }
+            
+            .order-summary {
+                padding: 14px 12px;
+            }
+            
+            .order-summary h3 {
+                font-size: 17px;
+            }
+            
+            .summary-row {
+                font-size: 13px;
+                padding: 6px 0;
+            }
+            
+            .summary-row.total {
+                font-size: 17px;
+            }
+            
+            .checkout-item {
+                padding: 10px 0;
+                gap: 10px;
+            }
+            
+            .checkout-item img {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .checkout-item-name {
+                font-size: 13px;
+            }
+            
+            .checkout-item-price {
+                font-size: 13px;
+            }
+            
+            .submit-order-btn {
+                font-size: 15px;
+                padding: 12px;
+                min-height: 44px;
+                gap: 8px;
+            }
+            
+            .step {
+                font-size: 11px;
+                gap: 4px;
+            }
+            
+            .step .step-number {
+                width: 20px;
+                height: 20px;
+                font-size: 10px;
+            }
+            
+            .step-line {
+                width: 8px;
+            }
+            
+            .file-preview-item {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .file-preview-item .remove-file {
+                width: 18px;
+                height: 18px;
+                font-size: 8px;
+                min-width: 18px;
+                min-height: 18px;
+                top: -4px;
+                right: -4px;
+            }
+            
+            .additional-fields-section {
+                padding: 12px;
+            }
+            
+            .additional-fields-section h3 {
+                font-size: 14px;
+            }
+            
+            .additional-fields-section h3 small {
+                font-size: 11px;
+            }
+            
+            .file-upload-wrapper {
+                padding: 12px;
+                min-height: 60px;
+            }
+            
+            .file-upload-wrapper .upload-icon {
+                font-size: 28px;
+            }
+            
+            .file-upload-wrapper .upload-text {
+                font-size: 12px;
+            }
+            
+            .back-to-cart {
+                font-size: 13px;
+                min-height: 36px;
+            }
+            
+            .payment-settings-container .setting-row {
+                font-size: 12px;
+                padding: 4px 0;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .checkout-form-section {
+                padding: 12px 8px;
+            }
+            
+            .payment-methods-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .payment-method-card {
+                padding: 8px 12px;
+                min-height: 50px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                text-align: right;
+            }
+            
+            .payment-method-card .method-icon {
+                font-size: 20px;
+                margin-bottom: 0;
+            }
+            
+            .payment-method-card .method-desc {
+                display: none;
+            }
+            
+            .step {
+                font-size: 10px;
+            }
+            
+            .step .step-number {
+                width: 18px;
+                height: 18px;
+                font-size: 9px;
+            }
+            
+            .step-line {
+                width: 6px;
+            }
+            
+            .submit-order-btn {
+                font-size: 13px;
+                padding: 10px;
+                min-height: 40px;
+            }
+        }
+        
+        /* ===== تحسينات اللمس للجوال ===== */
+        @media (hover: none) and (pointer: coarse) {
+            button,
+            .payment-method-card,
+            .submit-order-btn,
+            .back-to-cart,
+            .file-upload-wrapper,
+            .modal-close,
+            .close-cart {
+                min-height: 44px;
+                min-width: 44px;
+                touch-action: manipulation;
+            }
+            
+            .payment-method-card:hover {
+                transform: none;
+            }
+            
+            .submit-order-btn:hover {
+                transform: none;
+            }
+            
+            .submit-order-btn:active {
+                transform: scale(0.97);
+            }
+            
+            .back-to-cart:hover {
+                color: #8A8A9B;
+            }
+            
+            .back-to-cart:active {
+                color: #FFD700;
+                transform: scale(0.97);
+            }
+        }
+        
+        /* ===== تحسينات إمكانية الوصول ===== */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
             }
         }
     </style>
@@ -1152,6 +1482,13 @@
     let checkoutFields = [];
     
     // ============================================
+    // 📱 كشف الجوال
+    // ============================================
+    function isMobileDevice() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+    
+    // ============================================
     // دوال مساعدة
     // ============================================
     function getExchangeRate(fromCurrency, toCurrency) {
@@ -1214,7 +1551,7 @@
     }
     
     // ============================================
-    // 🔧 [جديد] تحميل إعدادات الدفع من Supabase
+    // 🔧 تحميل إعدادات الدفع من Supabase
     // ============================================
     async function loadPaymentSettings() {
         try {
@@ -1379,7 +1716,7 @@
     window.selectPaymentMethod = selectPaymentMethod;
     
     // ============================================
-    // 🔧 [جديد] تحميل شركات الشحن
+    // تحميل شركات الشحن
     // ============================================
     async function loadShippingMethods() {
         try {
@@ -1424,13 +1761,16 @@
             return;
         }
         
+        // تحسين للجوال: عرض أقل من التفاصيل
+        const isMobile = isMobileDevice();
+        
         container.innerHTML = shippingMethods.map((method, index) => `
             <div class="shipping-method-item ${index === 0 ? 'selected' : ''}" onclick="selectShippingMethod('${method.id}')" data-method="${method.id}">
                 <input type="radio" name="shipping_method" value="${method.id}" ${index === 0 ? 'checked' : ''} />
                 <span class="shipping-icon"><i class="fas ${method.icon || 'fa-truck'}"></i></span>
                 <span class="shipping-name">${method.name}</span>
                 <span class="shipping-price">${method.price ? method.price + ' ر.س' : 'مجاني'}</span>
-                <span class="shipping-days">${method.delivery_days || ''}</span>
+                ${!isMobile ? `<span class="shipping-days">${method.delivery_days || ''}</span>` : ''}
             </div>
         `).join('');
     }
@@ -1454,7 +1794,7 @@
     window.selectShippingMethod = selectShippingMethod;
     
     // ============================================
-    // 🔧 [جديد] تحميل حقول الطلب
+    // تحميل حقول الطلب
     // ============================================
     async function loadCheckoutFields() {
         try {
@@ -1499,6 +1839,9 @@
             return;
         }
         
+        // تحسين للجوال: عرض أقل من الحقول
+        const isMobile = isMobileDevice();
+        
         container.innerHTML = checkoutFields.map(field => {
             let inputHtml = '';
             const fieldId = `field_${field.slug}`;
@@ -1508,7 +1851,7 @@
                     inputHtml = `<input type="text" id="${fieldId}" class="checkout-field-input" placeholder="${field.placeholder || ''}" ${field.is_required ? 'required' : ''} />`;
                     break;
                 case 'textarea':
-                    inputHtml = `<textarea id="${fieldId}" class="checkout-field-input" placeholder="${field.placeholder || ''}" rows="3" ${field.is_required ? 'required' : ''}></textarea>`;
+                    inputHtml = `<textarea id="${fieldId}" class="checkout-field-input" placeholder="${field.placeholder || ''}" rows="${isMobile ? '2' : '3'}" ${field.is_required ? 'required' : ''}></textarea>`;
                     break;
                 case 'select':
                     const options = field.options ? field.options.split(',').map(o => o.trim()) : [];
@@ -1524,9 +1867,9 @@
                     break;
                 case 'map':
                     inputHtml = `
-                        <div id="${fieldId}-map" style="height:200px;background:#0F0F1A;border-radius:8px;border:1px solid rgba(255,215,0,0.1);"></div>
+                        <div id="${fieldId}-map" style="height:${isMobile ? '150px' : '200px'};background:#0F0F1A;border-radius:8px;border:1px solid rgba(255,215,0,0.1);"></div>
                         <input type="hidden" id="${fieldId}" />
-                        <button type="button" onclick="getLocation('${fieldId}')" class="btn-secondary" style="margin-top:5px;">
+                        <button type="button" onclick="getLocation('${fieldId}')" class="btn-secondary" style="margin-top:5px;min-height:44px;touch-action:manipulation;">
                             <i class="fas fa-map-marker-alt"></i> تحديد الموقع
                         </button>
                     `;
@@ -1550,6 +1893,7 @@
     // ============================================
     function getLocation(fieldId) {
         if (navigator.geolocation) {
+            showToast('📡 جاري تحديد موقعك...', 'info');
             navigator.geolocation.getCurrentPosition(
                 function(position) {
                     const lat = position.coords.latitude;
@@ -1669,6 +2013,12 @@
                 const index = parseInt(this.dataset.index);
                 removeFile(index);
             });
+            // تحسين اللمس
+            btn.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                const index = parseInt(this.dataset.index);
+                removeFile(index);
+            }, { passive: false });
         });
     }
     
@@ -1696,6 +2046,10 @@
                 div.querySelector('.remove-file').addEventListener('click', function() {
                     removeFile(index);
                 });
+                div.querySelector('.remove-file').addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    removeFile(index);
+                }, { passive: false });
             };
             reader.readAsDataURL(file);
         });
@@ -1778,6 +2132,9 @@
             return;
         }
         
+        // تحسين للجوال: عرض أقل من التفاصيل
+        const isMobile = isMobileDevice();
+        
         let itemsHtml = '';
         
         cart.forEach((item, index) => {
@@ -1788,7 +2145,7 @@
             let customFieldsHtml = '';
             const customFields = item.customFields || [];
             
-            if (customFields.length > 0) {
+            if (customFields.length > 0 && !isMobile) {
                 customFieldsHtml = `
                     <div class="checkout-custom-fields">
                         ${customFields.map(f => {
@@ -1809,15 +2166,6 @@
                                 </div>
                             `;
                         }).join('')}
-                    </div>
-                `;
-            } else {
-                customFieldsHtml = `
-                    <div class="checkout-custom-fields" style="border-color: rgba(255,255,255,0.03);">
-                        <div class="checkout-custom-field">
-                            <span class="field-label" style="color:#8A8A9B;">ملاحظات:</span>
-                            <span class="field-value empty-value">لا توجد تفاصيل إضافية</span>
-                        </div>
                     </div>
                 `;
             }

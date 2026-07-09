@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
     <title>لوحة التحكم - Tithkari Admin</title>
     
+    <!-- ===== 📱 Meta Tags للجوال ===== -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Tithkari - Admin" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#0F0F1A" />
+    <meta name="format-detection" content="telephone=no" />
+    
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
@@ -29,11 +37,17 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
         }
         
         html {
             font-size: 16px;
             -webkit-text-size-adjust: 100%;
+            -moz-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+            touch-action: manipulation;
         }
         
         body {
@@ -44,6 +58,9 @@
             min-height: 100vh;
             overflow-x: hidden;
             width: 100%;
+            max-width: 100vw;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         
         /* ===== الحاوية الرئيسية ===== */
@@ -71,6 +88,7 @@
             overflow-x: hidden;
             transition: all 0.3s ease;
             z-index: 100;
+            -webkit-overflow-scrolling: touch;
         }
         
         .admin-sidebar::-webkit-scrollbar {
@@ -111,6 +129,7 @@
             flex: 1;
             padding: 10px 0;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
         .admin-nav a {
             display: flex;
@@ -126,11 +145,15 @@
             cursor: pointer;
             border-right: 3px solid transparent;
             min-height: 44px;
+            touch-action: manipulation;
         }
         .admin-nav a:hover {
             background: rgba(255, 215, 0, 0.08);
             color: #F5F0EB;
             transform: translateX(-3px);
+        }
+        .admin-nav a:active {
+            transform: scale(0.97);
         }
         .admin-nav a.active {
             background: rgba(255, 215, 0, 0.12);
@@ -165,10 +188,15 @@
             transition: all 0.3s ease;
             font-size: 13px;
             margin-bottom: 6px;
+            min-height: 40px;
+            touch-action: manipulation;
         }
         .admin-bottom .admin-back:hover {
             background: rgba(255, 215, 0, 0.05);
             color: #FFD700;
+        }
+        .admin-bottom .admin-back:active {
+            transform: scale(0.97);
         }
         .admin-bottom .admin-back i {
             width: 18px;
@@ -185,6 +213,9 @@
         .admin-bottom .admin-back.admin-design:hover {
             opacity: 0.85;
             transform: scale(1.02);
+        }
+        .admin-bottom .admin-back.admin-design:active {
+            transform: scale(0.97);
         }
         
         .admin-logout {
@@ -204,9 +235,14 @@
             justify-content: center;
             gap: 8px;
             margin-top: 6px;
+            min-height: 44px;
+            touch-action: manipulation;
         }
         .admin-logout:hover {
             background: rgba(239, 68, 68, 0.2);
+        }
+        .admin-logout:active {
+            transform: scale(0.97);
         }
         
         /* ===== المحتوى الرئيسي ===== */
@@ -217,6 +253,7 @@
             min-height: 100vh;
             width: 100%;
             max-width: calc(100vw - 240px);
+            -webkit-overflow-scrolling: touch;
         }
         
         .admin-header {
@@ -278,11 +315,15 @@
             gap: 15px;
             transition: all 0.3s ease;
             cursor: default;
+            touch-action: manipulation;
         }
         .stat-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 8px 25px rgba(255, 215, 0, 0.1);
             border-color: rgba(255, 215, 0, 0.15);
+        }
+        .stat-card:active {
+            transform: scale(0.98);
         }
         .stat-card i {
             font-size: 32px;
@@ -326,10 +367,14 @@
             white-space: nowrap;
             min-height: 44px;
             justify-content: center;
+            touch-action: manipulation;
         }
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
+        }
+        .btn-primary:active {
+            transform: scale(0.97);
         }
         .btn-primary:disabled {
             opacity: 0.6;
@@ -351,9 +396,13 @@
             font-size: 14px;
             min-height: 44px;
             justify-content: center;
+            touch-action: manipulation;
         }
         .btn-secondary:hover {
             background: rgba(255, 255, 255, 0.1);
+        }
+        .btn-secondary:active {
+            transform: scale(0.97);
         }
         .btn-danger {
             display: inline-flex;
@@ -369,9 +418,13 @@
             transition: all 0.3s ease;
             font-size: 13px;
             min-height: 36px;
+            touch-action: manipulation;
         }
         .btn-danger:hover {
             background: rgba(239, 68, 68, 0.3);
+        }
+        .btn-danger:active {
+            transform: scale(0.97);
         }
         .btn-success {
             display: inline-flex;
@@ -387,9 +440,13 @@
             transition: all 0.3s ease;
             font-size: 13px;
             min-height: 36px;
+            touch-action: manipulation;
         }
         .btn-success:hover {
             background: rgba(16, 185, 129, 0.3);
+        }
+        .btn-success:active {
+            transform: scale(0.97);
         }
         
         /* ===== الجداول ===== */
@@ -459,13 +516,17 @@
             align-items: center;
             gap: 4px;
             min-height: 32px;
+            touch-action: manipulation;
         }
         .btn-edit { background: #3b82f6; color: white; }
         .btn-edit:hover { opacity: 0.85; transform: scale(1.05); }
+        .btn-edit:active { transform: scale(0.95); }
         .btn-delete { background: #ef4444; color: white; }
         .btn-delete:hover { opacity: 0.85; transform: scale(1.05); }
+        .btn-delete:active { transform: scale(0.95); }
         .btn-view { background: #8B5CF6; color: white; }
         .btn-view:hover { opacity: 0.85; transform: scale(1.05); }
+        .btn-view:active { transform: scale(0.95); }
         
         /* ===== نماذج ===== */
         .admin-form {
@@ -494,6 +555,8 @@
             font-family: 'Cairo', sans-serif;
             font-size: 15px;
             transition: all 0.3s ease;
+            min-height: 44px;
+            touch-action: manipulation;
         }
         .admin-form .form-group input:focus,
         .admin-form .form-group textarea:focus,
@@ -547,6 +610,7 @@
             padding: 20px;
             border: 1px solid rgba(255, 215, 0, 0.05);
             margin-top: 15px;
+            overflow-x: auto;
         }
         .chart-container h4 {
             color: #FFD700;
@@ -584,6 +648,7 @@
         .file-list {
             max-height: 300px;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
         .file-list::-webkit-scrollbar {
             width: 4px;
@@ -607,10 +672,15 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            min-height: 36px;
+            touch-action: manipulation;
         }
         .file-item:hover {
             background: rgba(255, 215, 0, 0.08);
             color: #F5F0EB;
+        }
+        .file-item:active {
+            transform: scale(0.97);
         }
         .file-item.active {
             background: rgba(255, 215, 0, 0.12);
@@ -638,6 +708,7 @@
             font-size: 13px;
             resize: vertical;
             min-height: 100px;
+            min-height: 44px;
         }
         .code-area textarea:focus {
             border-color: #FFD700;
@@ -689,9 +760,14 @@
             margin: 2px 4px 2px 0;
             cursor: pointer;
             transition: all 0.2s ease;
+            touch-action: manipulation;
+            min-height: 28px;
         }
         .edit-locations-hint .location-tag:hover {
             background: rgba(255, 215, 0, 0.15);
+        }
+        .edit-locations-hint .location-tag:active {
+            transform: scale(0.95);
         }
         
         /* ===== النوافذ المنبثقة ===== */
@@ -705,6 +781,7 @@
             align-items: center;
             padding: 20px;
             backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
         }
         .modal-overlay.active {
             display: flex;
@@ -719,6 +796,7 @@
             padding: 30px;
             border: 1px solid rgba(255, 215, 0, 0.1);
             animation: modalFade 0.3s ease;
+            -webkit-overflow-scrolling: touch;
         }
         @keyframes modalFade {
             from { opacity: 0; transform: scale(0.95) translateY(20px); }
@@ -738,10 +816,16 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            min-height: 35px;
+            min-width: 35px;
+            touch-action: manipulation;
         }
         .modal-close:hover {
             background: rgba(239, 68, 68, 0.3);
             transform: rotate(90deg);
+        }
+        .modal-close:active {
+            transform: scale(0.95);
         }
         .modal-content h2 {
             color: #FFD700;
@@ -754,6 +838,7 @@
         .modal-body {
             max-height: calc(90vh - 120px);
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
         
         /* ===== الإعدادات المتقدمة ===== */
@@ -809,6 +894,7 @@
             width: 100%;
             max-width: 280px;
             min-height: 44px;
+            touch-action: manipulation;
         }
         .search-input:focus {
             border-color: #FFD700;
@@ -828,6 +914,7 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 6px;
             width: 100%;
+            min-height: 44px;
         }
         input[type="file"]::-webkit-file-upload-button {
             background: rgba(255, 215, 0, 0.12);
@@ -838,9 +925,13 @@
             cursor: pointer;
             font-family: 'Cairo', sans-serif;
             transition: all 0.2s ease;
+            min-height: 32px;
         }
         input[type="file"]::-webkit-file-upload-button:hover {
             background: rgba(255, 215, 0, 0.2);
+        }
+        input[type="file"]::-webkit-file-upload-button:active {
+            transform: scale(0.95);
         }
         
         #imagePreview, #templatePreview, #editImagePreview, #editTemplatePreview {
@@ -883,6 +974,8 @@
             cursor: pointer;
             font-family: 'Cairo', sans-serif;
             transition: all 0.2s ease;
+            min-height: 30px;
+            touch-action: manipulation;
         }
         .status-toggle.active {
             background: rgba(16, 185, 129, 0.15);
@@ -894,6 +987,9 @@
         }
         .status-toggle:hover {
             opacity: 0.8;
+        }
+        .status-toggle:active {
+            transform: scale(0.95);
         }
         
         .form-group .help-text {
@@ -958,6 +1054,7 @@
             border: 1px solid rgba(255, 215, 0, 0.15);
             font-family: 'Cairo', sans-serif;
             font-size: 12px;
+            min-height: 32px;
         }
         .admin-table td select:focus {
             border-color: #FFD700;
@@ -1047,11 +1144,13 @@
                 font-size: 12px;
                 padding: 6px 10px;
                 margin: 0;
+                min-height: 36px;
             }
             
             .admin-bottom .admin-back.admin-design {
                 padding: 8px 14px;
                 font-size: 12px;
+                min-height: 40px;
             }
             
             .admin-logout {
@@ -1152,6 +1251,7 @@
             .admin-form .form-group select {
                 font-size: 14px;
                 padding: 10px 14px;
+                min-height: 40px;
             }
             
             .admin-header-tab {
@@ -1214,6 +1314,8 @@
                 width: 30px;
                 height: 30px;
                 font-size: 14px;
+                min-height: 30px;
+                min-width: 30px;
             }
             
             .code-editor-container {
@@ -1247,6 +1349,7 @@
                 overflow-x: auto;
                 gap: 4px;
                 padding: 4px 0;
+                -webkit-overflow-scrolling: touch;
             }
             
             .file-item {
@@ -1255,6 +1358,7 @@
                 padding: 6px 12px;
                 font-size: 12px;
                 border-radius: 6px;
+                min-height: 32px;
             }
             
             .search-input {
@@ -1379,12 +1483,22 @@
             .admin-form .form-group select {
                 font-size: 13px;
                 padding: 8px 12px;
+                min-height: 36px;
             }
             
             .code-area textarea {
                 font-size: 12px;
                 min-height: 80px;
                 padding: 8px 10px;
+                min-height: 36px;
+            }
+            
+            .modal-close {
+                width: 28px;
+                height: 28px;
+                font-size: 13px;
+                min-height: 28px;
+                min-width: 28px;
             }
         }
         
@@ -1418,6 +1532,18 @@
             
             .stat-card {
                 cursor: default;
+            }
+            
+            .stat-card:hover {
+                transform: none;
+            }
+            
+            .admin-nav a:hover {
+                transform: none;
+            }
+            
+            .admin-bottom .admin-back:hover {
+                background: none;
             }
         }
         
@@ -1461,6 +1587,39 @@
         @media (max-width: 768px) {
             .admin-table td:last-child {
                 flex-wrap: wrap;
+            }
+        }
+        
+        /* تحسينات إمكانية الوصول */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+        
+        /* تحسينات العرض في الوضع الأفقي */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .admin-sidebar {
+                max-height: 50vh;
+            }
+            
+            .admin-nav {
+                padding: 3px 8px;
+            }
+            
+            .admin-nav a {
+                padding: 4px 10px;
+                font-size: 10px;
+                min-height: 30px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
             }
         }
     </style>
@@ -1737,7 +1896,7 @@
                     
                     <div class="form-group" style="margin-bottom: 20px;">
                         <label>اختر المنتج:</label>
-                        <select id="fieldProductSelector" onchange="loadProductFields()" style="width:100%;padding:12px;border-radius:8px;background:#0F0F1A;color:#fff;border:1px solid rgba(255,215,0,0.1);font-family:'Cairo',sans-serif;">
+                        <select id="fieldProductSelector" onchange="loadProductFields()" style="width:100%;padding:12px;border-radius:8px;background:#0F0F1A;color:#fff;border:1px solid rgba(255,215,0,0.1);font-family:'Cairo',sans-serif;min-height:44px;">
                             <option value="">-- اختر منتج --</option>
                         </select>
                     </div>
@@ -1968,7 +2127,7 @@
                                 <div class="code-areas">
                                     <div class="code-area">
                                         <label>🔍 موقع التعديل (المعرف)</label>
-                                        <input type="text" id="editLocation" placeholder="مثال: renderProducts" style="width:100%;padding:10px 14px;border-radius:8px;background:#0F0F1A;color:#FFFFFF;border:1px solid rgba(255,215,0,0.08);font-family:'Cairo',sans-serif;font-size:14px;" />
+                                        <input type="text" id="editLocation" placeholder="مثال: renderProducts" style="width:100%;padding:10px 14px;border-radius:8px;background:#0F0F1A;color:#FFFFFF;border:1px solid rgba(255,215,0,0.08);font-family:'Cairo',sans-serif;font-size:14px;min-height:44px;" />
                                         <small style="color: var(--gray);">أدخل اسم الدالة أو المعرف المراد التعديل عليه</small>
                                     </div>
                                     
