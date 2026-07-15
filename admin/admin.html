@@ -172,6 +172,73 @@
             text-overflow: ellipsis;
         }
         
+        /* ===== أنماط الأزرار المخصصة في القائمة ===== */
+        .custom-nav-btn {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 10px 16px !important;
+            text-decoration: none !important;
+            color: #8B5CF6 !important;
+            font-weight: 600 !important;
+            transition: all 0.3s ease !important;
+            border-radius: 8px !important;
+            margin: 2px 8px !important;
+            border-right: 2px solid #8B5CF6 !important;
+            background: rgba(139, 92, 246, 0.08) !important;
+            min-height: 44px !important;
+        }
+        
+        .custom-nav-btn:hover {
+            background: rgba(139, 92, 246, 0.18) !important;
+            transform: translateX(-3px) !important;
+        }
+        
+        .custom-nav-btn i {
+            color: #8B5CF6 !important;
+            font-size: 16px !important;
+            width: 20px !important;
+            text-align: center !important;
+        }
+        
+        .custom-nav-btn span {
+            color: #8B5CF6 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+        
+        /* ===== الأزرار المخصصة في القائمة السفلية ===== */
+        .custom-bottom-btn {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            justify-content: center !important;
+            padding: 10px !important;
+            margin: 4px 0 !important;
+            border-radius: 8px !important;
+            text-decoration: none !important;
+            font-weight: 600 !important;
+            transition: all 0.3s ease !important;
+            background: linear-gradient(135deg, #8B5CF6, #6D28D9) !important;
+            color: white !important;
+            min-height: 40px !important;
+            border: none !important;
+        }
+        
+        .custom-bottom-btn:hover {
+            transform: scale(1.02) !important;
+            opacity: 0.9 !important;
+        }
+        
+        .custom-bottom-btn:active {
+            transform: scale(0.97) !important;
+        }
+        
+        .custom-bottom-btn i {
+            font-size: 14px !important;
+        }
+        
         .admin-bottom {
             padding: 15px 20px;
             border-top: 1px solid rgba(255, 215, 0, 0.05);
@@ -215,6 +282,25 @@
             transform: scale(1.02);
         }
         .admin-bottom .admin-back.admin-design:active {
+            transform: scale(0.97);
+        }
+        
+        /* ===== زر تخصيص المتجر في القائمة السفلية ===== */
+        .admin-bottom .admin-back.customize-btn {
+            background: linear-gradient(135deg, #FFD700, #FFED4A);
+            color: #0F0F1A;
+            justify-content: center;
+            border-radius: 8px;
+            padding: 10px;
+            font-weight: 600;
+            border: none;
+        }
+        .admin-bottom .admin-back.customize-btn:hover {
+            opacity: 0.85;
+            transform: scale(1.02);
+            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
+        }
+        .admin-bottom .admin-back.customize-btn:active {
             transform: scale(0.97);
         }
         
@@ -1153,6 +1239,12 @@
                 min-height: 40px;
             }
             
+            .admin-bottom .admin-back.customize-btn {
+                padding: 8px 14px;
+                font-size: 12px;
+                min-height: 40px;
+            }
+            
             .admin-logout {
                 padding: 8px;
                 font-size: 12px;
@@ -1718,6 +1810,16 @@
                     <i class="fas fa-plug" style="color: #8B5CF6;"></i>
                     <span style="color: #8B5CF6;">إدارة الأدوات</span>
                 </a>
+                <!-- ===== 🆕 زر تخصيص المتجر في القائمة الجانبية ===== -->
+                <a href="#" onclick="openCustomizer(event); return false;" style="background: rgba(255, 215, 0, 0.15); border-right: 2px solid #FFD700;">
+                    <i class="fas fa-paint-brush" style="color: #FFD700;"></i>
+                    <span style="color: #FFD700; font-weight: 700;">🎨 تخصيص المتجر</span>
+                </a>
+                <!-- ===== 🆕 زر إدارة الأزرار المخصصة ===== -->
+                <a href="#" onclick="switchTab('custom-buttons'); return false;" style="background: rgba(139, 92, 246, 0.08); border-right: 2px solid #8B5CF6;">
+                    <i class="fas fa-plus-circle" style="color: #8B5CF6;"></i>
+                    <span style="color: #8B5CF6;">🔘 إدارة الأزرار</span>
+                </a>
             </nav>
             <div class="admin-bottom">
                 <a href="../design-studio.html" class="admin-back admin-design" target="_blank">
@@ -1725,6 +1827,10 @@
                 </a>
                 <a href="../index.html" class="admin-back" target="_blank">
                     <i class="fas fa-store"></i> زيارة المتجر
+                </a>
+                <!-- ===== 🆕 زر تخصيص المتجر في القائمة السفلية ===== -->
+                <a href="#" onclick="openCustomizer(event); return false;" class="admin-back customize-btn">
+                    <i class="fas fa-paint-brush"></i> 🎨 تخصيص المتجر
                 </a>
                 <button onclick="logout()" class="admin-logout">
                     <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
@@ -2485,7 +2591,7 @@
                     </div>
                 </div>
 
-                <!-- ===== ✅ إضافة قسم إدارة الأدوات ===== -->
+                <!-- ===== إدارة الأدوات ===== -->
                 <div id="tools-tab" class="admin-tab">
                     <div class="admin-header-tab">
                         <h2>🔌 إدارة الأدوات والتطبيقات</h2>
@@ -2531,7 +2637,7 @@
                     </div>
                 </div>
 
-                <!-- ===== ✅ إضافة قسم إدارة الدفع والشحن ===== -->
+                <!-- ===== إدارة الدفع والشحن ===== -->
                 <div id="payment-shipping-tab" class="admin-tab">
                     <div class="admin-header-tab">
                         <h2>💳 إدارة الدفع والشحن</h2>
@@ -2569,6 +2675,44 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- ============================================================
+                ✅ [جديد] تبويب إدارة الأزرار المخصصة
+                ============================================================ -->
+                <div id="custom-buttons-tab" class="admin-tab">
+                    <div class="admin-header-tab">
+                        <h2>🔘 إدارة الأزرار المخصصة</h2>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                            <button class="btn-primary" onclick="openAddButtonModal()" style="background: #8B5CF6; color: white;">
+                                <i class="fas fa-plus"></i> إضافة زر جديد
+                            </button>
+                            <button class="btn-primary" onclick="loadCustomButtons()" style="background: #3b82f6; color: white;">
+                                <i class="fas fa-sync"></i> تحديث
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="admin-table-wrapper">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>الأيقونة</th>
+                                    <th>اسم الزر</th>
+                                    <th>مسار الملف</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customButtonsTableBody">
+                                <tr><td colspan="6" style="text-align:center;color:#8A8A9B;">جاري التحميل...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- ============================================================
+                نهاية تبويب إدارة الأزرار المخصصة
+                ============================================================ -->
             </div>
         </main>
     </div>
@@ -3190,6 +3334,92 @@
         </div>
     </div>
 
+    <!-- ============================================================
+    ✅ [جديد] نافذة إضافة/تعديل زر مخصص
+    ============================================================ -->
+    <div class="modal-overlay" id="customButtonModal">
+        <div class="modal-content" style="max-width:550px;">
+            <button class="modal-close" onclick="closeButtonModal()"><i class="fas fa-times"></i></button>
+            <div class="modal-body">
+                <h2 id="buttonModalTitle">➕ إضافة زر جديد</h2>
+                <form id="customButtonForm" class="admin-form" onsubmit="saveCustomButton(event)">
+                    <input type="hidden" id="buttonId" />
+                    
+                    <div class="form-group">
+                        <label>🏷️ اسم الزر *</label>
+                        <input type="text" id="buttonLabel" required placeholder="مثال: لوحة التحكم" />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>🔗 مسار الملف *</label>
+                        <input type="text" id="buttonPath" required placeholder="مثال: admin/admin.html" />
+                        <small style="color:var(--gray);">يمكنك استخدام مسار نسبي أو رابط كامل</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>🎨 الأيقونة</label>
+                        <select id="buttonIcon">
+                            <option value="fa-cog">⚙️ إعدادات</option>
+                            <option value="fa-paint-brush">🎨 تخصيص</option>
+                            <option value="fa-store">🏪 متجر</option>
+                            <option value="fa-users">👥 عملاء</option>
+                            <option value="fa-box">📦 منتجات</option>
+                            <option value="fa-truck">🚚 طلبات</option>
+                            <option value="fa-chart-line">📊 تحليلات</option>
+                            <option value="fa-credit-card">💳 دفع</option>
+                            <option value="fa-envelope">📧 بريد</option>
+                            <option value="fa-plug">🔌 أدوات</option>
+                            <option value="fa-shield-halved">🛡️ أمان</option>
+                            <option value="fa-cubes">🧩 قوالب</option>
+                            <option value="fa-code">💻 كود</option>
+                            <option value="fa-database">🗄️ قاعدة بيانات</option>
+                            <option value="fa-file-alt">📄 ملفات</option>
+                            <option value="fa-link">🔗 رابط</option>
+                            <option value="fa-external-link-alt">🌐 خارجي</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>📌 موقع الزر</label>
+                            <select id="buttonPosition">
+                                <option value="sidebar">القائمة الجانبية</option>
+                                <option value="bottom">القائمة السفلية</option>
+                                <option value="both">كلا القائمتين</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>⭐ الحالة</label>
+                            <select id="buttonStatus">
+                                <option value="true">نشط</option>
+                                <option value="false">غير نشط</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>🔢 ترتيب العرض</label>
+                        <input type="number" id="buttonOrder" value="0" min="0" />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                            <input type="checkbox" id="buttonNewWindow" checked />
+                            فتح في نافذة جديدة
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary" style="width:100%;justify-content:center;margin-top:10px;">
+                        <i class="fas fa-save"></i> حفظ الزر
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- ============================================================
+    نهاية نافذة إدارة الأزرار المخصصة
+    ============================================================ -->
+
     <script type="module" src="../js/admin.js"></script>
     
     <!-- ============================================
@@ -3274,7 +3504,8 @@
                 'payment-settings': '💳 إعدادات الدفع',
                 'email-settings': '📧 إعدادات البريد',
                 'payment-shipping': '💳 إدارة الدفع والشحن',
-                'tools': '🔌 إدارة الأدوات'
+                'tools': '🔌 إدارة الأدوات',
+                'custom-buttons': '🔘 إدارة الأزرار المخصصة'
             };
             
             const titleEl = document.getElementById('pageTitle');
@@ -3323,6 +3554,9 @@
                 if (typeof loadEmailSettings === 'function' && tabName === 'email-settings') {
                     loadEmailSettings();
                 }
+                if (typeof loadCustomButtons === 'function' && tabName === 'custom-buttons') {
+                    loadCustomButtons();
+                }
             }, 100);
         };
         
@@ -3335,6 +3569,34 @@
                 localStorage.removeItem('user');
                 localStorage.removeItem('remember_me');
                 window.location.href = '../login.html';
+            }
+        };
+        
+        // ============================================
+        // 🆕 دالة فتح نافذة تخصيص المتجر
+        // ============================================
+        window.openCustomizer = function(event) {
+            if (event) event.preventDefault();
+            
+            // فتح نافذة جديدة لتخصيص المتجر
+            const width = 1200;
+            const height = 800;
+            const left = (window.innerWidth - width) / 2;
+            const top = (window.innerHeight - height) / 2;
+            
+            const features = `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,scrollbars=yes,resizable=yes`;
+            
+            const newWindow = window.open('customize-store.html', 'TithkariCustomizer', features);
+            
+            if (newWindow) {
+                newWindow.focus();
+                if (typeof showToast === 'function') {
+                    showToast('🎨 تم فتح نافذة تخصيص المتجر', 'info');
+                }
+            } else {
+                if (typeof showToast === 'function') {
+                    showToast('⚠️ تم حظر النافذة المنبثقة، يرجى السماح بها', 'warning');
+                }
             }
         };
         
@@ -3370,6 +3632,9 @@
             setTimeout(() => {
                 if (typeof loadDashboard === 'function') {
                     loadDashboard();
+                }
+                if (typeof loadCustomButtons === 'function') {
+                    loadCustomButtons();
                 }
             }, 200);
         });

@@ -43,7 +43,7 @@ window.logout = function() {
 // ============================================
 // التبويبات - حل بسيط ومباشر
 // ============================================
-const tabs = ['dashboard', 'products', 'orders', 'add-product', 'custom-fields', 'analytics', 'banners', 'menus', 'customers', 'settings', 'design-templates', 'code-editor', 'store-settings', 'advanced-settings', 'footer', 'categories', 'coupons', 'reviews', 'payment-settings', 'email-settings', 'payment-shipping', 'tools'];
+const tabs = ['dashboard', 'products', 'orders', 'add-product', 'custom-fields', 'analytics', 'banners', 'menus', 'customers', 'settings', 'design-templates', 'code-editor', 'store-settings', 'advanced-settings', 'footer', 'categories', 'coupons', 'reviews', 'payment-settings', 'email-settings', 'payment-shipping', 'tools', 'custom-buttons'];
 const titles = {
     'dashboard': '📊 لوحة المعلومات',
     'products': '📦 المنتجات',
@@ -66,10 +66,13 @@ const titles = {
     'payment-settings': '💳 إعدادات الدفع',
     'email-settings': '📧 إعدادات البريد',
     'payment-shipping': '💳 إدارة الدفع والشحن',
-    'tools': '🔌 إدارة الأدوات'
+    'tools': '🔌 إدارة الأدوات',
+    'custom-buttons': '🔘 إدارة الأزرار المخصصة'
 };
 
-// دالة التبديل بين التبويبات - معرفة عالمياً
+// ============================================
+// دالة التبديل بين التبويبات
+// ============================================
 window.switchTab = function(tabName) {
     console.log('🔄 Switching to:', tabName);
     
@@ -119,7 +122,8 @@ window.switchTab = function(tabName) {
         'payment-settings': loadPaymentSettings,
         'email-settings': loadEmailSettings,
         'payment-shipping': () => console.log('📌 Payment Shipping tab opened'),
-        'tools': () => console.log('📌 Tools tab opened')
+        'tools': () => console.log('📌 Tools tab opened'),
+        'custom-buttons': loadCustomButtons
     };
     
     if (loaders[tabName]) {
@@ -133,6 +137,491 @@ window.switchTab = function(tabName) {
 function getPlaceholderSVG(text = '🛡️', width = 50, height = 50) {
     return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}' viewBox='0 0 ${width} ${height}'%3E%3Crect width='${width}' height='${height}' fill='%231a1a2e'/%3E%3Ctext x='${width/2}' y='${height/2 + 8}' text-anchor='middle' font-size='${Math.min(width, height) * 0.5}'%3E${encodeURIComponent(text)}%3C/text%3E%3C/svg%3E`;
 }
+
+// ============================================
+// ===== [نظام إدارة الأزرار المخصصة] =====
+// ============================================
+
+// متغيرات الأزرار
+let customButtons = [];
+let editingButtonId = null;
+
+// ============================================
+// تحميل الأزرار المخصصة من Supabase
+// ============================================
+async function loadCustomButtons() {
+    try {
+        console.log('🔘 جاري تحميل الأزرار المخصصة...');
+        
+        // محاولة التحميل من التخزين المحلي أولاً
+        if (loadButtonsFromLocal()) {
+            console.log('✅ تم تحميل الأزرار من التخزين المحلي');
+            renderCustomButtons();
+            renderCustomButtonsInNav();
+            renderCustomButtonsInBottom();
+            return;
+        }
+        
+        if (!supabase) {
+            customButtons = getDefaultButtons();
+            renderCustomButtons();
+            renderCustomButtonsInNav();
+            renderCustomButtonsInBottom();
+            return;
+        }
+        
+        const { data, error } = await supabase
+            .from('custom_buttons')
+            .select('*')
+            .order('display_order', { ascending: true });
+        
+        if (error) {
+            if (error.code === '42P01') {
+                await createCustomButtonsTable();
+                return loadCustomButtons();
+            }
+            throw error;
+        }
+        
+        customButtons = data || [];
+        renderCustomButtons();
+        renderCustomButtonsInNav();
+        renderCustomButtonsInBottom();
+        
+        // حفظ في التخزين المحلي
+        localStorage.setItem('tithkari_custom_buttons', JSON.stringify(customButtons));
+        
+        console.log('✅ تم تحميل', customButtons.length, 'زر مخصص');
+        
+    } catch (error) {
+        console.error('❌ خطأ في تحميل الأزرار:', error);
+        customButtons = getDefaultButtons();
+        renderCustomButtons();
+        renderCustomButtonsInNav();
+        renderCustomButtonsInBottom();
+    }
+}
+window.loadCustomButtons = loadCustomButtons;
+
+// ============================================
+// الأزرار الافتراضية
+// ============================================
+function getDefaultButtons() {
+    return [
+        {
+            id: 'default_1',
+            label: 'تخصيص المتجر',
+            path: 'customize-store.html',
+            icon: 'fa-paint-brush',
+            position: 'both',
+            is_active: true,
+            open_in_new_window: true,
+            display_order: 1
+        }
+    ];
+}
+
+// ============================================
+// إنشاء جدول الأزرار المخصصة
+// ============================================
+async function createCustomButtonsTable() {
+    try {
+        const { error } = await supabase.rpc('create_custom_buttons_table');
+        if (error) {
+            console.log('⚠️ يرجى إنشاء جدول custom_buttons في Supabase Dashboard');
+            console.log('SQL:', `
+                CREATE TABLE custom_buttons (
+                    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+                    label TEXT NOT NULL,
+                    path TEXT NOT NULL,
+                    icon TEXT DEFAULT 'fa-link',
+                    position TEXT DEFAULT 'both',
+                    is_active BOOLEAN DEFAULT true,
+                    open_in_new_window BOOLEAN DEFAULT true,
+                    display_order INTEGER DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT NOW(),
+                    updated_at TIMESTAMP DEFAULT NOW()
+                );
+            `);
+        }
+    } catch (error) {
+        console.error('❌ خطأ في إنشاء الجدول:', error);
+    }
+}
+
+// ============================================
+// عرض الأزرار في الجدول
+// ============================================
+function renderCustomButtons() {
+    const tbody = document.getElementById('customButtonsTableBody');
+    if (!tbody) return;
+    
+    if (customButtons.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#888;">🔘 لا توجد أزرار مخصصة</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = customButtons.map((btn, index) => `
+        <tr>
+            <td>${index + 1}</td>
+            <td style="font-size:24px;"><i class="fas ${btn.icon || 'fa-link'}"></i></td>
+            <td><strong>${btn.label}</strong></td>
+            <td><code style="background:#0F0F1A;padding:2px 8px;border-radius:4px;font-size:12px;">${btn.path}</code></td>
+            <td>
+                <span class="status-badge ${btn.is_active ? 'status-active' : 'status-inactive'}">
+                    ${btn.is_active ? '✅ نشط' : '❌ غير نشط'}
+                </span>
+            </td>
+            <td>
+                <button class="btn-edit" onclick="editCustomButton('${btn.id}')">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn-delete" onclick="deleteCustomButton('${btn.id}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+                <button class="btn-toggle" onclick="toggleCustomButtonStatus('${btn.id}')" 
+                        style="background:${btn.is_active ? '#f59e0b' : '#10b981'};color:white;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;">
+                    ${btn.is_active ? 'إيقاف' : 'تفعيل'}
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// ============================================
+// عرض الأزرار في القائمة الجانبية
+// ============================================
+function renderCustomButtonsInNav() {
+    const nav = document.querySelector('.admin-nav');
+    if (!nav) return;
+    
+    // إزالة الأزرار القديمة
+    nav.querySelectorAll('.custom-nav-btn').forEach(el => el.remove());
+    
+    const activeButtons = customButtons.filter(btn => btn.is_active && (btn.position === 'sidebar' || btn.position === 'both'));
+    
+    if (activeButtons.length === 0) return;
+    
+    activeButtons.forEach(btn => {
+        const a = document.createElement('a');
+        a.className = 'custom-nav-btn';
+        a.href = '#';
+        a.onclick = function(e) {
+            e.preventDefault();
+            openCustomButton(btn);
+        };
+        a.style.cssText = 'background: rgba(139, 92, 246, 0.1); border-right: 2px solid #8B5CF6; display: flex; align-items: center; gap: 10px; padding: 12px 18px; text-decoration: none; border-radius: 8px; margin: 2px 0; transition: all 0.3s ease;';
+        a.innerHTML = `
+            <i class="fas ${btn.icon || 'fa-link'}" style="color: #8B5CF6;"></i>
+            <span style="color: #8B5CF6;">${btn.label}</span>
+        `;
+        nav.appendChild(a);
+    });
+}
+
+// ============================================
+// عرض الأزرار في القائمة السفلية
+// ============================================
+function renderCustomButtonsInBottom() {
+    const bottom = document.querySelector('.admin-bottom');
+    if (!bottom) return;
+    
+    // إزالة الأزرار القديمة
+    bottom.querySelectorAll('.custom-bottom-btn').forEach(el => el.remove());
+    
+    const activeButtons = customButtons.filter(btn => btn.is_active && (btn.position === 'bottom' || btn.position === 'both'));
+    
+    if (activeButtons.length === 0) return;
+    
+    // العثور على زر تسجيل الخروج لإضافة الأزرار قبله
+    const logoutBtn = bottom.querySelector('.admin-logout');
+    
+    activeButtons.forEach(btn => {
+        const a = document.createElement('a');
+        a.className = 'custom-bottom-btn';
+        a.href = '#';
+        a.onclick = function(e) {
+            e.preventDefault();
+            openCustomButton(btn);
+        };
+        a.style.cssText = 'background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: white; justify-content: center; border-radius: 8px; padding: 10px; font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; text-decoration: none; transition: all 0.3s ease;';
+        a.innerHTML = `
+            <i class="fas ${btn.icon || 'fa-link'}"></i> ${btn.label}
+        `;
+        
+        if (logoutBtn) {
+            bottom.insertBefore(a, logoutBtn);
+        } else {
+            bottom.appendChild(a);
+        }
+    });
+}
+
+// ============================================
+// فتح زر مخصص
+// ============================================
+function openCustomButton(button) {
+    if (!button || !button.path) {
+        showToast('⚠️ مسار الملف غير محدد', 'warning');
+        return;
+    }
+    
+    const isInternal = !button.path.startsWith('http://') && !button.path.startsWith('https://');
+    const fullPath = isInternal ? button.path : button.path;
+    
+    if (button.open_in_new_window !== false) {
+        const width = 1200;
+        const height = 800;
+        const left = (window.innerWidth - width) / 2;
+        const top = (window.innerHeight - height) / 2;
+        const features = `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,scrollbars=yes,resizable=yes`;
+        
+        const newWindow = window.open(fullPath, `Tithkari_${button.id}`, features);
+        if (newWindow) {
+            newWindow.focus();
+            showToast(`✅ تم فتح "${button.label}" في نافذة جديدة`, 'success');
+        } else {
+            showToast('⚠️ تم حظر النافذة المنبثقة، يرجى السماح بها', 'warning');
+        }
+    } else {
+        window.location.href = fullPath;
+        showToast(`✅ تم فتح "${button.label}"`, 'success');
+    }
+}
+window.openCustomButton = openCustomButton;
+
+// ============================================
+// فتح نافذة إضافة زر جديد
+// ============================================
+function openAddButtonModal() {
+    editingButtonId = null;
+    document.getElementById('buttonModalTitle').textContent = '➕ إضافة زر جديد';
+    document.getElementById('customButtonForm').reset();
+    document.getElementById('buttonId').value = '';
+    document.getElementById('buttonStatus').value = 'true';
+    document.getElementById('buttonPosition').value = 'both';
+    document.getElementById('buttonNewWindow').checked = true;
+    document.getElementById('buttonOrder').value = 0;
+    document.getElementById('customButtonModal').classList.add('active');
+}
+window.openAddButtonModal = openAddButtonModal;
+
+// ============================================
+// فتح نافذة تعديل زر
+// ============================================
+function editCustomButton(buttonId) {
+    try {
+        const button = customButtons.find(b => b.id === buttonId);
+        if (!button) {
+            showToast('⚠️ الزر غير موجود', 'warning');
+            return;
+        }
+        
+        editingButtonId = buttonId;
+        document.getElementById('buttonModalTitle').textContent = '✏️ تعديل الزر';
+        document.getElementById('buttonId').value = button.id;
+        document.getElementById('buttonLabel').value = button.label || '';
+        document.getElementById('buttonPath').value = button.path || '';
+        document.getElementById('buttonIcon').value = button.icon || 'fa-link';
+        document.getElementById('buttonPosition').value = button.position || 'both';
+        document.getElementById('buttonStatus').value = button.is_active ? 'true' : 'false';
+        document.getElementById('buttonOrder').value = button.display_order || 0;
+        document.getElementById('buttonNewWindow').checked = button.open_in_new_window !== false;
+        document.getElementById('customButtonModal').classList.add('active');
+        
+    } catch (error) {
+        console.error('❌ خطأ:', error);
+        showToast('❌ حدث خطأ', 'error');
+    }
+}
+window.editCustomButton = editCustomButton;
+
+// ============================================
+// إغلاق نافذة الزر
+// ============================================
+function closeButtonModal() {
+    document.getElementById('customButtonModal').classList.remove('active');
+}
+window.closeButtonModal = closeButtonModal;
+
+// ============================================
+// حفظ الزر المخصص
+// ============================================
+async function saveCustomButton(event) {
+    event.preventDefault();
+    
+    const id = document.getElementById('buttonId').value;
+    const label = document.getElementById('buttonLabel').value.trim();
+    const path = document.getElementById('buttonPath').value.trim();
+    const icon = document.getElementById('buttonIcon').value;
+    const position = document.getElementById('buttonPosition').value;
+    const is_active = document.getElementById('buttonStatus').value === 'true';
+    const display_order = parseInt(document.getElementById('buttonOrder').value) || 0;
+    const open_in_new_window = document.getElementById('buttonNewWindow').checked;
+    
+    if (!label || !path) {
+        showToast('⚠️ الرجاء إدخال اسم الزر ومسار الملف', 'warning');
+        return;
+    }
+    
+    const data = {
+        label,
+        path,
+        icon: icon || 'fa-link',
+        position,
+        is_active,
+        display_order,
+        open_in_new_window,
+        updated_at: new Date().toISOString()
+    };
+    
+    try {
+        if (!supabase) {
+            saveButtonLocally(id, data);
+            return;
+        }
+        
+        let result;
+        if (id) {
+            result = await supabase
+                .from('custom_buttons')
+                .update(data)
+                .eq('id', id);
+        } else {
+            data.created_at = new Date().toISOString();
+            result = await supabase
+                .from('custom_buttons')
+                .insert(data);
+        }
+        
+        if (result.error) throw result.error;
+        
+        showToast(id ? '✅ تم تحديث الزر' : '✅ تم إضافة الزر', 'success');
+        closeButtonModal();
+        loadCustomButtons();
+        
+    } catch (error) {
+        console.error('❌ خطأ في حفظ الزر:', error);
+        saveButtonLocally(id, data);
+    }
+}
+window.saveCustomButton = saveCustomButton;
+
+// ============================================
+// حفظ الزر محلياً (حل بديل)
+// ============================================
+function saveButtonLocally(id, data) {
+    let buttons = JSON.parse(localStorage.getItem('tithkari_custom_buttons') || '[]');
+    
+    if (id) {
+        const index = buttons.findIndex(b => b.id === id);
+        if (index !== -1) {
+            buttons[index] = { ...buttons[index], ...data };
+        }
+    } else {
+        const newButton = {
+            id: 'btn_' + Date.now(),
+            ...data,
+            created_at: new Date().toISOString()
+        };
+        buttons.push(newButton);
+    }
+    
+    localStorage.setItem('tithkari_custom_buttons', JSON.stringify(buttons));
+    customButtons = buttons;
+    
+    renderCustomButtons();
+    renderCustomButtonsInNav();
+    renderCustomButtonsInBottom();
+    
+    showToast('✅ تم حفظ الزر محلياً', 'success');
+    closeButtonModal();
+}
+
+// ============================================
+// تحميل الأزرار من التخزين المحلي
+// ============================================
+function loadButtonsFromLocal() {
+    try {
+        const buttons = JSON.parse(localStorage.getItem('tithkari_custom_buttons') || '[]');
+        if (buttons.length > 0) {
+            customButtons = buttons;
+            renderCustomButtons();
+            renderCustomButtonsInNav();
+            renderCustomButtonsInBottom();
+            return true;
+        }
+    } catch (e) {
+        console.log('⚠️ لا توجد أزرار محفوظة محلياً');
+    }
+    return false;
+}
+
+// ============================================
+// حذف زر مخصص
+// ============================================
+async function deleteCustomButton(buttonId) {
+    if (!confirm('⚠️ هل أنت متأكد من حذف هذا الزر؟')) return;
+    
+    try {
+        if (supabase) {
+            const { error } = await supabase
+                .from('custom_buttons')
+                .delete()
+                .eq('id', buttonId);
+            
+            if (error) throw error;
+        }
+        
+        let buttons = JSON.parse(localStorage.getItem('tithkari_custom_buttons') || '[]');
+        buttons = buttons.filter(b => b.id !== buttonId);
+        localStorage.setItem('tithkari_custom_buttons', JSON.stringify(buttons));
+        
+        showToast('✅ تم حذف الزر', 'success');
+        loadCustomButtons();
+        
+    } catch (error) {
+        console.error('❌ خطأ في حذف الزر:', error);
+        showToast('❌ حدث خطأ: ' + error.message, 'error');
+    }
+}
+window.deleteCustomButton = deleteCustomButton;
+
+// ============================================
+// تبديل حالة الزر
+// ============================================
+async function toggleCustomButtonStatus(buttonId) {
+    try {
+        const button = customButtons.find(b => b.id === buttonId);
+        if (!button) return;
+        
+        const newStatus = !button.is_active;
+        
+        if (supabase) {
+            const { error } = await supabase
+                .from('custom_buttons')
+                .update({ is_active: newStatus })
+                .eq('id', buttonId);
+            
+            if (error) throw error;
+        }
+        
+        let buttons = JSON.parse(localStorage.getItem('tithkari_custom_buttons') || '[]');
+        const index = buttons.findIndex(b => b.id === buttonId);
+        if (index !== -1) {
+            buttons[index].is_active = newStatus;
+            localStorage.setItem('tithkari_custom_buttons', JSON.stringify(buttons));
+        }
+        
+        showToast(`✅ تم ${newStatus ? 'تفعيل' : 'إيقاف'} الزر`, 'success');
+        loadCustomButtons();
+        
+    } catch (error) {
+        console.error('❌ خطأ:', error);
+        showToast('❌ حدث خطأ', 'error');
+    }
+}
+window.toggleCustomButtonStatus = toggleCustomButtonStatus;
 
 // ============================================
 // تحميل الإحصائيات
@@ -4345,6 +4834,29 @@ window.loadDashboard = async function() {
 };
 
 // ============================================
+// ✅ دالة فتح نافذة تخصيص المتجر
+// ============================================
+window.openCustomizer = function(event) {
+    if (event) event.preventDefault();
+    
+    const width = 1200;
+    const height = 800;
+    const left = (window.innerWidth - width) / 2;
+    const top = (window.innerHeight - height) / 2;
+    
+    const features = `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,scrollbars=yes,resizable=yes`;
+    
+    const newWindow = window.open('customize-store.html', 'TithkariCustomizer', features);
+    
+    if (newWindow) {
+        newWindow.focus();
+        showToast('🎨 تم فتح نافذة تخصيص المتجر', 'info');
+    } else {
+        showToast('⚠️ تم حظر النافذة المنبثقة، يرجى السماح بها', 'warning');
+    }
+};
+
+// ============================================
 // جعل الدوال العامة متاحة
 // ============================================
 window.loadDashboard = loadDashboard;
@@ -4413,6 +4925,16 @@ window.loadEmailSettings = loadEmailSettings;
 window.saveEmailSettings = saveEmailSettings;
 window.sendTestEmail = sendTestEmail;
 
+// دوال الأزرار المخصصة
+window.openCustomButton = openCustomButton;
+window.openAddButtonModal = openAddButtonModal;
+window.closeButtonModal = closeButtonModal;
+window.editCustomButton = editCustomButton;
+window.deleteCustomButton = deleteCustomButton;
+window.toggleCustomButtonStatus = toggleCustomButtonStatus;
+window.saveCustomButton = saveCustomButton;
+window.loadCustomButtons = loadCustomButtons;
+
 // ============================================
 // بدء التشغيل
 // ============================================
@@ -4455,6 +4977,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initCodeEditor();
     loadCustomers();
     loadDashboard();
+    loadCustomButtons();
     
     setTimeout(function() {
         loadProductsForFieldSelector();
@@ -4500,5 +5023,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 1500);
     
     console.log('✅ Admin Panel Ready');
-    console.log('📋 Available tabs:', ['dashboard', 'products', 'orders', 'add-product', 'custom-fields', 'analytics', 'banners', 'menus', 'customers', 'settings', 'design-templates', 'code-editor', 'store-settings', 'advanced-settings', 'footer', 'categories', 'coupons', 'reviews', 'payment-settings', 'email-settings', 'payment-shipping', 'tools'].join(', '));
+    console.log('📋 Available tabs:', ['dashboard', 'products', 'orders', 'add-product', 'custom-fields', 'analytics', 'banners', 'menus', 'customers', 'settings', 'design-templates', 'code-editor', 'store-settings', 'advanced-settings', 'footer', 'categories', 'coupons', 'reviews', 'payment-settings', 'email-settings', 'payment-shipping', 'tools', 'custom-buttons'].join(', '));
 });

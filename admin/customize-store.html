@@ -1,0 +1,3071 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    <title>🎨 تخصيص المتجر - Tithkari</title>
+    
+    <!-- ===== Meta Tags للجوال ===== -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Tithkari - تخصيص المتجر" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#0F0F1A" />
+    <meta name="format-detection" content="telephone=no" />
+    
+    <!-- ===== الخطوط والأيقونات ===== -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    
+    <!-- ===== Supabase ===== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        /* ===== أنماط إضافية للصفحة ===== */
+        .customize-page {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .customize-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 2px solid var(--primary, #FFD700);
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .customize-header h1 {
+            color: var(--primary, #FFD700);
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .customize-header .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .customize-header .actions button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 44px;
+            touch-action: manipulation;
+        }
+        
+        .btn-save {
+            background: linear-gradient(135deg, var(--primary, #FFD700), var(--primaryLight, #FFED4A));
+            color: var(--text, #0F0F1A);
+        }
+        
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
+        }
+        
+        .btn-reset {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        .btn-reset:hover { background: rgba(239, 68, 68, 0.25); }
+        
+        .btn-export {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        .btn-export:hover { background: rgba(16, 185, 129, 0.25); }
+        
+        .btn-close {
+            background: rgba(255, 255, 255, 0.05);
+            color: #8A8A9B;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .btn-close:hover { background: rgba(255, 255, 255, 0.1); }
+        
+        /* ===== تبويبات التخصيص ===== */
+        .customize-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 30px;
+            background: var(--surface, #1A1A2E);
+            padding: 5px;
+            border-radius: 12px;
+            flex-wrap: wrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .customize-tabs .tab-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: var(--textSecondary, #8A8A9B);
+            font-family: 'Cairo', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            min-height: 44px;
+            touch-action: manipulation;
+        }
+        
+        .customize-tabs .tab-btn:hover {
+            color: var(--text, #FFFFFF);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .customize-tabs .tab-btn.active {
+            background: var(--primary, #FFD700);
+            color: var(--text, #0F0F1A);
+        }
+        
+        .customize-tabs .tab-btn i { margin-left: 8px; }
+        
+        /* ===== محتوى التبويبات ===== */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .tab-content.active { display: block; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* ===== Toast Notification ===== */
+        .toast-notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--surface, #1A1A2E);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 8px;
+            padding: 12px 24px;
+            color: var(--text, #fff);
+            font-size: 14px;
+            z-index: 99999;
+            animation: slideUp 0.4s ease;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            font-family: 'Cairo', sans-serif;
+            max-width: 90%;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .toast-notification.success { border-color: #10b981; }
+        .toast-notification.error { border-color: #ef4444; }
+        .toast-notification.warning { border-color: #fbbf24; }
+        .toast-notification.info { border-color: #3b82f6; }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateX(-50%) translateY(30px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        
+        /* ===== أقسام المنتجات ===== */
+        .section-card {
+            background: var(--surface, #1A1A2E);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255,215,0,0.05);
+            transition: all 0.3s ease;
+        }
+        .section-card:hover { border-color: rgba(255,215,0,0.15); }
+        .section-card .section-header-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .section-card .section-icon { font-size: 32px; }
+        .section-card .section-title-text {
+            color: var(--text, #FFFFFF);
+            margin: 0;
+            font-size: 16px;
+        }
+        .section-card .section-subtitle-text {
+            color: var(--textSecondary, #8A8A9B);
+            font-size: 12px;
+            margin: 2px 0;
+        }
+        .section-card .section-status { font-size: 11px; }
+        .section-card .section-status.active { color: #10b981; }
+        .section-card .section-status.inactive { color: #ef4444; }
+        .section-card .section-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .section-card .section-actions button {
+            padding: 4px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            min-height: 32px;
+            touch-action: manipulation;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--textSecondary, #8A8A9B);
+        }
+        .empty-state i {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 10px;
+            opacity: 0.3;
+        }
+        .empty-state h3 { color: var(--text, #FFFFFF); margin-bottom: 5px; }
+        .empty-state p { font-size: 14px; }
+        
+        /* ===== معاينة المنتجات في أقسام الإدارة (مبسطة) ===== */
+        .section-products-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+            min-height: 40px;
+        }
+        
+        .product-preview-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            width: 65px;
+            padding: 4px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            cursor: default;
+        }
+        
+        .product-preview-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+        }
+        
+        .product-preview-item img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 215, 0, 0.08);
+            background: var(--dark);
+        }
+        
+        .product-preview-item span {
+            font-size: 10px;
+            color: var(--gray);
+            text-align: center;
+            max-width: 65px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .product-preview-more {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            border-radius: 6px;
+            background: rgba(255, 215, 0, 0.05);
+            border: 1px dashed rgba(255, 215, 0, 0.15);
+            color: var(--gold);
+            font-size: 14px;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+        
+        .section-products-empty {
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 6px;
+            border: 1px dashed rgba(255, 215, 0, 0.05);
+        }
+        
+        .section-products-empty p {
+            color: var(--gray);
+            font-size: 12px;
+            margin: 5px 0;
+        }
+        
+        /* ===== الإعدادات المتقدمة ===== */
+        .advanced-settings {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .advanced-settings .settings-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .advanced-settings .settings-section {
+            background: var(--surface, #1A1A2E);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+        }
+        .advanced-settings .settings-section h4 {
+            color: var(--primary, #FFD700);
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .advanced-settings .settings-section .form-group { margin-bottom: 12px; }
+        .advanced-settings .settings-section .form-group:last-child { margin-bottom: 0; }
+        .advanced-settings .settings-section .form-group label {
+            display: block;
+            color: var(--textSecondary, #8A8A9B);
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        .advanced-settings .settings-section .form-group input,
+        .advanced-settings .settings-section .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            background: var(--background, #0F0F1A);
+            color: var(--text, #FFFFFF);
+            border: 1px solid rgba(255, 215, 0, 0.08);
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            min-height: 44px;
+        }
+        .advanced-settings .settings-section .form-group input:focus,
+        .advanced-settings .settings-section .form-group select:focus {
+            border-color: var(--primary, #FFD700);
+            outline: none;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.05);
+        }
+        .advanced-settings .settings-section .form-group input[type="color"] {
+            height: 50px;
+            padding: 4px;
+            cursor: pointer;
+        }
+        .advanced-settings .settings-section .form-group input[type="file"] {
+            padding: 8px;
+            cursor: pointer;
+        }
+        .advanced-settings .settings-section .form-group .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .advanced-settings .settings-section .form-group .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            min-height: 18px;
+            min-width: 18px;
+            cursor: pointer;
+        }
+        
+        /* ===== معاينة الصور ===== */
+        #advLogoPreview img,
+        #advBgImagePreview img {
+            max-width: 150px;
+            max-height: 100px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            object-fit: contain;
+        }
+        
+        /* ===== البنرات ===== */
+        .banner-thumb-preview {
+            width: 80px;
+            height: 60px;
+            border-radius: 8px;
+            background-size: cover;
+            background-position: center;
+            flex-shrink: 0;
+            border: 1px solid rgba(255,215,0,0.1);
+        }
+        
+        .banner-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 20px;
+            background: var(--surface, #1A1A2E);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+            transition: all 0.3s ease;
+            flex-wrap: wrap;
+            gap: 10px;
+            border-right: 3px solid transparent;
+        }
+        .banner-item:hover { border-color: rgba(255, 215, 0, 0.15); }
+        .banner-item .banner-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
+            min-width: 150px;
+        }
+        .banner-item .banner-info .banner-details h4 {
+            font-size: 15px;
+            color: var(--text, #FFFFFF);
+        }
+        .banner-item .banner-info .banner-details p {
+            font-size: 12px;
+            color: var(--textSecondary, #8A8A9B);
+        }
+        .banner-item .banner-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .banner-item .banner-actions button {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            min-height: 32px;
+            touch-action: manipulation;
+        }
+        .banner-item .banner-actions .btn-edit {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+        }
+        .banner-item .banner-actions .btn-edit:hover { background: rgba(59, 130, 246, 0.25); }
+        .banner-item .banner-actions .btn-delete {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+        .banner-item .banner-actions .btn-delete:hover { background: rgba(239, 68, 68, 0.25); }
+        .banner-item .banner-actions .btn-toggle {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+        .banner-item .banner-actions .btn-toggle.inactive {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+        }
+        
+        .banners-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        
+        /* ===== الألوان المتقدمة ===== */
+        .color-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .color-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .color-item label {
+            font-size: 12px;
+            color: var(--textSecondary, #8A8A9B);
+        }
+        .color-item input[type="color"] {
+            height: 40px;
+            padding: 2px;
+            cursor: pointer;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 215, 0, 0.08);
+        }
+        .color-item input[type="text"] {
+            font-size: 11px;
+            padding: 2px 4px;
+            min-height: 28px;
+            text-align: center;
+            border-radius: 6px;
+            background: var(--background, #0F0F1A);
+            color: var(--text, #FFFFFF);
+            border: 1px solid rgba(255, 215, 0, 0.08);
+        }
+        
+        /* ===== الثيمات ===== */
+        .themes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .theme-card {
+            background: var(--surface, #1A1A2E);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+        }
+        .theme-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+        .theme-card.active {
+            border-color: var(--primary, #FFD700);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.1);
+        }
+        .theme-card .theme-preview {
+            height: 180px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .theme-card .theme-preview .theme-sample {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .theme-card .theme-preview .theme-sample .theme-sample-header {
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .theme-card .theme-preview .theme-sample .theme-sample-body {
+            flex: 1;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .theme-card .theme-preview .theme-sample .theme-sample-body div {
+            height: 20px;
+            border-radius: 4px;
+        }
+        .theme-card .theme-info {
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        .theme-card .theme-info h4 {
+            color: var(--text, #FFFFFF);
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+        .theme-card .theme-info p {
+            color: var(--textSecondary, #8A8A9B);
+            font-size: 12px;
+        }
+        
+        /* ===== الخطوط ===== */
+        .fonts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .font-group {
+            background: var(--surface, #1A1A2E);
+            border-radius: 8px;
+            padding: 15px 20px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+        }
+        .font-group label {
+            display: block;
+            color: var(--textSecondary, #8A8A9B);
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+        .font-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            background: var(--background, #0F0F1A);
+            color: var(--text, #FFFFFF);
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            min-height: 44px;
+        }
+        .font-group select:focus {
+            border-color: var(--primary, #FFD700);
+            outline: none;
+        }
+        .font-group .font-size-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .font-group .font-size-control input[type="range"] {
+            flex: 1;
+            accent-color: var(--primary, #FFD700);
+            height: 4px;
+            min-height: 20px;
+        }
+        .font-group .font-size-control span {
+            min-width: 40px;
+            text-align: center;
+            color: var(--primary, #FFD700);
+            font-weight: 700;
+        }
+        
+        .font-preview {
+            background: var(--surface, #1A1A2E);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+        }
+        .font-preview h4 {
+            color: var(--primary, #FFD700);
+            margin-bottom: 15px;
+        }
+        .font-preview .preview-text {
+            padding: 20px;
+            background: var(--background, #0F0F1A);
+            border-radius: 8px;
+            text-align: center;
+            color: var(--text, #FFFFFF);
+        }
+        
+        /* ===== عرض المنتجات ===== */
+        .display-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .display-option {
+            background: var(--surface, #1A1A2E);
+            border-radius: 8px;
+            padding: 15px 20px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+        }
+        .display-option:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+        .display-option.active {
+            border-color: var(--primary, #FFD700);
+        }
+        .display-option i {
+            font-size: 32px;
+            color: var(--primary, #FFD700);
+            display: block;
+            margin-bottom: 8px;
+        }
+        .display-option h4 {
+            color: var(--text, #FFFFFF);
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .display-option p {
+            color: var(--textSecondary, #8A8A9B);
+            font-size: 11px;
+        }
+        
+        .products-preview {
+            background: var(--surface, #1A1A2E);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+            min-height: 200px;
+        }
+        .products-preview .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .products-preview .preview-product {
+            background: var(--background, #0F0F1A);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+        }
+        .products-preview .preview-product .preview-image {
+            height: 120px;
+            background: var(--primary, #FFD700);
+            opacity: 0.2;
+        }
+        .products-preview .preview-product .preview-info {
+            padding: 10px 15px;
+        }
+        .products-preview .preview-product .preview-info h4 {
+            font-size: 13px;
+            color: var(--text, #FFFFFF);
+            margin-bottom: 2px;
+        }
+        .products-preview .preview-product .preview-info p {
+            font-size: 12px;
+            color: var(--textSecondary, #8A8A9B);
+        }
+        
+        /* ===== التذييل ===== */
+        .footer-items {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        .footer-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 18px;
+            background: var(--surface, #1A1A2E);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+            transition: all 0.3s ease;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .footer-item:hover { border-color: rgba(255, 215, 0, 0.15); }
+        .footer-item .item-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 150px;
+        }
+        .footer-item .item-info .item-icon {
+            font-size: 20px;
+            color: var(--primary, #FFD700);
+            width: 30px;
+            text-align: center;
+        }
+        .footer-item .item-info .item-details h4 {
+            font-size: 14px;
+            color: var(--text, #FFFFFF);
+        }
+        .footer-item .item-info .item-details p {
+            font-size: 12px;
+            color: var(--textSecondary, #8A8A9B);
+        }
+        .footer-item .item-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .footer-item .item-actions button {
+            padding: 4px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            min-height: 32px;
+            touch-action: manipulation;
+        }
+        
+        .footer-preview {
+            background: var(--surface, #1A1A2E);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+        }
+        .footer-preview .preview-footer {
+            padding: 20px;
+            background: var(--background, #0F0F1A);
+            border-radius: 8px;
+            color: var(--text, #FFFFFF);
+        }
+        .footer-preview .preview-footer .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 20px;
+        }
+        .footer-preview .preview-footer .footer-column h4 {
+            color: var(--primary, #FFD700);
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .footer-preview .preview-footer .footer-column p {
+            color: var(--textSecondary, #8A8A9B);
+            font-size: 12px;
+        }
+        
+        /* ===== النوافذ المنبثقة ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: var(--surface, #1A1A2E);
+            border-radius: 16px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 30px;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            animation: modalFade 0.3s ease;
+            -webkit-overflow-scrolling: touch;
+        }
+        @keyframes modalFade {
+            from { opacity: 0; transform: scale(0.95) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .modal-close {
+            float: left;
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            color: var(--text, #FFFFFF);
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+        }
+        .modal-close:hover {
+            background: rgba(239, 68, 68, 0.3);
+            transform: rotate(90deg);
+        }
+        .modal-content h2 {
+            color: var(--primary, #FFD700);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 22px;
+        }
+        .modal-content .form-group { margin-bottom: 15px; }
+        .modal-content .form-group label {
+            display: block;
+            color: var(--textSecondary, #8A8A9B);
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        .modal-content .form-group input,
+        .modal-content .form-group textarea,
+        .modal-content .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            background: var(--background, #0F0F1A);
+            color: var(--text, #FFFFFF);
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            min-height: 44px;
+        }
+        .modal-content .form-group input:focus,
+        .modal-content .form-group textarea:focus,
+        .modal-content .form-group select:focus {
+            border-color: var(--primary, #FFD700);
+            outline: none;
+        }
+        .modal-content .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .modal-content .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        /* ===== صور البنر ===== */
+        .images-list {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .images-list .image-item {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid rgba(255,215,0,0.1);
+        }
+        .images-list .image-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .images-list .image-item .remove-image {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ef4444;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* ===== تخصيص الثيم ===== */
+        .theme-customizer {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .theme-customizer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .customizer-section {
+            background: var(--surface, #1A1A2E);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+        }
+        .customizer-section h4 {
+            color: var(--primary, #FFD700);
+            font-size: 16px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .color-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .color-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .color-item label {
+            font-size: 12px;
+            color: var(--textSecondary, #8A8A9B);
+            min-width: 80px;
+            flex-shrink: 0;
+        }
+        .color-item input[type="color"] {
+            width: 40px;
+            height: 40px;
+            padding: 2px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 215, 0, 0.08);
+            cursor: pointer;
+            background: transparent;
+            flex-shrink: 0;
+        }
+        .color-item input[type="text"] {
+            flex: 1;
+            padding: 6px 10px;
+            border-radius: 6px;
+            background: var(--background, #0F0F1A);
+            color: var(--text, #FFFFFF);
+            border: 1px solid rgba(255, 215, 0, 0.08);
+            font-size: 12px;
+            font-family: 'Cairo', sans-serif;
+            min-height: 30px;
+        }
+        .color-item input[type="text"]:focus {
+            border-color: var(--primary, #FFD700);
+            outline: none;
+        }
+        
+        /* ===== معاينة الثيم ===== */
+        .theme-preview-section {
+            background: var(--surface, #1A1A2E);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.05);
+            margin-bottom: 20px;
+        }
+        .theme-preview-section h4 {
+            color: var(--primary, #FFD700);
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        .preview-container {
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border, rgba(255,255,255,0.08));
+        }
+        .preview-header {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--surface, #1A1A2E);
+            border-bottom: 1px solid var(--border, rgba(255,255,255,0.05));
+        }
+        .preview-logo {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary, #FFD700);
+        }
+        .preview-nav {
+            font-size: 13px;
+            color: var(--textSecondary, #8A8A9B);
+        }
+        .preview-body {
+            padding: 20px;
+            background: var(--background, #0F0F1A);
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            min-height: 200px;
+        }
+        .preview-card {
+            background: var(--cardBackground, #1A1A2E);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--cardBorder, rgba(255,255,255,0.05));
+        }
+        .preview-card-image {
+            height: 100px;
+            background: var(--primary, #FFD700);
+            opacity: 0.2;
+        }
+        .preview-card-content {
+            padding: 12px 14px;
+        }
+        .preview-card-content h4 {
+            font-size: 14px;
+            color: var(--text, #FFFFFF);
+            margin: 0 0 4px 0;
+        }
+        .preview-card-content p {
+            font-size: 12px;
+            color: var(--textSecondary, #8A8A9B);
+            margin: 0 0 6px 0;
+        }
+        .preview-card-price {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary, #FFD700);
+            margin-bottom: 8px;
+        }
+        .preview-card-btn {
+            width: 100%;
+            padding: 8px 12px;
+            background: var(--buttonPrimary, #1E88E5);
+            color: var(--buttonPrimaryText, #FFFFFF);
+            border: none;
+            border-radius: 6px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .preview-card-btn:hover {
+            background: var(--buttonHover, #1565C0);
+        }
+        .preview-footer {
+            padding: 12px 20px;
+            background: var(--surface, #1A1A2E);
+            text-align: center;
+            font-size: 12px;
+            color: var(--textSecondary, #8A8A9B);
+            border-top: 1px solid var(--border, rgba(255,255,255,0.05));
+        }
+        .customizer-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        
+        /* ===== CSS/JS مخصص ===== */
+        .custom-code-section textarea {
+            direction: ltr;
+            text-align: left;
+            font-family: 'Courier New', monospace !important;
+            font-size: 13px !important;
+            line-height: 1.8 !important;
+            tab-size: 4;
+        }
+        .custom-code-section textarea:focus {
+            border-color: var(--primary, #FFD700) !important;
+            outline: none !important;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.05) !important;
+        }
+        
+        /* ===== طرق العرض ===== */
+        .display-modes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .display-mode-card {
+            background: var(--surface, #1A1A2E);
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid rgba(255, 215, 0, 0.05);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        .display-mode-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+        .display-mode-card.active {
+            border-color: var(--primary, #FFD700);
+        }
+        .display-mode-card i {
+            font-size: 32px;
+            color: var(--textSecondary, #8A8A9B);
+            display: block;
+            margin-bottom: 10px;
+        }
+        .display-mode-card.active i {
+            color: var(--primary, #FFD700);
+        }
+        .display-mode-card h4 {
+            color: var(--text, #FFFFFF);
+            font-size: 14px;
+            margin: 0;
+        }
+        .display-mode-card p {
+            color: var(--textSecondary, #8A8A9B);
+            font-size: 11px;
+            margin: 4px 0 0;
+        }
+        .display-mode-card .active-badge {
+            display: inline-block;
+            margin-top: 8px;
+            background: var(--primary, #FFD700);
+            color: #0F0F1A;
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        
+        /* ===== أزرار الإعدادات المتقدمة ===== */
+        .settings-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .settings-actions .btn-save {
+            padding: 8px 16px;
+            font-size: 14px;
+            min-height: 40px;
+        }
+        .settings-actions .btn-apply {
+            padding: 8px 16px;
+            font-size: 14px;
+            min-height: 40px;
+            background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        .settings-actions .btn-apply:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+        }
+        
+        .btn-apply-all {
+            width: 100%;
+            justify-content: center;
+            padding: 12px 24px;
+            font-size: 16px;
+            background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            min-height: 50px;
+            margin-top: 10px;
+        }
+        .btn-apply-all:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+        }
+        
+        /* ===== تحسينات الجوال ===== */
+        @media (max-width: 768px) {
+            .customize-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            .customize-header .actions {
+                justify-content: center;
+                width: 100%;
+            }
+            .customize-header .actions button {
+                flex: 1;
+                justify-content: center;
+                min-width: 80px;
+            }
+            .customize-tabs .tab-btn {
+                font-size: 13px;
+                padding: 8px 16px;
+                min-height: 36px;
+            }
+            .advanced-settings .settings-section {
+                padding: 15px;
+            }
+            .advanced-settings .settings-section .form-group input,
+            .advanced-settings .settings-section .form-group select {
+                font-size: 13px;
+                padding: 8px 12px;
+                min-height: 38px;
+            }
+            .banner-item {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .banner-item .banner-info { flex-wrap: wrap; }
+            .banner-item .banner-actions { justify-content: center; }
+            .themes-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+            .color-row { grid-template-columns: 1fr 1fr; }
+            .modal-content .form-row { grid-template-columns: 1fr; }
+            .theme-customizer-grid { grid-template-columns: 1fr; }
+            .color-item { flex-wrap: wrap; }
+            .color-item label { min-width: 60px; font-size: 11px; }
+            .preview-body { grid-template-columns: 1fr 1fr; }
+            .display-modes-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+            .settings-actions { flex-direction: column; }
+            .settings-actions .btn-save,
+            .settings-actions .btn-apply { width: 100%; justify-content: center; }
+        }
+        
+        @media (max-width: 480px) {
+            .customize-header h1 { font-size: 22px; }
+            .customize-tabs .tab-btn {
+                font-size: 11px;
+                padding: 6px 12px;
+                min-height: 32px;
+            }
+            .customize-tabs .tab-btn i { margin-left: 4px; }
+            .section-card .section-header-info {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .section-card .section-actions { justify-content: center; }
+            .advanced-settings .settings-section { padding: 12px; }
+            .advanced-settings .settings-section h4 { font-size: 16px; }
+            #advLogoPreview img,
+            #advBgImagePreview img {
+                max-width: 100px;
+                max-height: 80px;
+            }
+            .banner-item .banner-actions { flex-wrap: wrap; }
+            .themes-grid { grid-template-columns: 1fr; }
+            .color-row { grid-template-columns: 1fr; }
+            .display-options { grid-template-columns: 1fr 1fr; }
+            .preview-body { grid-template-columns: 1fr; }
+            .customizer-actions { flex-direction: column; }
+            .customizer-actions button { width: 100%; justify-content: center; }
+            .display-modes-grid { grid-template-columns: 1fr 1fr; }
+        }
+        
+        @media (hover: none) and (pointer: coarse) {
+            .customize-tabs .tab-btn,
+            .customize-header .actions button {
+                min-height: 44px;
+                touch-action: manipulation;
+            }
+            .customize-tabs .tab-btn:hover {
+                color: #8A8A9B;
+                background: transparent;
+            }
+            .customize-tabs .tab-btn:active { transform: scale(0.95); }
+            .theme-card:hover { transform: none; }
+            .theme-card:active { transform: scale(0.97); }
+            .display-mode-card:hover { transform: none; }
+            .display-mode-card:active { transform: scale(0.97); }
+            .product-preview-item:hover { transform: none; }
+            .product-preview-item:active { transform: scale(0.95); }
+        }
+    </style>
+</head>
+<body>
+    <div class="customize-page">
+        <!-- ===== الهيدر ===== -->
+        <div class="customize-header">
+            <h1>
+                <i class="fas fa-paint-brush"></i>
+                تخصيص المتجر
+                <span style="font-size: 14px; color: var(--textSecondary, #8A8A9B); font-weight: 400;">
+                    - Tithkari
+                </span>
+            </h1>
+            <div class="actions">
+                <button class="btn-save" onclick="saveAllCustomizations()">
+                    <i class="fas fa-save"></i> حفظ الكل
+                </button>
+                <button class="btn-reset" onclick="resetAllSettings()">
+                    <i class="fas fa-undo"></i> إعادة تعيين
+                </button>
+                <button class="btn-export" onclick="exportSettings()">
+                    <i class="fas fa-download"></i> تصدير
+                </button>
+                <button class="btn-close" onclick="closeCustomizer()">
+                    <i class="fas fa-times"></i> إغلاق
+                </button>
+            </div>
+        </div>
+        
+        <!-- ===== التبويبات ===== -->
+        <div class="customize-tabs" id="customizeTabs">
+            <button class="tab-btn active" data-tab="themes">
+                <i class="fas fa-palette"></i> الثيمات
+            </button>
+            <button class="tab-btn" data-tab="theme-customizer">
+                <i class="fas fa-sliders-h"></i> تخصيص الثيم
+            </button>
+            <button class="tab-btn" data-tab="banners">
+                <i class="fas fa-images"></i> البنرات
+            </button>
+            <button class="tab-btn" data-tab="sections">
+                <i class="fas fa-boxes"></i> أقسام المنتجات
+            </button>
+            <button class="tab-btn" data-tab="colors">
+                <i class="fas fa-fill-drip"></i> الألوان
+            </button>
+            <button class="tab-btn" data-tab="fonts">
+                <i class="fas fa-font"></i> الخطوط
+            </button>
+            <button class="tab-btn" data-tab="products">
+                <i class="fas fa-box"></i> عرض المنتجات
+            </button>
+            <button class="tab-btn" data-tab="display-modes">
+                <i class="fas fa-th-large"></i> طرق العرض
+            </button>
+            <button class="tab-btn" data-tab="custom-css">
+                <i class="fas fa-code"></i> CSS مخصص
+            </button>
+            <button class="tab-btn" data-tab="custom-js">
+                <i class="fab fa-js"></i> JavaScript مخصص
+            </button>
+            <button class="tab-btn" data-tab="footer">
+                <i class="fas fa-shoe-prints"></i> التذييل
+            </button>
+            <button class="tab-btn" data-tab="advanced">
+                <i class="fas fa-cog"></i> إعدادات متقدمة
+            </button>
+        </div>
+        
+        <!-- ===== محتوى التبويبات ===== -->
+        <div class="customize-content">
+            
+            <!-- ===== تبويب الثيمات ===== -->
+            <div class="tab-content active" id="tab-themes">
+                <div class="themes-section">
+                    <h3 style="color: var(--primary, #FFD700);">🎨 اختر ثيم المتجر</h3>
+                    <p style="color: var(--textSecondary, #8A8A9B); margin-bottom: 20px;">
+                        اختر الثيم المناسب لمتجرك أو قم بتخصيص الألوان والخطوط يدوياً
+                    </p>
+                    <div class="themes-grid" id="themesGrid">
+                        <!-- سيتم تعبئتها بواسطة JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ===== تبويب تخصيص الثيم ===== -->
+            <div class="tab-content" id="tab-theme-customizer">
+                <div class="theme-customizer">
+                    <h3 style="color: var(--primary, #FFD700);">🎨 تخصيص الثيم المتقدم</h3>
+                    <p style="color: var(--textSecondary, #8A8A9B); margin-bottom: 20px;">
+                        قم بتخصيص كل جزء من الثيم يدوياً مع معاينة فورية
+                    </p>
+                    
+                    <div class="theme-customizer-grid" id="themeCustomizerGrid">
+                        <!-- سيتم تعبئتها بواسطة JavaScript -->
+                    </div>
+                    
+                    <div class="theme-preview-section">
+                        <h4>📋 معاينة الثيم</h4>
+                        <div class="preview-container">
+                            <div class="preview-header" id="previewHeader">
+                                <span class="preview-logo">🛡️ Tithkari</span>
+                                <span class="preview-nav">الرئيسية | المنتجات | تواصل</span>
+                            </div>
+                            <div class="preview-body" id="previewBody">
+                                <div class="preview-card">
+                                    <div class="preview-card-image"></div>
+                                    <div class="preview-card-content">
+                                        <h4>عنوان المنتج</h4>
+                                        <p>وصف المنتج التجريبي</p>
+                                        <div class="preview-card-price">199 ر.س</div>
+                                        <button class="preview-card-btn">أضف للسلة</button>
+                                    </div>
+                                </div>
+                                <div class="preview-card">
+                                    <div class="preview-card-image"></div>
+                                    <div class="preview-card-content">
+                                        <h4>منتج تجريبي</h4>
+                                        <p>وصف المنتج الثاني</p>
+                                        <div class="preview-card-price">299 ر.س</div>
+                                        <button class="preview-card-btn">أضف للسلة</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="preview-footer" id="previewFooter">
+                                <span>© 2026 Tithkari - جميع الحقوق محفوظة</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="customizer-actions">
+                        <button class="btn-save" onclick="saveCustomTheme()">
+                            <i class="fas fa-save"></i> حفظ الثيم المخصص
+                        </button>
+                        <button class="btn-reset" onclick="resetCustomTheme()">
+                            <i class="fas fa-undo"></i> إعادة تعيين الثيم
+                        </button>
+                        <button class="btn-export" onclick="exportCustomTheme()">
+                            <i class="fas fa-download"></i> تصدير الثيم
+                        </button>
+                        <button class="btn-save" onclick="importCustomTheme()" style="background:#8B5CF6;color:white;">
+                            <i class="fas fa-upload"></i> استيراد الثيم
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ===== تبويب البنرات المتطورة ===== -->
+            <div class="tab-content" id="tab-banners">
+                <div class="banners-section">
+                    <div class="section-header">
+                        <h3 style="color: var(--primary, #FFD700);">📢 إدارة البنرات المتطورة</h3>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                            <button class="btn-save" onclick="openAdvancedBannerForm()" style="padding:8px 16px;font-size:14px;">
+                                <i class="fas fa-plus"></i> إضافة بنر
+                            </button>
+                            <button class="btn-save" onclick="loadAdvancedBanners()" style="background:#3b82f6;color:white;padding:8px 16px;font-size:14px;">
+                                <i class="fas fa-sync"></i> تحديث
+                            </button>
+                        </div>
+                    </div>
+                    <div class="banners-list" id="advancedBannersList">
+                        <!-- سيتم تعبئتها بواسطة JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ===== تبويب أقسام المنتجات ===== -->
+            <div class="tab-content" id="tab-sections">
+                <div class="sections-management">
+                    <div class="section-header">
+                        <h3 style="color: var(--primary, #FFD700);">📦 إدارة أقسام المنتجات</h3>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                            <button class="btn-save" onclick="openProductSectionForm()" style="padding:8px 16px;font-size:14px;background:#8B5CF6;color:white;">
+                                <i class="fas fa-plus"></i> إضافة قسم
+                            </button>
+                            <button class="btn-save" onclick="loadProductSections()" style="background:#3b82f6;color:white;padding:8px 16px;font-size:14px;">
+                                <i class="fas fa-sync"></i> تحديث
+                            </button>
+                        </div>
+                    </div>
+                    <div id="productSectionsList">
+                        <!-- سيتم تعبئتها بواسطة JavaScript (معاينة مبسطة) -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ===== تبويب الألوان المتقدمة ===== -->
+            <div class="tab-content" id="tab-colors">
+                <div class="colors-section">
+                    <h3 style="color: var(--primary, #FFD700);">🌈 تخصيص الألوان المتقدم</h3>
+                    <p style="color: var(--textSecondary, #8A8A9B); margin-bottom: 20px;">
+                        قم بتغيير جميع ألوان المتجر حسب رغبتك
+                    </p>
+                    <div id="advancedColorsContainer">
+                        <!-- سيتم تعبئتها بواسطة JavaScript -->
+                    </div>
+                    <button class="btn-save" onclick="saveAdvancedColors()" style="margin-top:20px;">
+                        <i class="fas fa-save"></i> حفظ جميع الألوان
+                    </button>
+                </div>
+            </div>
+            
+            <!-- ===== تبويب الخطوط ===== -->
+            <div class="tab-content" id="tab-fonts">
+                <div class="fonts-section">
+                    <h3 style="color: var(--primary, #FFD700);">🔤 تخصيص الخطوط</h3>
+                    <p style="color: var(--textSecondary, #8A8A9B); margin-bottom: 20px;">
+                        اختر الخطوط المناسبة لمتجرك
+                    </p>
+                    <div class="fonts-grid" id="fontsGrid">
+                        <!-- سيتم تعبئتها بواسطة JavaScript -->
+                    </div>
+                    <div class="font-preview">
+                        <h4 style="color: var(--primary, #FFD700);">📝 معاينة النص</h4>
+                        <div class="preview-text" id="previewText">
+                            <p style="font-size: 24px; font-weight: 700;">عنوان رئيسي</p>
+                            <p style="font-size: 18px;">نص عادي للعرض</p>
+                            <p style="font-size: 14px; color: var(--textSecondary, #8A8A9B);">نص صغير للتفاصيل</p>
+                        </div>
+                    </div>
+                    <button class="btn-save" onclick="saveFonts()" style="margin-top:20px;">
+                        <i class="fas fa-save"></i> حفظ الخطوط
+                    </button>
+                </div>
+            </div>
+            
+            <!-- ===== تبويب عرض المنتجات ===== -->
+            <div class="tab-content" id="tab-products">
+                <div class="products-display-section">
+                    <h3 style="color: var(--primary, #FFD700);">📦 تخصيص عرض المنتجات</h3>
+                    <p style="color: var(--textSecondary, #8A8A9B); margin-bottom: 20px;">
+                        اختر كيفية عرض المنتجات في المتجر
+                    </p>
+                    <div class="display-options" id="displayOptions">
+                        <!-- سيتم تعبئتها بواسطة JavaScript -->
+                    </div>
+                    <div class="products-preview" id="productsPreview">
+                        <!-- سيتم تعبئتها بواسطة JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ===== تبويب طرق العرض ===== -->
+            <div class="tab-content" id="tab-display-modes">
+                <div class="display-modes-section">
+                    <h3 style="color: var(--primary, #FFD700);">📐 طرق عرض المنتجات</h3>
+                    <p style="color: var(--textSecondary, #8A8A9B); margin-bottom: 20px;">
+                        اختر طريقة عرض المنتجات في المتجر وقم بتخصيصها
+                    </p>
+                    
+                    <div class="display-modes-grid" id="displayModesGrid">
+                        <!-- سيتم تعبئتها بواسطة JavaScript -->
+                    </div>
+                    
+                    <div style="margin-top:20px;background:var(--surface,#1A1A2E);border-radius:12px;padding:20px;border:1px solid rgba(255,215,0,0.05);">
+                        <h4 style="color:var(--primary,#FFD700);">🎨 تخصيص طريقة العرض</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label style="color: var(--textSecondary, #8A8A9B);">عدد الأعمدة في الشبكة</label>
+                                <select id="gridColumns">
+                                    <option value="2">2 أعمدة</option>
+                                    <option value="3">3 أعمدة</option>
+                                    <option value="4" selected>4 أعمدة</option>
+                                    <option value="5">5 أعمدة</option>
+                                    <option value="6">6 أعمدة</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label style="color: var(--textSecondary, #8A8A9B);">حجم الصورة</label>
+                                <select id="imageSize">
+                                    <option value="small">صغير</option>
+                                    <option value="medium" selected>متوسط</option>
+                                    <option value="large">كبير</option>
+                                    <option value="xlarge">كبير جداً</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label style="color: var(--textSecondary, #8A8A9B);">نوع البطاقة</label>
+                                <select id="cardStyle">
+                                    <option value="default">افتراضي</option>
+                                    <option value="compact">مضغوط</option>
+                                    <option value="elegant">أنيق</option>
+                                    <option value="modern">حديث</option>
+                                    <option value="minimal">بسيط</option>
+                                    <option value="glass">زجاجي</option>
+                                    <option value="neon">نيون</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label style="color: var(--textSecondary, #8A8A9B);">تأثير التمرير</label>
+                                <select id="hoverEffect">
+                                    <option value="scale">تكبير</option>
+                                    <option value="glow">توهج</option>
+                                    <option value="lift">رفع</option>
+                                    <option value="none">بدون تأثير</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label style="display:flex;align-items:center;gap:8px;color:var(--textSecondary,#8A8A9B);">
+                                <input type="checkbox" id="showQuickView" checked /> عرض زر المعاينة السريعة
+                            </label>
+                            <label style="display:flex;align-items:center;gap:8px;color:var(--textSecondary,#8A8A9B);margin-top:6px;">
+                                <input type="checkbox" id="showWishlist" /> عرض زر المفضلة
+                            </label>
+                            <label style="display:flex;align-items:center;gap:8px;color:var(--textSecondary,#8A8A9B);margin-top:6px;">
+                                <input type="checkbox" id="showCompare" /> عرض زر المقارنة
+                            </label>
+                        </div>
+                        <button class="btn-save" onclick="saveDisplaySettings()" style="margin-top:15px;">
+                            <i class="fas fa-save"></i> حفظ إعدادات العرض
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ===== تبويب CSS مخصص ===== -->
+            <div class="tab-content" id="tab-custom-css">
+                <div class="custom-code-section">
+                    <div class="section-header">
+                        <h3 style="color: var(--primary, #FFD700);">🎨 CSS مخصص</h3>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                            <button class="btn-save" onclick="saveCustomCSS()" style="padding:8px 16px;font-size:14px;">
+                                <i class="fas fa-save"></i> حفظ CSS
+                            </button>
+                            <button class="btn-export" onclick="exportCustomCSS()" style="padding:8px 16px;font-size:14px;">
+                                <i class="fas fa-download"></i> تصدير
+                            </button>
+                            <button class="btn-reset" onclick="resetCustomCSS()" style="padding:8px 16px;font-size:14px;">
+                                <i class="fas fa-undo"></i> إعادة تعيين
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--surface, #1A1A2E); border-radius: 12px; padding: 20px; border: 1px solid rgba(255, 215, 0, 0.05);">
+                        <div class="form-group">
+                            <label style="color: var(--textSecondary, #8A8A9B);">📝 كود CSS مخصص</label>
+                            <p style="color: var(--textMuted, #6B6B7B); font-size: 13px; margin-bottom: 8px;">
+                                أضف كود CSS لتخصيص مظهر المتجر. سيتم تطبيقه على جميع الصفحات.
+                            </p>
+                            <textarea id="customCssEditor" rows="15" style="width:100%;padding:15px;border-radius:8px;background:var(--background,#0F0F1A);color:var(--text,#FFFFFF);border:1px solid rgba(255,215,0,0.08);font-family:'Courier New',monospace;font-size:13px;line-height:1.8;resize:vertical;min-height:200px;" placeholder="/* اكتب كود CSS المخصص هنا */&#10;&#10;.product-card {&#10;    border-radius: 20px;&#10;    box-shadow: 0 10px 40px rgba(0,0,0,0.5);&#10;}&#10;&#10;.btn-primary {&#10;    background: linear-gradient(135deg, #FF6B6B, #EE5A24);&#10;    border-radius: 50px;&#10;}"></textarea>
+                        </div>
+                        
+                        <div class="form-group" style="margin-top:15px;">
+                            <label style="color: var(--textSecondary, #8A8A9B);">📄 معاينة الكود</label>
+                            <div id="customCssPreview" style="background: var(--background, #0F0F1A); border-radius: 8px; padding: 15px; border: 1px solid rgba(255, 215, 0, 0.05); min-height: 60px; max-height: 200px; overflow: auto; font-family: 'Courier New', monospace; font-size: 12px; color: var(--textSecondary, #8A8A9B); white-space: pre-wrap; direction: ltr; text-align: left;">
+                                // سيتم عرض معاينة الكود هنا
+                            </div>
+                        </div>
+                        
+                        <div class="form-group" style="margin-top:15px;display:flex;gap:10px;flex-wrap:wrap;">
+                            <button class="btn-save" onclick="previewCustomCSS()" style="background:#3b82f6;color:white;padding:8px 16px;border:none;border-radius:8px;font-family:'Cairo',sans-serif;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;">
+                                <i class="fas fa-eye"></i> معاينة التغييرات
+                            </button>
+                            <button class="btn-save" onclick="applyCustomCSS()" style="background:#8B5CF6;color:white;padding:8px 16px;border:none;border-radius:8px;font-family:'Cairo',sans-serif;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;">
+                                <i class="fas fa-check"></i> تطبيق CSS
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top:20px;background:var(--surface,#1A1A2E);border-radius:12px;padding:20px;border:1px solid rgba(255,215,0,0.05);">
+                        <h4 style="color:var(--primary,#FFD700);">📚 أمثلة CSS</h4>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:10px;">
+                            <button class="btn-secondary" onclick="loadCSSExample('modern')" style="padding:8px 12px;border-radius:6px;background:rgba(255,255,255,0.05);color:var(--text,#FFFFFF);border:1px solid rgba(255,255,255,0.1);cursor:pointer;font-family:'Cairo',sans-serif;font-size:12px;text-align:center;">
+                                🎨 حديث
+                            </button>
+                            <button class="btn-secondary" onclick="loadCSSExample('glass')" style="padding:8px 12px;border-radius:6px;background:rgba(255,255,255,0.05);color:var(--text,#FFFFFF);border:1px solid rgba(255,255,255,0.1);cursor:pointer;font-family:'Cairo',sans-serif;font-size:12px;text-align:center;">
+                                🪟 زجاجي
+                            </button>
+                            <button class="btn-secondary" onclick="loadCSSExample('minimal')" style="padding:8px 12px;border-radius:6px;background:rgba(255,255,255,0.05);color:var(--text,#FFFFFF);border:1px solid rgba(255,255,255,0.1);cursor:pointer;font-family:'Cairo',sans-serif;font-size:12px;text-align:center;">
+                                ✨ بسيط
+                            </button>
+                            <button class="btn-secondary" onclick="loadCSSExample('dark')" style="padding:8px 12px;border-radius:6px;background:rgba(255,255,255,0.05);color:var(--text,#FFFFFF);border:1px solid rgba(255,255,255,0.1);cursor:pointer;font-family:'Cairo',sans-serif;font-size:12px;text-align:center;">
+                                🌙 داكن
+                            </button>
+                            <button class="btn-secondary" onclick="loadCSSExample('neon')" style="padding:8px 12px;border-radius:6px;background:rgba(255,255,255,0.05);color:var(--text,#FFFFFF);border:1px solid rgba(255,255,255,0.1);cursor:pointer;font-family:'Cairo',sans-serif;font-size:12px;text-align:center;">
+                                💡 نيون
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ===== تبويب JavaScript مخصص ===== -->
+            <div class="tab-content" id="tab-custom-js">
+                <div class="custom-code-section">
+                    <div class="section-header">
+                        <h3 style="color: var(--primary, #FFD700);">⚡ JavaScript مخصص</h3>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                            <button class="btn-save" onclick="saveCustomJS()" style="padding:8px 16px;font-size:14px;">
+                                <i class="fas fa-save"></i> حفظ JS
+                            </button>
+                            <button class="btn-export" onclick="exportCustomJS()" style="padding:8px 16px;font-size:14px;">
+                                <i class="fas fa-download"></i> تصدير
+                            </button>
+                            <button class="btn-reset" onclick="resetCustomJS()" style="padding:8px 16px;font-size:14px;">
+                                <i class="fas fa-undo"></i> إعادة تعيين
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--surface, #1A1A2E); border-radius: 12px; padding: 20px; border: 1px solid rgba(255, 215, 0, 0.05);">
+                        <div class="form-group">
+                            <label style="color: var(--textSecondary, #8A8A9B);">📝 كود JavaScript مخصص</label>
+                            <p style="color: var(--textMuted, #6B6B7B); font-size: 13px; margin-bottom: 8px;">
+                                أضف كود JavaScript لتخصيص وظائف المتجر. سيتم تنفيذه بعد تحميل الصفحة.
+                            </p>
+                            <textarea id="customJsEditor" rows="15" style="width:100%;padding:15px;border-radius:8px;background:var(--background,#0F0F1A);color:var(--text,#FFFFFF);border:1px solid rgba(255,215,0,0.08);font-family:'Courier New',monospace;font-size:13px;line-height:1.8;resize:vertical;min-height:200px;" placeholder="// اكتب كود JavaScript المخصص هنا&#10;&#10;console.log('🛡️ Tithkari - Custom JS loaded');&#10;&#10;// مثال: تغيير سلوك الأزرار&#10;document.querySelectorAll('.btn-primary').forEach(btn => {&#10;    btn.addEventListener('click', function(e) {&#10;        console.log('Button clicked!');&#10;        this.style.transform = 'scale(0.95)';&#10;        setTimeout(() => {&#10;            this.style.transform = 'scale(1)';&#10;        }, 200);&#10;    });&#10;});"></textarea>
+                        </div>
+                        
+                        <div class="form-group" style="margin-top:15px;">
+                            <label style="color: var(--textSecondary, #8A8A9B);">📄 معاينة الكود</label>
+                            <div id="customJsPreview" style="background: var(--background, #0F0F1A); border-radius: 8px; padding: 15px; border: 1px solid rgba(255, 215, 0, 0.05); min-height: 60px; max-height: 200px; overflow: auto; font-family: 'Courier New', monospace; font-size: 12px; color: var(--textSecondary, #8A8A9B); white-space: pre-wrap; direction: ltr; text-align: left;">
+                                // سيتم عرض معاينة الكود هنا
+                            </div>
+                        </div>
+                        
+                        <div class="form-group" style="margin-top:15px;display:flex;gap:10px;flex-wrap:wrap;">
+                            <button class="btn-save" onclick="previewCustomJS()" style="background:#3b82f6;color:white;padding:8px 16px;border:none;border-radius:8px;font-family:'Cairo',sans-serif;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;">
+                                <i class="fas fa-eye"></i> معاينة التغييرات
+                            </button>
+                            <button class="btn-save" onclick="applyCustomJS()" style="background:#8B5CF6;color:white;padding:8px 16px;border:none;border-radius:8px;font-family:'Cairo',sans-serif;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;">
+                                <i class="fas fa-check"></i> تطبيق JS
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top:20px;background:var(--surface,#1A1A2E);border-radius:12px;padding:20px;border:1px solid rgba(255,215,0,0.05);">
+                        <h4 style="color:var(--primary,#FFD700);">📚 أمثلة JavaScript</h4>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:10px;">
+                            <button class="btn-secondary" onclick="loadJSExample('animations')" style="padding:8px 12px;border-radius:6px;background:rgba(255,255,255,0.05);color:var(--text,#FFFFFF);border:1px solid rgba(255,255,255,0.1);cursor:pointer;font-family:'Cairo',sans-serif;font-size:12px;text-align:center;">
+                                🎬 مؤثرات حركية
+                            </button>
+                            <button class="btn-secondary" onclick="loadJSExample('interactions')" style="padding:8px 12px;border-radius:6px;background:rgba(255,255,255,0.05);color:var(--text,#FFFFFF);border:1px solid rgba(255,255,255,0.1);cursor:pointer;font-family:'Cairo',sans-serif;font-size:12px;text-align:center;">
+                                🖱️ تفاعلات
+                            </button>
+                            <button class="btn-secondary" onclick="loadJSExample('analytics')" style="padding:8px 12px;border-radius:6px;background:rgba(255,255,255,0.05);color:var(--text,#FFFFFF);border:1px solid rgba(255,255,255,0.1);cursor:pointer;font-family:'Cairo',sans-serif;font-size:12px;text-align:center;">
+                                📊 تحليلات
+                            </button>
+                            <button class="btn-secondary" onclick="loadJSExample('customization')" style="padding:8px 12px;border-radius:6px;background:rgba(255,255,255,0.05);color:var(--text,#FFFFFF);border:1px solid rgba(255,255,255,0.1);cursor:pointer;font-family:'Cairo',sans-serif;font-size:12px;text-align:center;">
+                                🎨 تخصيص
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ===== تبويب التذييل ===== -->
+            <div class="tab-content" id="tab-footer">
+                <div class="footer-section">
+                    <div class="section-header">
+                        <h3 style="color: var(--primary, #FFD700);">🦶 تخصيص التذييل</h3>
+                        <button class="btn-save" onclick="addFooterItem()" style="padding: 8px 16px; font-size: 14px;">
+                            <i class="fas fa-plus"></i> إضافة عنصر
+                        </button>
+                    </div>
+                    <div class="footer-items" id="footerItems">
+                        <!-- سيتم تعبئتها بواسطة JavaScript -->
+                    </div>
+                    <div class="footer-preview" id="footerPreview">
+                        <!-- سيتم تعبئتها بواسطة JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ===== تبويب الإعدادات المتقدمة ===== -->
+            <div class="tab-content" id="tab-advanced">
+                <div class="advanced-settings">
+                    <h3 style="color: var(--primary, #FFD700);">⚙️ الإعدادات المتقدمة</h3>
+                    <p style="color: var(--textSecondary, #8A8A9B); margin-bottom: 20px;">قم بتخصيص جميع جوانب المتجر من هنا</p>
+                    
+                    <div class="settings-sections">
+                        <!-- هوية المتجر -->
+                        <div class="settings-section">
+                            <h4 style="color: var(--primary, #FFD700);">🏪 هوية المتجر</h4>
+                            <div class="form-group">
+                                <label style="color: var(--textSecondary, #8A8A9B);">اسم المتجر</label>
+                                <input type="text" id="advStoreName" placeholder="اسم المتجر" />
+                            </div>
+                            <div class="form-group">
+                                <label style="color: var(--textSecondary, #8A8A9B);">شعار المتجر</label>
+                                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                                    <input type="file" id="advLogoFile" accept="image/*" style="flex:1;" />
+                                    <input type="url" id="advLogoUrl" placeholder="أو أدخل رابط الشعار" style="flex:2;" />
+                                </div>
+                                <div id="advLogoPreview" style="margin-top:8px;min-height:60px;"></div>
+                            </div>
+                            <div class="form-group">
+                                <label style="color: var(--textSecondary, #8A8A9B);">أيقونة الموقع (Favicon)</label>
+                                <input type="url" id="advFavicon" placeholder="رابط الأيقونة" />
+                            </div>
+                            <div class="form-group">
+                                <label style="color: var(--textSecondary, #8A8A9B);">وصف المتجر</label>
+                                <input type="text" id="advStoreDescription" placeholder="وصف قصير للمتجر" />
+                            </div>
+                            <div class="form-group">
+                                <label style="color: var(--textSecondary, #8A8A9B);">شعار المتجر</label>
+                                <input type="text" id="advStoreSlogan" placeholder="شعار المتجر" />
+                            </div>
+                            <div class="form-group">
+                                <label style="color: var(--textSecondary, #8A8A9B);">البريد الإلكتروني</label>
+                                <input type="email" id="advContactEmail" placeholder="info@tithkari.com" />
+                            </div>
+                            <div class="form-group">
+                                <label style="color: var(--textSecondary, #8A8A9B);">رقم الهاتف</label>
+                                <input type="text" id="advContactPhone" placeholder="+966 50 000 0000" />
+                            </div>
+                            
+                            <div class="settings-actions">
+                                <button class="btn-save" onclick="saveStoreIdentity()">
+                                    <i class="fas fa-save"></i> حفظ الهوية
+                                </button>
+                                <button class="btn-apply" onclick="applyStoreIdentity()">
+                                    <i class="fas fa-check"></i> تطبيق الهوية
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- الخلفية -->
+                        <div class="settings-section">
+                            <h4 style="color: var(--primary, #FFD700);">🖼️ خلفية المتجر</h4>
+                            <div class="form-group">
+                                <label style="color: var(--textSecondary, #8A8A9B);">نوع الخلفية</label>
+                                <select id="advBgType">
+                                    <option value="color">لون</option>
+                                    <option value="gradient">تدرج لوني</option>
+                                    <option value="image">صورة</option>
+                                    <option value="pattern">نقش</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="advBgColorGroup">
+                                <label style="color: var(--textSecondary, #8A8A9B);">لون الخلفية</label>
+                                <input type="color" id="advBgColor" value="#0F0F1A" />
+                            </div>
+                            <div class="form-group" id="advBgGradientGroup" style="display:none;">
+                                <label style="color: var(--textSecondary, #8A8A9B);">تدرج الخلفية</label>
+                                <div style="display:flex;gap:10px;">
+                                    <input type="color" id="advBgGradientStart" value="#0F0F1A" />
+                                    <input type="color" id="advBgGradientEnd" value="#1A1A2E" />
+                                </div>
+                            </div>
+                            <div class="form-group" id="advBgImageGroup" style="display:none;">
+                                <label style="color: var(--textSecondary, #8A8A9B);">صورة الخلفية</label>
+                                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                                    <input type="file" id="advBgImageFile" accept="image/*" style="flex:1;" />
+                                    <input type="url" id="advBgImageUrl" placeholder="رابط الصورة" style="flex:2;" />
+                                </div>
+                                <div id="advBgImagePreview" style="margin-top:8px;min-height:60px;"></div>
+                            </div>
+                            
+                            <div class="settings-actions">
+                                <button class="btn-save" onclick="saveStoreBackground()">
+                                    <i class="fas fa-save"></i> حفظ الخلفية
+                                </button>
+                                <button class="btn-apply" onclick="applyStoreBackground()">
+                                    <i class="fas fa-check"></i> تطبيق الخلفية
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- الأيقونات -->
+                        <div class="settings-section">
+                            <h4 style="color: var(--primary, #FFD700);">🎨 تخصيص الأيقونات</h4>
+                            <div class="form-group">
+                                <label style="color: var(--textSecondary, #8A8A9B);">نمط الأيقونات</label>
+                                <select id="advIconStyle">
+                                    <option value="solid">صلبة</option>
+                                    <option value="regular">خفيفة</option>
+                                    <option value="light">ناعمة</option>
+                                    <option value="duotone">مزدوجة</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label style="color: var(--textSecondary, #8A8A9B);">لون الأيقونات</label>
+                                <input type="color" id="advIconColor" value="#FFD700" />
+                            </div>
+                            <div class="form-group">
+                                <label style="color: var(--textSecondary, #8A8A9B);">حجم الأيقونات</label>
+                                <select id="advIconSize">
+                                    <option value="small">صغير</option>
+                                    <option value="medium" selected>متوسط</option>
+                                    <option value="large">كبير</option>
+                                    <option value="xlarge">كبير جداً</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-group" style="color: var(--textSecondary, #8A8A9B);">
+                                    <input type="checkbox" id="advIconRounded" checked /> أيقونات مدورة
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-group" style="color: var(--textSecondary, #8A8A9B);">
+                                    <input type="checkbox" id="advIconGlow" /> تأثير التوهج
+                                </label>
+                            </div>
+                            
+                            <div class="settings-actions">
+                                <button class="btn-save" onclick="saveStoreIcons()">
+                                    <i class="fas fa-save"></i> حفظ الأيقونات
+                                </button>
+                                <button class="btn-apply" onclick="applyStoreIcons()">
+                                    <i class="fas fa-check"></i> تطبيق الأيقونات
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- تحسينات المنتجات -->
+                        <div class="settings-section">
+                            <h4 style="color: var(--primary, #FFD700);">📦 تحسينات المنتجات</h4>
+                            <div class="form-group">
+                                <label class="checkbox-group" style="color: var(--textSecondary, #8A8A9B);">
+                                    <input type="checkbox" id="advShowDiscount" checked /> عرض شارة الخصم
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-group" style="color: var(--textSecondary, #8A8A9B);">
+                                    <input type="checkbox" id="advShowCustomize" checked /> عرض زر التخصيص
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-group" style="color: var(--textSecondary, #8A8A9B);">
+                                    <input type="checkbox" id="advShowQuickView" checked /> عرض المعاينة السريعة
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-group" style="color: var(--textSecondary, #8A8A9B);">
+                                    <input type="checkbox" id="advImageZoom" checked /> تكبير الصورة عند التمرير
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-group" style="color: var(--textSecondary, #8A8A9B);">
+                                    <input type="checkbox" id="advImageGallery" checked /> معرض الصور المتعددة
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label style="color: var(--textSecondary, #8A8A9B);">عدد أسطر الوصف</label>
+                                <select id="advDescriptionLines">
+                                    <option value="1">سطر واحد</option>
+                                    <option value="2" selected>سطرين</option>
+                                    <option value="3">ثلاثة أسطر</option>
+                                    <option value="0">عرض الكل</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label style="color: var(--textSecondary, #8A8A9B);">حجم الصورة</label>
+                                <select id="advImageSize">
+                                    <option value="small">صغير</option>
+                                    <option value="medium" selected>متوسط</option>
+                                    <option value="large">كبير</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label style="color: var(--textSecondary, #8A8A9B);">نمط البطاقة</label>
+                                <select id="advCardStyle">
+                                    <option value="default">افتراضي</option>
+                                    <option value="compact">مضغوط</option>
+                                    <option value="elegant">أنيق</option>
+                                    <option value="modern">حديث</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-group" style="color: var(--textSecondary, #8A8A9B);">
+                                    <input type="checkbox" id="advShowStock" /> عرض المخزون
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-group" style="color: var(--textSecondary, #8A8A9B);">
+                                    <input type="checkbox" id="advShowRating" checked /> عرض التقييمات
+                                </label>
+                            </div>
+                            
+                            <div class="settings-actions">
+                                <button class="btn-save" onclick="saveProductEnhancements()">
+                                    <i class="fas fa-save"></i> حفظ التحسينات
+                                </button>
+                                <button class="btn-apply" onclick="applyProductEnhancements()">
+                                    <i class="fas fa-check"></i> تطبيق التحسينات
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- ===== قسم مزامنة المنتجات المخصصة ===== -->
+                        <div class="settings-section" style="border-color: rgba(139, 92, 246, 0.3); margin-top: 20px;">
+                            <h4 style="color: #8B5CF6;">🔄 مزامنة المنتجات المخصصة</h4>
+                            <p style="color: var(--textSecondary, #8A8A9B); font-size: 13px; margin-bottom: 12px;">
+                                قم بمزامنة التصميمات المخصصة من جهازك إلى قاعدة البيانات لتظهر في المتجر مثل أي منتج عادي.
+                            </p>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <button class="btn-save" onclick="syncCustomProductsToSupabase()" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: white; padding: 10px 20px; border: none; border-radius: 8px; font-family: 'Cairo', sans-serif; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; min-height: 44px; touch-action: manipulation;">
+                                    <i class="fas fa-cloud-upload-alt"></i> مزامنة المنتجات المخصصة
+                                </button>
+                                <button class="btn-reset" onclick="clearCustomProductsFromSupabase()" style="padding: 10px 20px; border: none; border-radius: 8px; font-family: 'Cairo', sans-serif; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; min-height: 44px; touch-action: manipulation; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);">
+                                    <i class="fas fa-trash"></i> حذف الكل
+                                </button>
+                                <button class="btn-close" onclick="window.location.reload()" style="padding: 10px 20px; border: none; border-radius: 8px; font-family: 'Cairo', sans-serif; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; min-height: 44px; touch-action: manipulation; background: rgba(255, 255, 255, 0.05); color: #8A8A9B; border: 1px solid rgba(255, 255, 255, 0.1);">
+                                    <i class="fas fa-sync"></i> تحديث الصفحة
+                                </button>
+                            </div>
+                            <div style="margin-top: 10px; padding: 10px; background: rgba(255, 255, 255, 0.02); border-radius: 6px; border: 1px solid rgba(255, 215, 0, 0.05);">
+                                <p style="color: var(--textSecondary, #8A8A9B); font-size: 12px; margin: 0;">
+                                    💡 <strong>ملاحظة:</strong> بعد المزامنة، ستظهر المنتجات المخصصة في المتجر مثل أي منتج عادي.
+                                    يمكنك إدارتها من لوحة التحكم.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <button class="btn-apply-all" onclick="applyAllAdvancedSettings()">
+                            <i class="fas fa-check-circle"></i> تطبيق جميع الإعدادات على المتجر
+                        </button>
+                        
+                        <button class="btn-save" onclick="saveAdvancedSettings()" style="width:100%;justify-content:center;margin-top:10px;padding:12px 24px;font-size:16px;">
+                            <i class="fas fa-save"></i> حفظ جميع الإعدادات المتقدمة في Supabase
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+    <!-- ===== نافذة إضافة/تعديل بنر متطور ===== -->
+    <div class="modal-overlay" id="advancedBannerModal">
+        <div class="modal-content" style="max-width:700px;">
+            <button class="modal-close" onclick="closeAdvancedBannerModal()"><i class="fas fa-times"></i></button>
+            <div class="modal-body">
+                <h2 id="advancedBannerModalTitle">➕ إضافة بنر متطور</h2>
+                <form id="advancedBannerForm" onsubmit="saveAdvancedBanner(event)">
+                    <input type="hidden" id="advBannerId" />
+                    
+                    <div class="form-group">
+                        <label style="color: var(--textSecondary, #8A8A9B);">🏷️ عنوان البنر *</label>
+                        <input type="text" id="advBannerTitle" required placeholder="عنوان البنر" />
+                    </div>
+                    <div class="form-group">
+                        <label style="color: var(--textSecondary, #8A8A9B);">📝 النص الفرعي</label>
+                        <input type="text" id="advBannerSubtitle" placeholder="نص فرعي قصير" />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="color: var(--textSecondary, #8A8A9B);">🖼️ صور البنر (للسلايدر)</label>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                            <input type="file" id="advBannerImageFile" accept="image/*" style="flex:1;min-height:44px;" multiple />
+                            <input type="url" id="advBannerImageUrl" placeholder="أو أدخل رابط الصورة" style="flex:2;min-height:44px;" />
+                            <button type="button" class="btn-save" onclick="addBannerImage()" style="padding:4px 12px;font-size:12px;">إضافة</button>
+                        </div>
+                        <div id="advBannerImagesPreview" class="images-list"></div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label style="color: var(--textSecondary, #8A8A9B);">🎨 لون الخلفية</label>
+                            <input type="color" id="advBannerBgColor" value="#1A1A2E" />
+                        </div>
+                        <div class="form-group">
+                            <label style="color: var(--textSecondary, #8A8A9B);">🎨 لون النص</label>
+                            <input type="color" id="advBannerTextColor" value="#FFFFFF" />
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label style="color: var(--textSecondary, #8A8A9B);">📏 الارتفاع</label>
+                            <select id="advBannerHeight">
+                                <option value="200px">صغير (200px)</option>
+                                <option value="300px" selected>متوسط (300px)</option>
+                                <option value="400px">كبير (400px)</option>
+                                <option value="500px">كبير جداً (500px)</option>
+                                <option value="full">ملء الشاشة</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label style="color: var(--textSecondary, #8A8A9B);">📐 العرض</label>
+                            <select id="advBannerWidth">
+                                <option value="100%">كامل (100%)</option>
+                                <option value="75%">75%</option>
+                                <option value="50%">50%</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label style="color: var(--textSecondary, #8A8A9B);">🔘 نص الزر</label>
+                            <input type="text" id="advBannerButtonText" placeholder="عرض المزيد" />
+                        </div>
+                        <div class="form-group">
+                            <label style="color: var(--textSecondary, #8A8A9B);">🎨 لون الزر</label>
+                            <input type="color" id="advBannerButtonColor" value="#FFD700" />
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label style="color: var(--textSecondary, #8A8A9B);">🔗 رابط الزر</label>
+                            <input type="text" id="advBannerLinkUrl" placeholder="#products" />
+                        </div>
+                        <div class="form-group">
+                            <label style="color: var(--textSecondary, #8A8A9B);">📍 الموقع</label>
+                            <select id="advBannerPosition">
+                                <option value="home">الصفحة الرئيسية</option>
+                                <option value="hero">القسم العلوي</option>
+                                <option value="products">المنتجات</option>
+                                <option value="footer">التذييل</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label style="color: var(--textSecondary, #8A8A9B);">🔢 ترتيب العرض</label>
+                            <input type="number" id="advBannerOrder" value="0" min="0" />
+                        </div>
+                        <div class="form-group">
+                            <label style="color: var(--textSecondary, #8A8A9B);">⭐ الحالة</label>
+                            <select id="advBannerStatus">
+                                <option value="true">نشط</option>
+                                <option value="false">غير نشط</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label style="color: var(--textSecondary, #8A8A9B);">📂 نوع البنر</label>
+                            <select id="advBannerType">
+                                <option value="image">صورة</option>
+                                <option value="gradient">تدرج لوني</option>
+                                <option value="slideshow">سلايدر</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label style="color: var(--textSecondary, #8A8A9B);">⏱️ سرعة التبديل (ثانية)</label>
+                            <input type="number" id="advBannerSpeed" value="4" min="2" max="10" />
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn-save" style="width:100%;justify-content:center;margin-top:10px;">
+                        <i class="fas fa-save"></i> حفظ البنر
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ===== نافذة إضافة/تعديل قسم منتجات ===== -->
+    <div class="modal-overlay" id="productSectionModal">
+        <div class="modal-content" style="max-width:700px;">
+            <button class="modal-close" onclick="closeProductSectionModal()"><i class="fas fa-times"></i></button>
+            <div class="modal-body">
+                <h2 id="productSectionModalTitle">➕ إضافة قسم منتجات</h2>
+                <form id="productSectionForm" onsubmit="saveProductSection(event)">
+                    <input type="hidden" id="sectionId" />
+                    
+                    <div class="form-group">
+                        <label style="color: var(--textSecondary, #8A8A9B);">🏷️ عنوان القسم *</label>
+                        <input type="text" id="sectionTitle" required placeholder="مثال: أحدث المنتجات" />
+                    </div>
+                    <div class="form-group">
+                        <label style="color: var(--textSecondary, #8A8A9B);">📝 وصف القسم</label>
+                        <input type="text" id="sectionSubtitle" placeholder="وصف قصير للقسم" />
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label style="color: var(--textSecondary, #8A8A9B);">📐 طريقة العرض</label>
+                            <select id="sectionDisplayType">
+                                <option value="grid">شبكة (Grid)</option>
+                                <option value="list">قائمة (List)</option>
+                                <option value="carousel">سلايدر (Carousel)</option>
+                                <option value="compact">مضغوط (Compact)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label style="color: var(--textSecondary, #8A8A9B);">🔢 عدد المنتجات</label>
+                            <input type="number" id="sectionProductsPerPage" value="8" min="2" max="20" />
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="color: var(--textSecondary, #8A8A9B);">📂 تصنيف المنتجات</label>
+                        <select id="sectionCategoryFilter">
+                            <option value="">جميع التصنيفات</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label style="color: var(--textSecondary, #8A8A9B);">📊 ترتيب حسب</label>
+                            <select id="sectionSortBy">
+                                <option value="created_at">تاريخ الإضافة</option>
+                                <option value="price">السعر</option>
+                                <option value="name">الاسم</option>
+                                <option value="stock">المخزون</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label style="color: var(--textSecondary, #8A8A9B);">⬆️⬇️ اتجاه الترتيب</label>
+                            <select id="sectionSortOrder">
+                                <option value="desc">تنازلي (الأحدث أولاً)</option>
+                                <option value="asc">تصاعدي (الأقدم أولاً)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label style="color: var(--textSecondary, #8A8A9B);">🔢 ترتيب القسم</label>
+                            <input type="number" id="sectionOrder" value="0" min="0" />
+                        </div>
+                        <div class="form-group">
+                            <label style="color: var(--textSecondary, #8A8A9B);">⭐ الحالة</label>
+                            <select id="sectionStatus">
+                                <option value="true">نشط</option>
+                                <option value="false">غير نشط</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="display:flex;gap:20px;flex-wrap:wrap;color: var(--textSecondary, #8A8A9B);">
+                            <span style="display:flex;align-items:center;gap:6px;">
+                                <input type="checkbox" id="sectionShowArrows" checked /> عرض أسهم التنقل
+                            </span>
+                            <span style="display:flex;align-items:center;gap:6px;">
+                                <input type="checkbox" id="sectionShowDots" checked /> عرض النقاط
+                            </span>
+                            <span style="display:flex;align-items:center;gap:6px;">
+                                <input type="checkbox" id="sectionAutoplay" /> تشغيل تلقائي
+                            </span>
+                        </label>
+                    </div>
+                    
+                    <div class="form-group" id="autoplaySpeedGroup" style="display:none;">
+                        <label style="color: var(--textSecondary, #8A8A9B);">⏱️ سرعة التشغيل التلقائي (مللي ثانية)</label>
+                        <input type="number" id="sectionAutoplaySpeed" value="3000" min="1000" step="500" />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="color: var(--textSecondary, #8A8A9B);">🎨 لون خلفية القسم</label>
+                        <div style="display:flex;gap:10px;">
+                            <input type="color" id="sectionBgColor" value="#0F0F1A" />
+                            <input type="text" id="sectionBgColorText" placeholder="رمز اللون" style="flex:1;" />
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="color: var(--textSecondary, #8A8A9B);">🎨 لون النص</label>
+                        <div style="display:flex;gap:10px;">
+                            <input type="color" id="sectionTextColor" value="#FFFFFF" />
+                            <input type="text" id="sectionTextColorText" placeholder="رمز اللون" style="flex:1;" />
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="color: var(--textSecondary, #8A8A9B);">🛒 اختيار منتجات محددة (اختياري)</label>
+                        <select id="sectionProductSelector" multiple style="height:100px;min-height:80px;"></select>
+                        <small style="color:var(--textSecondary, #8A8A9B);">اضغط Ctrl (⌘) لتحديد عدة منتجات</small>
+                    </div>
+                    
+                    <button type="submit" class="btn-save" style="width:100%;justify-content:center;margin-top:10px;">
+                        <i class="fas fa-save"></i> حفظ القسم
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ===== نافذة إضافة/تعديل بنر عادي ===== -->
+    <div class="modal-overlay" id="bannerModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeBannerModal()"><i class="fas fa-times"></i></button>
+            <h2 id="bannerModalTitle">➕ إضافة بنر</h2>
+            <form id="bannerForm" onsubmit="saveBanner(event)">
+                <input type="hidden" id="editBannerId" />
+                
+                <div class="form-group">
+                    <label style="color: var(--textSecondary, #8A8A9B);">🏷️ عنوان البنر *</label>
+                    <input type="text" id="bannerTitle" required placeholder="عنوان البنر" />
+                </div>
+                <div class="form-group">
+                    <label style="color: var(--textSecondary, #8A8A9B);">📝 النص الفرعي</label>
+                    <input type="text" id="bannerSubtitle" placeholder="نص فرعي قصير" />
+                </div>
+                <div class="form-group">
+                    <label style="color: var(--textSecondary, #8A8A9B);">🖼️ رابط الصورة</label>
+                    <input type="url" id="bannerImage" placeholder="https://example.com/banner.jpg" />
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label style="color: var(--textSecondary, #8A8A9B);">🎨 لون الخلفية</label>
+                        <input type="color" id="bannerBgColor" value="#1A1A2E" />
+                    </div>
+                    <div class="form-group">
+                        <label style="color: var(--textSecondary, #8A8A9B);">🎨 لون النص</label>
+                        <input type="color" id="bannerTextColor" value="#FFFFFF" />
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label style="color: var(--textSecondary, #8A8A9B);">🔗 رابط الزر</label>
+                    <input type="text" id="bannerLink" placeholder="#products" />
+                </div>
+                <div class="form-group">
+                    <label style="color: var(--textSecondary, #8A8A9B);">📌 نص الزر</label>
+                    <input type="text" id="bannerButtonText" placeholder="عرض المزيد" />
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label style="color: var(--textSecondary, #8A8A9B);">📍 الموقع</label>
+                        <select id="bannerPosition">
+                            <option value="home">الصفحة الرئيسية</option>
+                            <option value="hero">القسم العلوي</option>
+                            <option value="products">المنتجات</option>
+                            <option value="footer">التذييل</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="color: var(--textSecondary, #8A8A9B);">⭐ الحالة</label>
+                        <select id="bannerStatus">
+                            <option value="true">نشط</option>
+                            <option value="false">غير نشط</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label style="color: var(--textSecondary, #8A8A9B);">🔢 ترتيب العرض</label>
+                    <input type="number" id="bannerOrder" value="0" min="0" />
+                </div>
+                
+                <button type="submit" class="btn-save" style="width:100%; justify-content:center; margin-top:10px;">
+                    <i class="fas fa-save"></i> حفظ البنر
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- ===== نافذة إضافة/تعديل عنصر تذييل ===== -->
+    <div class="modal-overlay" id="footerItemModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeFooterItemModal()"><i class="fas fa-times"></i></button>
+            <h2 id="footerItemModalTitle">➕ إضافة عنصر تذييل</h2>
+            <form id="footerItemForm" onsubmit="saveFooterItem(event)">
+                <input type="hidden" id="editFooterItemId" />
+                
+                <div class="form-group">
+                    <label style="color: var(--textSecondary, #8A8A9B);">🏷️ اسم العنصر *</label>
+                    <input type="text" id="footerItemLabel" required placeholder="اسم العنصر" />
+                </div>
+                <div class="form-group">
+                    <label style="color: var(--textSecondary, #8A8A9B);">🎨 الأيقونة</label>
+                    <input type="text" id="footerItemIcon" placeholder="fa-info-circle" />
+                </div>
+                <div class="form-group">
+                    <label style="color: var(--textSecondary, #8A8A9B);">📝 المحتوى</label>
+                    <textarea id="footerItemContent" rows="3" placeholder="محتوى العنصر..."></textarea>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label style="color: var(--textSecondary, #8A8A9B);">📂 النوع</label>
+                        <select id="footerItemType">
+                            <option value="text">نص</option>
+                            <option value="link">رابط</option>
+                            <option value="contact">اتصال</option>
+                            <option value="social">تواصل اجتماعي</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="color: var(--textSecondary, #8A8A9B);">🔗 الرابط</label>
+                        <input type="text" id="footerItemLink" placeholder="/about" />
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label style="color: var(--textSecondary, #8A8A9B);">⭐ الحالة</label>
+                        <select id="footerItemStatus">
+                            <option value="true">نشط</option>
+                            <option value="false">غير نشط</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="color: var(--textSecondary, #8A8A9B);">🔢 الترتيب</label>
+                        <input type="number" id="footerItemOrder" value="0" min="0" />
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-save" style="width:100%; justify-content:center; margin-top:10px;">
+                    <i class="fas fa-save"></i> حفظ العنصر
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- ===== Toast Container ===== -->
+    <div id="toastContainer"></div>
+    
+    <!-- ===== JavaScript ===== -->
+    <script type="module" src="customize-store.js"></script>
+    <script>
+        // ===== دوال إضافية للصفحة =====
+        
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+            const toast = document.createElement('div');
+            toast.className = `toast-notification ${type}`;
+            toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span><span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(20px)';
+                toast.style.transition = 'all 0.4s ease';
+                setTimeout(() => toast.remove(), 400);
+            }, 3500);
+        }
+        window.showToast = showToast;
+        
+        function closeCustomizer() {
+            if (confirm('⚠️ هل أنت متأكد من إغلاق نافذة التخصيص؟ سيتم حفظ التغييرات تلقائياً.')) {
+                window.close();
+            }
+        }
+        window.closeCustomizer = closeCustomizer;
+        
+        // ===== دوال البنرات المتطورة =====
+        function openAdvancedBannerForm(data) {
+            const modal = document.getElementById('advancedBannerModal');
+            const title = document.getElementById('advancedBannerModalTitle');
+            if (data) {
+                title.textContent = '✏️ تعديل البنر';
+                document.getElementById('advBannerId').value = data.id || '';
+                document.getElementById('advBannerTitle').value = data.title || '';
+                document.getElementById('advBannerSubtitle').value = data.subtitle || '';
+                document.getElementById('advBannerImageUrl').value = data.image_url || '';
+                document.getElementById('advBannerBgColor').value = data.bg_color || '#1A1A2E';
+                document.getElementById('advBannerTextColor').value = data.text_color || '#FFFFFF';
+                document.getElementById('advBannerHeight').value = data.height || '300px';
+                document.getElementById('advBannerWidth').value = data.width || '100%';
+                document.getElementById('advBannerButtonText').value = data.button_text || '';
+                document.getElementById('advBannerButtonColor').value = data.button_color || '#FFD700';
+                document.getElementById('advBannerLinkUrl').value = data.link_url || '';
+                document.getElementById('advBannerPosition').value = data.position || 'home';
+                document.getElementById('advBannerOrder').value = data.section_order || 0;
+                document.getElementById('advBannerStatus').value = data.is_active ? 'true' : 'false';
+                document.getElementById('advBannerType').value = data.banner_type || 'image';
+                document.getElementById('advBannerSpeed').value = data.speed || 4;
+                if (data.images && data.images.length > 0) {
+                    document.getElementById('advBannerImagesPreview').innerHTML = data.images.map(img => `
+                        <div class="image-item"><img src="${img}" /><button class="remove-image" onclick="removeBannerImage(this, '${img}')">×</button></div>
+                    `).join('');
+                }
+            } else {
+                title.textContent = '➕ إضافة بنر متطور';
+                document.getElementById('advancedBannerForm').reset();
+                document.getElementById('advBannerId').value = '';
+                document.getElementById('advBannerBgColor').value = '#1A1A2E';
+                document.getElementById('advBannerTextColor').value = '#FFFFFF';
+                document.getElementById('advBannerButtonColor').value = '#FFD700';
+                document.getElementById('advBannerHeight').value = '300px';
+                document.getElementById('advBannerWidth').value = '100%';
+                document.getElementById('advBannerStatus').value = 'true';
+                document.getElementById('advBannerOrder').value = 0;
+                document.getElementById('advBannerSpeed').value = 4;
+                document.getElementById('advBannerImagesPreview').innerHTML = '';
+            }
+            modal.classList.add('active');
+        }
+        window.openAdvancedBannerForm = openAdvancedBannerForm;
+        
+        function closeAdvancedBannerModal() {
+            document.getElementById('advancedBannerModal').classList.remove('active');
+        }
+        window.closeAdvancedBannerModal = closeAdvancedBannerModal;
+        
+        let bannerImages = [];
+        function addBannerImage() {
+            const url = document.getElementById('advBannerImageUrl').value.trim();
+            if (url && (url.startsWith('http') || url.startsWith('data:image'))) {
+                bannerImages.push(url);
+                document.getElementById('advBannerImagesPreview').innerHTML += `
+                    <div class="image-item"><img src="${url}" /><button class="remove-image" onclick="removeBannerImage(this, '${url}')">×</button></div>
+                `;
+                document.getElementById('advBannerImageUrl').value = '';
+            }
+            const file = document.getElementById('advBannerImageFile').files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    bannerImages.push(e.target.result);
+                    document.getElementById('advBannerImagesPreview').innerHTML += `
+                        <div class="image-item"><img src="${e.target.result}" /><button class="remove-image" onclick="removeBannerImage(this, '${e.target.result}')">×</button></div>
+                    `;
+                };
+                reader.readAsDataURL(file);
+                document.getElementById('advBannerImageFile').value = '';
+            }
+        }
+        window.addBannerImage = addBannerImage;
+        
+        function removeBannerImage(el, url) {
+            bannerImages = bannerImages.filter(img => img !== url);
+            el.closest('.image-item').remove();
+        }
+        window.removeBannerImage = removeBannerImage;
+        
+        // ===== دوال أقسام المنتجات =====
+        function openProductSectionForm(data) {
+            const modal = document.getElementById('productSectionModal');
+            const title = document.getElementById('productSectionModalTitle');
+            if (data) {
+                title.textContent = '✏️ تعديل قسم المنتجات';
+                document.getElementById('sectionId').value = data.id || '';
+                document.getElementById('sectionTitle').value = data.title || '';
+                document.getElementById('sectionSubtitle').value = data.subtitle || '';
+                document.getElementById('sectionDisplayType').value = data.display_type || 'grid';
+                document.getElementById('sectionProductsPerPage').value = data.products_per_page || 8;
+                document.getElementById('sectionCategoryFilter').value = data.category_filter || '';
+                document.getElementById('sectionSortBy').value = data.sort_by || 'created_at';
+                document.getElementById('sectionSortOrder').value = data.sort_order || 'desc';
+                document.getElementById('sectionOrder').value = data.section_order || 0;
+                document.getElementById('sectionStatus').value = data.is_active ? 'true' : 'false';
+                document.getElementById('sectionShowArrows').checked = data.show_arrows !== false;
+                document.getElementById('sectionShowDots').checked = data.show_dots !== false;
+                document.getElementById('sectionAutoplay').checked = data.autoplay || false;
+                document.getElementById('sectionAutoplaySpeed').value = data.autoplay_speed || 3000;
+                document.getElementById('sectionBgColor').value = data.bg_color || '#0F0F1A';
+                document.getElementById('sectionTextColor').value = data.text_color || '#FFFFFF';
+                document.getElementById('autoplaySpeedGroup').style.display = data.autoplay ? 'block' : 'none';
+            } else {
+                title.textContent = '➕ إضافة قسم منتجات';
+                document.getElementById('productSectionForm').reset();
+                document.getElementById('sectionId').value = '';
+                document.getElementById('sectionDisplayType').value = 'grid';
+                document.getElementById('sectionProductsPerPage').value = 8;
+                document.getElementById('sectionOrder').value = 0;
+                document.getElementById('sectionStatus').value = 'true';
+                document.getElementById('sectionShowArrows').checked = true;
+                document.getElementById('sectionShowDots').checked = true;
+                document.getElementById('sectionAutoplay').checked = false;
+                document.getElementById('sectionAutoplaySpeed').value = 3000;
+                document.getElementById('sectionBgColor').value = '#0F0F1A';
+                document.getElementById('sectionTextColor').value = '#FFFFFF';
+                document.getElementById('autoplaySpeedGroup').style.display = 'none';
+            }
+            if (typeof loadCategoriesForSelect === 'function') loadCategoriesForSelect('sectionCategoryFilter');
+            if (typeof loadProductsForSelect === 'function') loadProductsForSelect('sectionProductSelector');
+            modal.classList.add('active');
+        }
+        window.openProductSectionForm = openProductSectionForm;
+        
+        function closeProductSectionModal() {
+            document.getElementById('productSectionModal').classList.remove('active');
+        }
+        window.closeProductSectionModal = closeProductSectionModal;
+        
+        // ===== دوال البنرات العادية =====
+        function addNewBanner() {
+            document.getElementById('bannerModalTitle').textContent = '➕ إضافة بنر';
+            document.getElementById('bannerForm').reset();
+            document.getElementById('editBannerId').value = '';
+            document.getElementById('bannerBgColor').value = '#1A1A2E';
+            document.getElementById('bannerTextColor').value = '#FFFFFF';
+            document.getElementById('bannerStatus').value = 'true';
+            document.getElementById('bannerModal').classList.add('active');
+        }
+        window.addNewBanner = addNewBanner;
+        
+        function closeBannerModal() {
+            document.getElementById('bannerModal').classList.remove('active');
+        }
+        window.closeBannerModal = closeBannerModal;
+        
+        // ===== دوال التذييل =====
+        function addFooterItem() {
+            document.getElementById('footerItemModalTitle').textContent = '➕ إضافة عنصر تذييل';
+            document.getElementById('footerItemForm').reset();
+            document.getElementById('editFooterItemId').value = '';
+            document.getElementById('footerItemStatus').value = 'true';
+            document.getElementById('footerItemModal').classList.add('active');
+        }
+        window.addFooterItem = addFooterItem;
+        
+        function closeFooterItemModal() {
+            document.getElementById('footerItemModal').classList.remove('active');
+        }
+        window.closeFooterItemModal = closeFooterItemModal;
+        
+        // ===== دوال تحميل البنرات والأقسام =====
+        function loadAdvancedBanners() {
+            if (typeof window.loadAdvancedBanners === 'function') {
+                window.loadAdvancedBanners();
+            }
+        }
+        window.loadAdvancedBanners = loadAdvancedBanners;
+        
+        function loadProductSections() {
+            if (typeof window.loadProductSections === 'function') {
+                window.loadProductSections();
+            }
+        }
+        window.loadProductSections = loadProductSections;
+        
+        // ===== الألوان =====
+        function updateColor(key, value) {
+            if (typeof window.updateColor === 'function') {
+                window.updateColor(key, value);
+            }
+        }
+        window.updateColor = updateColor;
+        
+        function saveAdvancedColors() {
+            if (typeof window.saveAdvancedColors === 'function') {
+                window.saveAdvancedColors();
+            }
+        }
+        window.saveAdvancedColors = saveAdvancedColors;
+        
+        // ===== تخصيص الثيم =====
+        function loadThemeColorsToForm() {
+            if (typeof window.loadThemeColorsToForm === 'function') {
+                window.loadThemeColorsToForm();
+            }
+        }
+        window.loadThemeColorsToForm = loadThemeColorsToForm;
+        
+        function saveCustomTheme() {
+            if (typeof window.saveCustomTheme === 'function') {
+                window.saveCustomTheme();
+            }
+        }
+        window.saveCustomTheme = saveCustomTheme;
+        
+        function resetCustomTheme() {
+            if (typeof window.resetCustomTheme === 'function') {
+                window.resetCustomTheme();
+            }
+        }
+        window.resetCustomTheme = resetCustomTheme;
+        
+        function exportCustomTheme() {
+            if (typeof window.exportCustomTheme === 'function') {
+                window.exportCustomTheme();
+            }
+        }
+        window.exportCustomTheme = exportCustomTheme;
+        
+        function importCustomTheme() {
+            if (typeof window.importCustomTheme === 'function') {
+                window.importCustomTheme();
+            }
+        }
+        window.importCustomTheme = importCustomTheme;
+        
+        // ===== CSS/JS مخصص =====
+        function loadCustomCSS() {
+            if (typeof window.loadCustomCSS === 'function') {
+                window.loadCustomCSS();
+            }
+        }
+        window.loadCustomCSS = loadCustomCSS;
+        
+        function saveCustomCSS() {
+            if (typeof window.saveCustomCSS === 'function') {
+                window.saveCustomCSS();
+            }
+        }
+        window.saveCustomCSS = saveCustomCSS;
+        
+        function previewCustomCSS() {
+            if (typeof window.previewCustomCSS === 'function') {
+                window.previewCustomCSS();
+            }
+        }
+        window.previewCustomCSS = previewCustomCSS;
+        
+        function applyCustomCSS() {
+            if (typeof window.applyCustomCSS === 'function') {
+                window.applyCustomCSS();
+            }
+        }
+        window.applyCustomCSS = applyCustomCSS;
+        
+        function exportCustomCSS() {
+            if (typeof window.exportCustomCSS === 'function') {
+                window.exportCustomCSS();
+            }
+        }
+        window.exportCustomCSS = exportCustomCSS;
+        
+        function resetCustomCSS() {
+            if (typeof window.resetCustomCSS === 'function') {
+                window.resetCustomCSS();
+            }
+        }
+        window.resetCustomCSS = resetCustomCSS;
+        
+        function loadCSSExample(type) {
+            if (typeof window.loadCSSExample === 'function') {
+                window.loadCSSExample(type);
+            }
+        }
+        window.loadCSSExample = loadCSSExample;
+        
+        function loadCustomJS() {
+            if (typeof window.loadCustomJS === 'function') {
+                window.loadCustomJS();
+            }
+        }
+        window.loadCustomJS = loadCustomJS;
+        
+        function saveCustomJS() {
+            if (typeof window.saveCustomJS === 'function') {
+                window.saveCustomJS();
+            }
+        }
+        window.saveCustomJS = saveCustomJS;
+        
+        function previewCustomJS() {
+            if (typeof window.previewCustomJS === 'function') {
+                window.previewCustomJS();
+            }
+        }
+        window.previewCustomJS = previewCustomJS;
+        
+        function applyCustomJS() {
+            if (typeof window.applyCustomJS === 'function') {
+                window.applyCustomJS();
+            }
+        }
+        window.applyCustomJS = applyCustomJS;
+        
+        function exportCustomJS() {
+            if (typeof window.exportCustomJS === 'function') {
+                window.exportCustomJS();
+            }
+        }
+        window.exportCustomJS = exportCustomJS;
+        
+        function resetCustomJS() {
+            if (typeof window.resetCustomJS === 'function') {
+                window.resetCustomJS();
+            }
+        }
+        window.resetCustomJS = resetCustomJS;
+        
+        function loadJSExample(type) {
+            if (typeof window.loadJSExample === 'function') {
+                window.loadJSExample(type);
+            }
+        }
+        window.loadJSExample = loadJSExample;
+        
+        // ===== طرق العرض =====
+        function renderDisplayModes() {
+            if (typeof window.renderDisplayModes === 'function') {
+                window.renderDisplayModes();
+            }
+        }
+        window.renderDisplayModes = renderDisplayModes;
+        
+        function selectDisplayMode(modeId) {
+            if (typeof window.selectDisplayMode === 'function') {
+                window.selectDisplayMode(modeId);
+            }
+        }
+        window.selectDisplayMode = selectDisplayMode;
+        
+        function saveDisplaySettings() {
+            if (typeof window.saveDisplaySettings === 'function') {
+                window.saveDisplaySettings();
+            }
+        }
+        window.saveDisplaySettings = saveDisplaySettings;
+        
+        function loadDisplaySettings() {
+            if (typeof window.loadDisplaySettings === 'function') {
+                window.loadDisplaySettings();
+            }
+        }
+        window.loadDisplaySettings = loadDisplaySettings;
+        
+        // ===== دوال الإعدادات المتقدمة =====
+        function saveStoreIdentity() {
+            if (typeof window.saveStoreIdentity === 'function') {
+                window.saveStoreIdentity();
+            }
+        }
+        window.saveStoreIdentity = saveStoreIdentity;
+        
+        function applyStoreIdentity() {
+            if (typeof window.applyStoreIdentity === 'function') {
+                window.applyStoreIdentity();
+            }
+        }
+        window.applyStoreIdentity = applyStoreIdentity;
+        
+        function saveStoreBackground() {
+            if (typeof window.saveStoreBackground === 'function') {
+                window.saveStoreBackground();
+            }
+        }
+        window.saveStoreBackground = saveStoreBackground;
+        
+        function applyStoreBackground() {
+            if (typeof window.applyStoreBackground === 'function') {
+                window.applyStoreBackground();
+            }
+        }
+        window.applyStoreBackground = applyStoreBackground;
+        
+        function saveStoreIcons() {
+            if (typeof window.saveStoreIcons === 'function') {
+                window.saveStoreIcons();
+            }
+        }
+        window.saveStoreIcons = saveStoreIcons;
+        
+        function applyStoreIcons() {
+            if (typeof window.applyStoreIcons === 'function') {
+                window.applyStoreIcons();
+            }
+        }
+        window.applyStoreIcons = applyStoreIcons;
+        
+        function saveProductEnhancements() {
+            if (typeof window.saveProductEnhancements === 'function') {
+                window.saveProductEnhancements();
+            }
+        }
+        window.saveProductEnhancements = saveProductEnhancements;
+        
+        function applyProductEnhancements() {
+            if (typeof window.applyProductEnhancements === 'function') {
+                window.applyProductEnhancements();
+            }
+        }
+        window.applyProductEnhancements = applyProductEnhancements;
+        
+        function applyAllAdvancedSettings() {
+            if (typeof window.applyAllAdvancedSettings === 'function') {
+                window.applyAllAdvancedSettings();
+            } else {
+                // تطبيق الإعدادات يدوياً
+                applyStoreIdentity();
+                applyStoreBackground();
+                applyStoreIcons();
+                applyProductEnhancements();
+                showToast('✅ تم تطبيق جميع الإعدادات على المتجر', 'success');
+            }
+        }
+        window.applyAllAdvancedSettings = applyAllAdvancedSettings;
+        
+        // ===== دوال مزامنة المنتجات المخصصة =====
+        function syncCustomProductsToSupabase() {
+            if (typeof window.syncCustomProductsToSupabase === 'function') {
+                window.syncCustomProductsToSupabase();
+            } else {
+                showToast('⚠️ وظيفة المزامنة غير متاحة. تأكد من تحميل customize-store.js', 'error');
+            }
+        }
+        window.syncCustomProductsToSupabase = syncCustomProductsToSupabase;
+        
+        function clearCustomProductsFromSupabase() {
+            if (typeof window.clearCustomProductsFromSupabase === 'function') {
+                window.clearCustomProductsFromSupabase();
+            } else {
+                showToast('⚠️ وظيفة الحذف غير متاحة. تأكد من تحميل customize-store.js', 'error');
+            }
+        }
+        window.clearCustomProductsFromSupabase = clearCustomProductsFromSupabase;
+        
+        // ===== تهيئة الصفحة =====
+        document.addEventListener('DOMContentLoaded', function() {
+            // إغلاق النوافذ بالنقر خارجها
+            document.getElementById('advancedBannerModal').addEventListener('click', function(e) {
+                if (e.target === this) closeAdvancedBannerModal();
+            });
+            document.getElementById('productSectionModal').addEventListener('click', function(e) {
+                if (e.target === this) closeProductSectionModal();
+            });
+            document.getElementById('bannerModal').addEventListener('click', function(e) {
+                if (e.target === this) closeBannerModal();
+            });
+            document.getElementById('footerItemModal').addEventListener('click', function(e) {
+                if (e.target === this) closeFooterItemModal();
+            });
+            
+            // إظهار/إخفاء حقول الخلفية حسب النوع
+            const bgType = document.getElementById('advBgType');
+            if (bgType) {
+                bgType.addEventListener('change', function() {
+                    const type = this.value;
+                    document.getElementById('advBgColorGroup').style.display = type === 'color' ? 'block' : 'none';
+                    document.getElementById('advBgGradientGroup').style.display = type === 'gradient' ? 'block' : 'none';
+                    document.getElementById('advBgImageGroup').style.display = (type === 'image' || type === 'pattern') ? 'block' : 'none';
+                });
+            }
+            
+            // معاينة الشعار عند تغيير الرابط
+            const logoUrl = document.getElementById('advLogoUrl');
+            if (logoUrl) {
+                logoUrl.addEventListener('input', function() {
+                    const url = this.value.trim();
+                    if (url && (url.startsWith('http') || url.startsWith('data:image'))) {
+                        document.getElementById('advLogoPreview').innerHTML = `
+                            <img src="${url}" style="max-width:150px;max-height:100px;border-radius:8px;border:1px solid rgba(255,215,0,0.1);" onerror="this.style.display='none'" />
+                        `;
+                    }
+                });
+            }
+            
+            // معاينة صورة الخلفية
+            const bgImageUrl = document.getElementById('advBgImageUrl');
+            if (bgImageUrl) {
+                bgImageUrl.addEventListener('input', function() {
+                    const url = this.value.trim();
+                    if (url && (url.startsWith('http') || url.startsWith('data:image'))) {
+                        document.getElementById('advBgImagePreview').innerHTML = `
+                            <img src="${url}" style="max-width:200px;max-height:120px;border-radius:8px;border:1px solid rgba(255,215,0,0.1);" onerror="this.style.display='none'" />
+                        `;
+                    }
+                });
+            }
+            
+            // إظهار/إخفاء سرعة التشغيل التلقائي
+            const autoplayCheckbox = document.getElementById('sectionAutoplay');
+            if (autoplayCheckbox) {
+                autoplayCheckbox.addEventListener('change', function() {
+                    document.getElementById('autoplaySpeedGroup').style.display = this.checked ? 'block' : 'none';
+                });
+            }
+            
+            // تحميل البنرات والأقسام عند فتح التبويبات
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tab = this.dataset.tab;
+                    if (tab === 'banners') {
+                        setTimeout(loadAdvancedBanners, 100);
+                    } else if (tab === 'sections') {
+                        setTimeout(loadProductSections, 100);
+                    } else if (tab === 'colors') {
+                        if (typeof window.renderAdvancedColors === 'function') {
+                            window.renderAdvancedColors();
+                        }
+                    } else if (tab === 'theme-customizer') {
+                        setTimeout(loadThemeColorsToForm, 100);
+                    } else if (tab === 'custom-css') {
+                        setTimeout(loadCustomCSS, 100);
+                    } else if (tab === 'custom-js') {
+                        setTimeout(loadCustomJS, 100);
+                    } else if (tab === 'display-modes') {
+                        setTimeout(() => {
+                            renderDisplayModes();
+                            loadDisplaySettings();
+                        }, 100);
+                    } else if (tab === 'advanced') {
+                        if (typeof window.loadAdvancedSettings === 'function') {
+                            window.loadAdvancedSettings();
+                        }
+                    }
+                });
+            });
+            
+            // إذا كانت التبويبات نشطة عند التحميل
+            if (document.getElementById('tab-banners').classList.contains('active')) {
+                setTimeout(loadAdvancedBanners, 500);
+            }
+            if (document.getElementById('tab-sections').classList.contains('active')) {
+                setTimeout(loadProductSections, 500);
+            }
+            if (document.getElementById('tab-colors').classList.contains('active')) {
+                setTimeout(function() {
+                    if (typeof window.renderAdvancedColors === 'function') {
+                        window.renderAdvancedColors();
+                    }
+                }, 500);
+            }
+            if (document.getElementById('tab-theme-customizer').classList.contains('active')) {
+                setTimeout(loadThemeColorsToForm, 500);
+            }
+            if (document.getElementById('tab-custom-css').classList.contains('active')) {
+                setTimeout(loadCustomCSS, 500);
+            }
+            if (document.getElementById('tab-custom-js').classList.contains('active')) {
+                setTimeout(loadCustomJS, 500);
+            }
+            if (document.getElementById('tab-display-modes').classList.contains('active')) {
+                setTimeout(() => {
+                    renderDisplayModes();
+                    loadDisplaySettings();
+                }, 500);
+            }
+            if (document.getElementById('tab-advanced').classList.contains('active')) {
+                setTimeout(function() {
+                    if (typeof window.loadAdvancedSettings === 'function') {
+                        window.loadAdvancedSettings();
+                    }
+                }, 500);
+            }
+        });
+    </script>
+</body>
+</html>
