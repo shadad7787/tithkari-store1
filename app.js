@@ -61,6 +61,15 @@ let storeSettings = {
 };
 
 // ============================================
+// ===== جعل المتغيرات متاحة عالمياً =====
+// ============================================
+window.products = products;
+window.cart = cart;
+window.supabase = supabase;
+window.PLACEHOLDER_IMAGE = PLACEHOLDER_IMAGE;
+window.PLACEHOLDER_SMALL = PLACEHOLDER_SMALL;
+
+// ============================================
 // ===== 📱 تحسينات أداء الجوال =====
 // ============================================
 
@@ -967,6 +976,7 @@ async function loadProducts() {
         updateProductCount();
     }
 }
+window.loadProducts = loadProducts;
 
 // ============================================
 // ===== عرض المنتجات (مُصلح بالكامل مع دعم المنتجات المخصصة) =====
@@ -1125,6 +1135,7 @@ function renderProducts(productsToShow) {
     setTimeout(() => initGalleries(), 100);
     console.log('✅ تم عرض', validProducts.length, 'منتج');
 }
+window.renderProducts = renderProducts;
 
 // ============================================
 // ===== دوال معرض الصور المتعددة =====
@@ -1458,6 +1469,7 @@ window.addToCart = addToCart;
 // ============================================
 // ===== دالة الإضافة من نافذة المنتج (محسنة) =====
 // ============================================
+// ✅ نسخة واحدة فقط من addFromModal - تم إزالة التكرار
 function addFromModal(productId) {
     const product = findProductById(productId);
     if (!product) {
@@ -1972,37 +1984,6 @@ async function openProductModal(productId) {
     }, 200);
 }
 window.openProductModal = openProductModal;
-
-// ============================================
-// ===== تحديث دالة الإضافة من النافذة =====
-// ============================================
-function addFromModal(productId) {
-    const product = findProductById(productId);
-    if (!product) {
-        showToast('❌ المنتج غير موجود', 'error');
-        return;
-    }
-    try {
-        const customData = collectCustomFields(productId);
-        const quantity = window.currentModalQuantity || 1;
-        const productWithCustom = {
-            ...product,
-            customFields: customData,
-            quantity: quantity
-        };
-        const requiredFields = customData.filter(f => f.is_required && !f.value);
-        if (requiredFields.length > 0) {
-            showToast(`⚠️ الرجاء إكمال جميع الحقول المطلوبة`, 'warning');
-            return;
-        }
-        console.log('📝 Adding product with custom fields:', productWithCustom.customFields);
-        addToCart(productWithCustom);
-        closeModal();
-    } catch (error) {
-        showToast(error.message, 'warning');
-    }
-}
-window.addFromModal = addFromModal;
 
 // ============================================
 // ===== عرض الحقول المخصصة في السلة =====
@@ -2729,7 +2710,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     await loadSettings();
     await renderMenus();
     await loadCategories();
-    loadProducts();
+    await loadProducts(); // ✅ تم تغييرها إلى await لضمان تحميل المنتجات
     await initCarousel();
     await loadFooterItems();
     initDesignTool();
@@ -2805,6 +2786,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     console.log('✅ تم تهيئة المتجر بنجاح');
     console.log('📱 وضع الجوال:', isMobileDevice());
     console.log('👆 جهاز يعمل باللمس:', isTouchDevice());
+    console.log('📦 عدد المنتجات المحملة:', products.length);
 });
 
 // ============================================
